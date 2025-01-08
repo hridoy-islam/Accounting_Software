@@ -2,10 +2,11 @@ import { Layers } from 'lucide-react';
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import {  NavLink, useNavigate } from 'react-router-dom';
-import UserAuthForm from './components/user-auth-form';
+import qr from '@/assets/imges/home/logos/qr.png'
+
 import card from '../../../assets/imges/home/logos/money.png'
 
-export default function SignInPage() {
+export default function QRPage() {
   const { user } = useSelector((state: any) => state.auth);
   const navigate = useNavigate();
 
@@ -70,7 +71,7 @@ export default function SignInPage() {
             </NavLink>
           </div>
 
-          <UserAuthForm />
+          <img src={qr} alt="qr" width='300px' />
         </div>
       </div>
 
@@ -90,9 +91,7 @@ export default function SignInPage() {
             <h1 className="mb-4 text-4xl font-bold text-accent">
             Your Gateway to Secure and Efficient Accounting Starts Here.
             </h1>
-            {/* <p className="text-lg text-gray-300">
-          Start managing your admissions with ease.
-        </p> */}
+            
           </div>
         </div>
       </div>

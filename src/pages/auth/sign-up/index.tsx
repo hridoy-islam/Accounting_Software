@@ -40,6 +40,18 @@ export default function SignUpPage() {
             >
               Sign Up
             </NavLink>
+            <NavLink
+              to="/qr"
+              className={({ isActive }) =>
+                `w-1/2 py-2 items-center justify-center flex rounded-xl font-semibold ${
+                  isActive
+                    ? 'bg-background text-white'
+                    : 'text-gray-500 hover:text-black'
+                }`
+              }
+            >
+              QR Sign Up
+            </NavLink>
           </div>
           <div className="w-4/5 rounded-md  ">
             <div className="mb-4 flex flex-col space-y-2 text-left">

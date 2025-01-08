@@ -1,112 +1,101 @@
-"use client"
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import placeholder from '@/assets/imges/home/logos/placeholder.jpg';
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { StatCard } from "@/components/shared/stat-card"
-import { RefreshCw } from 'lucide-react'
-
-const stats = [
-  {
-    title: "Applications",
-    value: 1426
-  },
-  {
-    title: "Students",
-    value: 1070
-  },
-  {
-    title: "Waiting LLC Approval",
-    value: 0
-  },
-  {
-    title: "New",
-    value: 125
-  },
-  {
-    title: "Processing",
-    value: 29
-  },
-  {
-    title: "Application Made",
-    value: 4
-  },
-  {
-    title: "Offer Made",
-    value: 0
-  },
-  {
-    title: "Enrolled",
-    value: 594
-  },
-  {
-    title: "Rejected",
-    value: 367
-  },
-  {
-    title: "Hold",
-    value: 1
-  },
-  {
-    title: "App made to LCC",
-    value: 113
-  },
-  {
-    title: "Deregister",
-    value: 60
-  },
-  {
-    title: "SLC Course Completed",
-    value: 133
-  }
-]
-
-export default function DashboardPage() {
-  return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-2xl font-bold">General Report</h2>
-        <div className="flex items-center space-x-2">
-          <Button className="bg-supperagent text-white hover:bg-supperagent/90" size="sm">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Reload Data
-          </Button>
-        </div>
-      </div>
-      
-      <div className="space-y-4">
-        <div className="rounded-lg bg-supperagent p-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <label className="text-sm font-medium text-white">
-                Applications by academic year:
-              </label>
-              <Select defaultValue="2024-2025">
-                <SelectTrigger className="mt-2 bg-white border-white">
-                  <SelectValue placeholder="Select year" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2024-2025">2024-2025</SelectItem>
-                  <SelectItem value="2023-2024">2023-2024</SelectItem>
-                  <SelectItem value="2022-2023">2022-2023</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <StatCard
-              key={stat.title}
-              title={stat.title}
-              value={stat.value}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  )
+interface Company {
+  id: number;
+  name: string;
+  logo: string;
 }
 
+export function Dashboard() {
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Simulating API call to fetch companies
+    const fetchCompanies = async () => {
+      // In a real application, this would be an API call
+      const response = await new Promise<Company[]>((resolve) =>
+        setTimeout(
+          () =>
+            resolve([
+              { id: 1, name: 'Company 1', logo: '' },
+              { id: 2, name: 'Company 2', logo: '' },
+              { id: 3, name: 'Company 3', logo: '' }
+            ]),
+          1000
+        )
+      );
+      setCompanies(response);
+    };
+
+    fetchCompanies();
+  }, []);
+
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <Card>
+          <CardHeader className='p-6'>
+            <CardTitle>Total Companies</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-8xl font-bold">{companies.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='p-6'>
+            <CardTitle>Total Storage Profiles</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-8xl font-bold">0</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='p-6'>
+            <CardTitle>Total Categories</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-8xl font-bold">0</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='p-6'>
+            <CardTitle>Total Methods</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-8xl font-bold">0</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader className='p-6'>
+          <CardTitle>Registered Companies</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 justify-items-center gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {companies.map((company) => (
+              <Card
+                key={company.id}
+                className="w-auto cursor-pointer transition-shadow hover:shadow-lg"
+                onClick={() => navigate(`companies/${company.id}`)}
+              >
+                <CardContent className="p-4">
+                  <img
+                    src={company.logo || placeholder}
+                    alt={`${company.name} logo`}
+                    className="mb-2 h-full w-full object-cover"
+                  />
+                  <h3 className="font-bold">{company.name}</h3>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

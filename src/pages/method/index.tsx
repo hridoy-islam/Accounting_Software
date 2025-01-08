@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pen, Plus, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+
 import {
   Table,
   TableBody,
@@ -13,7 +13,6 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pagination } from "@/components/ui/pagination"; // Assumed custom Pagination component
 
 interface Method {
   id: number;
@@ -21,7 +20,7 @@ interface Method {
   active: boolean;
 }
 
-export function MethodManagement() {
+export function Method() {
   const [methods, setMethods] = useState<Method[]>([
     { id: 1, name: "Method 1", active: true },
     { id: 2, name: "Method 2", active: false },
@@ -42,6 +41,8 @@ export function MethodManagement() {
     method.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredMethods.length / itemsPerPage);
+
   const paginatedMethods = filteredMethods.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -49,11 +50,9 @@ export function MethodManagement() {
 
   const handleSubmit = (data: Method) => {
     if (editingMethod) {
-      // Update existing method
       setMethods(methods.map((method) => (method.id === editingMethod.id ? { ...method, ...data } : method)));
       setEditingMethod(null);
     } else {
-      // Add new method
       const newId = Math.max(...methods.map((m) => m.id), 0) + 1;
       setMethods([...methods, { id: newId, ...data, active: true }]);
     }
@@ -68,35 +67,41 @@ export function MethodManagement() {
     setMethods(methods.map((method) => (method.id === id ? { ...method, active } : method)));
   };
 
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
+        <h1 className="text-2xl font-semibold">Methods</h1>
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">Method Management</h1>
-        <div className="flex space-x-2">
-          <Input
-            placeholder="Search methods..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Button
-            className="bg-supperagent text-white hover:bg-supperagent/90"
-            onClick={() => {
-              setEditingMethod(null);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Method
-          </Button>
-        </div>
+        <div className="flex-1 flex justify-between items-center space-x-4">
+    <Input
+      placeholder="Search methods..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="max-w-md"
+    />
+    <Button
+      className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
+      onClick={() => {
+        setEditingMethod(null);
+        setDialogOpen(true);
+      }}
+    >
+      <Plus className="w-4 h-4 mr-2" />
+      New Method
+    </Button>
+  </div>
       </div>
       <div className="rounded-md bg-white shadow-2xl p-4">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>#ID</TableHead>
+              <TableHead>ID</TableHead>
               <TableHead>Method Name</TableHead>
-             
               <TableHead className="w-32 text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -105,11 +110,10 @@ export function MethodManagement() {
               <TableRow key={method.id}>
                 <TableCell>{method.id}</TableCell>
                 <TableCell>{method.name}</TableCell>
-               
                 <TableCell className="text-center space-x-2">
                   <Button
                     variant="ghost"
-                    className="bg-supperagent text-white hover:bg-supperagent/90 border-none"
+                    className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80 border-none"
                     size="icon"
                     onClick={() => {
                       setEditingMethod(method);
@@ -132,12 +136,25 @@ export function MethodManagement() {
           </TableBody>
         </Table>
       </div>
-      <Pagination
-        totalItems={filteredMethods.length}
-        itemsPerPage={itemsPerPage}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-      />
+      <div className="flex flex-col sm:flex-row justify-center gap-4 items-center mt-4 space-y-2 sm:space-y-0">
+  <Button
+    disabled={currentPage === 1}
+    onClick={() => goToPage(currentPage - 1)}
+  >
+    Previous
+  </Button>
+  <div className="flex items-center gap-2">
+    Page {currentPage} of {totalPages}
+    
+  </div>
+  <Button
+    disabled={currentPage === totalPages}
+    onClick={() => goToPage(currentPage + 1)}
+  >
+    Next
+  </Button>
+</div>
+
       <Dialog
         open={dialogOpen}
         onOpenChange={(open) => {
@@ -167,7 +184,12 @@ export function MethodManagement() {
                 required
               />
             </div>
-            <Button type="submit">{editingMethod ? "Save Changes" : "Add Method"}</Button>
+            <Button
+              className="hover:bg-[#a78bfa] hover:text-white"
+              type="submit"
+            >
+              {editingMethod ? "Save Changes" : "Add Method"}
+            </Button>
           </form>
         </DialogContent>
       </Dialog>

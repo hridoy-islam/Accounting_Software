@@ -21,12 +21,14 @@ import AgentsPage from '@/pages/agent';
 import CourseRelationPage from '@/pages/course-relation';
 // import StudentViewPage from '@/pages/students/view';
 
-import { CompanyManagement } from '@/components/shared/CompanyManagement';
+import { Company } from '@/pages/company/index';
 import { StorageManagement } from '@/components/shared/StorageManagement';
 import { CategoryManagement } from '@/components/shared/CategoryManagement';
-import { MethodManagement } from '@/components/shared/MethodManagement';
-import { CompanyDetails } from '@/components/shared/CompanyDetails';
-import { Dashboard } from '@/components/shared/Dashboard';
+import { Dashboard } from '@/pages/dashboard/index';
+import { Method } from '@/pages/method';
+import  CompanyDetails  from '@/pages/company/components/CompanyDetails';
+import QRPage from '@/pages/auth/qr';
+
 
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
@@ -55,7 +57,7 @@ export default function AppRouter() {
         },
         {
           path: 'companies',
-          element: <CompanyManagement  />
+          element: <Company />
         },
         {
           path: 'companies/:id',
@@ -71,7 +73,7 @@ export default function AppRouter() {
         },
         {
           path: 'methods',
-          element: <MethodManagement />
+          element: <Method />
         },
         {
           path: 'students/new',
@@ -123,6 +125,11 @@ export default function AppRouter() {
     {
       path: '/signup',
       element: <SignUpPage />,
+      index: true
+    },
+    {
+      path: '/qr',
+      element: <QRPage />,
       index: true
     },
     {
