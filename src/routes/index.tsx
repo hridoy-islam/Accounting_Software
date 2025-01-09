@@ -10,7 +10,6 @@ import Otp from '@/pages/auth/otp';
 import NewPassword from '@/pages/new-password';
 import AdminLayout from '@/components/layout/admin-layout';
 // import StudentsPage from '@/pages/students';
-import NewStudentPage from '@/pages/students/new';
 import { StudentQuiz } from '@/pages/students/quiz';
 import InstitutionsPage from '@/pages/institutions';
 import CoursesPage from '@/pages/courses';
@@ -23,11 +22,13 @@ import CourseRelationPage from '@/pages/course-relation';
 
 import { Company } from '@/pages/company/index';
 import { StorageManagement } from '@/components/shared/StorageManagement';
-import { CategoryManagement } from '@/components/shared/CategoryManagement';
+
 import { Dashboard } from '@/pages/dashboard/index';
 import { Method } from '@/pages/method';
 import  CompanyDetails  from '@/pages/company/components/CompanyDetails';
 import QRPage from '@/pages/auth/qr';
+import UserPage from '@/pages/users';
+import { CategoryManagement } from '@/pages/category';
 
 
 
@@ -76,8 +77,8 @@ export default function AppRouter() {
           element: <Method />
         },
         {
-          path: 'students/new',
-          element: <NewStudentPage />
+          path: 'users',
+          element: <UserPage />
         },
         {
           path: 'students/quiz',

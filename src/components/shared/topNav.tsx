@@ -78,6 +78,24 @@ export function TopNavigation() {
                 <Users className="mr-2 h-4 w-4" /> Company
               </Link>
             </Button>
+            <Button
+              asChild
+              variant="ghost"
+              className="flex hover:bg-[#a78bfa] items-center justify-center py-2 md:justify-start md:py-3"
+            >
+              <Link to="users">
+                <Users className="mr-2 h-4 w-4" /> User
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="ghost"
+              className="flex hover:bg-[#a78bfa] items-center justify-center py-2 md:justify-start md:py-3"
+            >
+              <Link to="Categories">
+                <Users className="mr-2 h-4 w-4" /> Category
+              </Link>
+            </Button>
   
             <Button
               asChild
@@ -117,6 +135,24 @@ export function TopNavigation() {
               >
                 <Link to="companies" onClick={() => setSidebarOpen(false)}>
                   <Users className="mr-2 h-4 w-4" /> Company
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="ghost"
+                className="w-full hover:bg-[#a78bfa] justify-center max-md:py-6 md:justify-start"
+              >
+                <Link to="users" onClick={() => setSidebarOpen(false)}>
+                  <Users className="mr-2 h-4 w-4" /> User
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="ghost"
+                className="w-full hover:bg-[#a78bfa] justify-center max-md:py-6 md:justify-start"
+              >
+                <Link to="categories" onClick={() => setSidebarOpen(false)}>
+                  <Users className="mr-2 h-4 w-4" /> Category
                 </Link>
               </Button>
              

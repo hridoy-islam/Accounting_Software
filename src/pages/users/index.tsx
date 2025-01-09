@@ -15,11 +15,11 @@ export default function UserPage() {
       <PageHead title="Profile Page" />
       <Breadcrumbs
         items={[
-          { title: 'Dashboard', link: '/dashboard' },
+          { title: 'Dashboard', link: '/admin' },
           { title: 'Users', link: '/users' }
         ]}
       />
-      <CreateUser onUserCreated={handleUserCreated} />
+      {/* <CreateUser onUserCreated={handleUserCreated} /> */}
       <UserTableList refreshKey={refreshKey} />
     </div>
   );

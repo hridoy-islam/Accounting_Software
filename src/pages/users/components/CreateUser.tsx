@@ -69,7 +69,7 @@ export default function CreateUser({ onUserCreated }) {
 
       <Dialog open={isCompanyDialogOpen} onOpenChange={setIsCompanyDialogOpen}>
         <DialogTrigger asChild>
-          <Button>
+          <Button className='hover:bg-[#a78bfa] hover:text-white'>
             <PlusCircle className="mr-2 h-4 w-4" />
             Create User
           </Button>
@@ -121,7 +121,7 @@ export default function CreateUser({ onUserCreated }) {
               {error && <p className="text-red-500">{error}</p>}
             </div>
             <DialogFooter>
-              <Button variant="outline" type="submit" disabled={isLoading}>
+              <Button className="hover:bg-[#a78bfa] hover:text-white" type="submit" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
