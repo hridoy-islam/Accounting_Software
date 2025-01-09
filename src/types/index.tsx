@@ -50,6 +50,49 @@ export interface StudentFormData {
   agent: string
 }
 
+export interface Transaction {
+  id: number
+  tcid: string
+  transactionDate: string
+  invoiceNumber?: string
+  invoiceDate?: string
+  details?: string
+  description?: string
+  transactionAmount: number
+  transactionDoc?: string
+  transactionCategory: string
+  transactionMethod: string
+  storage: string
+  transactionType: 'inflow' | 'outflow'
+}
+
+export interface Category {
+  id: string
+  name: string
+  parentId?: string
+  type: 'inflow' | 'outflow'
+}
+
+export interface Storage {
+  id: string
+  name: string
+  openingBalance: number
+  openingDate: string
+  logo: string
+  status: 'active' | 'inactive'
+  auditStatus: 'pending' | 'completed'
+}
+
+export interface Company {
+  id: number
+  name: string
+  email: string
+  phone: string
+  logo: string
+}
+
+
+
 export const initialFormData: StudentFormData = {
   title: '',
   firstName: '',

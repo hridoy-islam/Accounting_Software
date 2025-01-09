@@ -11,7 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
-import PageHead from '@/components/shared/page-head';
+
 import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
@@ -90,16 +90,21 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-4 p-4 md:p-8">
-      <PageHead title="Profile Page" />
-      <Breadcrumbs
-        items={[
-          { title: 'Dashboard', link: '/' },
-          { title: 'Profile', link: '/profile' }
-        ]}
-      />
+    <div className="flex flex-col items-center justify-center min-h-full md:px-4">
+      <div className="absolute w-full max-w-md left-12 top-44 max-md:hidden">
+        <Breadcrumbs
+          items={[
+            { title: 'Dashboard', link: '/admin' },
+            { title: 'Profile', link: '/profile' },
+          ]}
+   
+        />
+      </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-8 w-full max-w-md"
+        >
           <div className="flex flex-col items-center space-y-4">
             <Avatar className="h-32 w-32">
               <AvatarImage src={user?.image} alt="Profile picture" />
@@ -118,7 +123,7 @@ export default function ProfilePage() {
                 className="hidden"
               />
               <Label htmlFor="avatar" className="cursor-pointer">
-                <Button type="button" variant="outline" size="sm">
+                <Button type="button" className='hover:bg-[#a78bfa] hover:text-white' size="sm">
                   Change Avatar
                 </Button>
               </Label>
@@ -131,7 +136,7 @@ export default function ProfilePage() {
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter Your Name..." {...field} />
+                  <Input placeholder="Enter Your Name..." {...field} className='py-6' />
                 </FormControl>
               </FormItem>
             )}
@@ -147,6 +152,7 @@ export default function ProfilePage() {
                     placeholder="example@example.com"
                     disabled
                     {...field}
+                    className='py-6'
                   />
                 </FormControl>
                 <FormMessage />
@@ -160,7 +166,7 @@ export default function ProfilePage() {
               <FormItem>
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
-                  <Input placeholder="Phone" {...field} />
+                  <Input placeholder="Phone" {...field} className='py-6'/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -173,17 +179,19 @@ export default function ProfilePage() {
               <FormItem>
                 <FormLabel>Address</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter Your Address" {...field} />
+                  <Input placeholder="Enter Your Address" {...field} className='py-6' />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button variant="outline" type="submit">
+          <Button className='py-4 hover:bg-[#a78bfa] hover:text-white' type="submit">
             Update profile
           </Button>
         </form>
       </Form>
     </div>
   );
+  
+  
 }

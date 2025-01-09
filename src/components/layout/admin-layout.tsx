@@ -9,7 +9,7 @@ export default function AdminLayout({
     children: React.ReactNode;
   })  {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 z-999">
       <AutoLogout inactivityLimit={30 * 60 * 1000} />
       {/* <TopNav /> */}
       <TopNavigation />

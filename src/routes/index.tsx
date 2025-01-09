@@ -25,10 +25,15 @@ import { StorageManagement } from '@/components/shared/StorageManagement';
 
 import { Dashboard } from '@/pages/dashboard/index';
 import { Method } from '@/pages/method';
-import  CompanyDetails  from '@/pages/company/components/CompanyDetails';
+import  CompanyDetails  from '@/pages/company/companyDetails';
 import QRPage from '@/pages/auth/qr';
 import UserPage from '@/pages/users';
 import { CategoryManagement } from '@/pages/category';
+import ReportPage from '@/pages/company/companyDetails/reportPage';
+import TransactionPage from '@/pages/company/companyDetails/transactionPage';
+import ProfilePage from '@/pages/profile';
+import ResetPassword from '@/pages/resetPassword';
+
 
 
 
@@ -65,6 +70,14 @@ export default function AppRouter() {
           element: <CompanyDetails  />
         },
         {
+          path: 'companies/:id/transactions',
+          element: <TransactionPage  />
+        },
+        {
+          path: 'companies/:id/reports',
+          element: <ReportPage  />
+        },
+        {
           path: 'storages',
           element: <StorageManagement />
         },
@@ -80,37 +93,15 @@ export default function AppRouter() {
           path: 'users',
           element: <UserPage />
         },
+        
         {
-          path: 'students/quiz',
-          element: <StudentQuiz />
+          path: 'profile',
+          element: <ProfilePage />
         },
         {
-          path: 'institution',
-          element: <InstitutionsPage />
-        },
-        {
-          path: 'courses',
-          element: <CoursesPage />
-        },
-        {
-          path: 'terms',
-          element: <TermsPage />
-        },
-        {
-          path: 'academic-year',
-          element: <AcademicYearPage />
-        },
-        {
-          path: 'staff',
-          element: <StaffPage />
-        },
-        {
-          path: 'agents',
-          element: <AgentsPage />
-        },
-        {
-          path: 'course-fee',
-          element: <CourseRelationPage />
+          path: 'reset',
+          element:<ResetPassword />
+         
         }
         
       ]
@@ -143,11 +134,7 @@ export default function AppRouter() {
       element: <Otp />,
       index: true
     },
-    {
-      path: '/new-password',
-      element: <NewPassword />,
-      index: true
-    },
+    
     {
       path: '/404',
       element: <NotFound />

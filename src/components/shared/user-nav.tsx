@@ -51,13 +51,13 @@ export function UserNav() {
               <User className="mr-2 h-4 w-4" />
               <Link to="profile">Profile</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            {/* <DropdownMenuItem>
               <UserPlus className="mr-2 h-4 w-4" />
               <span>Add Account</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuItem>
               <KeyRound className="mr-2 h-4 w-4" />
-              <span>Reset Password</span>
+              <Link to="reset">Reset Password</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
