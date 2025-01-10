@@ -37,11 +37,12 @@ import {
 
 const AddTransaction = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [date, setDate] = React.useState("")
   const [formData, setFormData] = useState({
     transactionCategory: '',
-    transactionDate: null,
+    transactionDate: new Date(),
     invoiceNumber: '',
-    invoiceDate: null,
+    invoiceDate: "",
     details: '',
     description: '',
     transactionAmount: '',
@@ -67,14 +68,22 @@ const AddTransaction = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.transactionDate) {
+      alert('Transaction Date is required');
+      return;
+    }
     console.log(formData);
     setIsOpen(false);
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button onClick={() => setIsOpen(true)} className="hover:bg-[#a78bfa] hover:text-white">Add Transaction</Button>
+        <Button
+          onClick={() => setIsOpen(true)}
+          className="hover:bg-[#a78bfa] hover:text-white"
+        >
+          Add Transaction
+        </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] w-full overflow-y-auto p-4 sm:max-w-[600px] md:p-6">
         <DialogHeader>
@@ -128,71 +137,34 @@ const AddTransaction = () => {
             {/* Transaction Date */}
             <div className="space-y-2">
               <Label htmlFor="transactionDate">Transaction Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={'outline'}
-                    className={cn(
-                      'w-[240px] justify-start text-left font-normal',
-                      !formData.transactionDate && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon />
-                    {formData.transactionDate ? (
-                      format(formData.transactionDate, 'PPP')
-                    ) : (
-                      <span>Select Transaction Date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.transactionDate}
-                    onSelect={(date) =>
-                      handleDateChange(date, 'transactionDate')
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Input
+                id="transactionDate"
+                name="transactionDate"
+                type="date"
+                value={formData.transactionDate}
+                onChange={handleInputChange}
+                required
+                className="w-full"
+              />
             </div>
 
             {/* Invoice Date */}
             <div className="space-y-2">
-              <Label htmlFor="invoiceDate">Invoice Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={'outline'}
-                    className={cn(
-                      'w-[240px] justify-start text-left font-normal',
-                      !formData.invoiceDate && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon />
-                    {formData.invoiceDate ? (
-                      format(formData.invoiceDate, 'PPP')
-                    ) : (
-                      <span>Select Invoice Date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.invoiceDate}
-                    onSelect={(date) => handleDateChange(date, 'invoiceDate')}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+            <Label htmlFor="invoiceDate">Invoice Date</Label>
+              <Input
+                id="invoiceDate"
+                name="invoiceDate"
+                type="date"
+                value={formData.invoiceDate}
+                onChange={handleInputChange}
+                className="w-full"
+              />
             </div>
           </div>
 
-          {/* Invoice and Details */}
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
+      
+          <div className="grid gap-4 md:grid-cols-1">
+            {/* <div className="space-y-2">
               <Label htmlFor="invoiceNumber">Invoice Number</Label>
               <Input
                 id="invoiceNumber"
@@ -201,7 +173,7 @@ const AddTransaction = () => {
                 onChange={handleInputChange}
                 className="w-full"
               />
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <Label htmlFor="details">Details</Label>
@@ -210,7 +182,7 @@ const AddTransaction = () => {
                 name="details"
                 value={formData.details}
                 onChange={handleInputChange}
-                className="w-full"
+                className="w-full min-h-[100px]"
               />
             </div>
           </div>
@@ -244,7 +216,11 @@ const AddTransaction = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {transactionMethods.map((method) => (
-                    <SelectItem key={method} value={method}>
+                    <SelectItem
+                      key={method}
+                      value={method}
+                      className="hover:bg-black hover:text-white"
+                    >
                       {method}
                     </SelectItem>
                   ))}
@@ -265,7 +241,11 @@ const AddTransaction = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {storageOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
+                    <SelectItem
+                      key={option}
+                      value={option}
+                      className="hover:bg-black hover:text-white"
+                    >
                       {option}
                     </SelectItem>
                   ))}

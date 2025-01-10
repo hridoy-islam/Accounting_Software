@@ -1,25 +1,14 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Select } from '@/components/ui/select';
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from '@/components/ui/table';
-import DatePicker from 'react-datepicker';
-import {
-  PDFDownloadLink,
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet
-} from '@react-pdf/renderer';
-import CompanyNav from '../../components/companyNav';
 import { DatePickerRange } from '@/components/ui/DatePickerRange';
 import {
   DropdownMenu,
@@ -28,86 +17,219 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import CompanyNav from '../../components/CompanyNav';
+import { saveAs } from 'file-saver';
+import { utils, write } from 'xlsx';
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+
+interface CompanyData {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+}
+
+interface ReportData {
+  period: string;
+  totalInflow: number;
+  totalOutflow: number;
+  categories: {
+    [key: string]: {
+      inflow: number;
+      outflow: number;
+      children?: {
+        [key: string]: {
+          inflow: number;
+          outflow: number;
+        };
+      };
+    };
+  };
+}
+
+// Mock initial report data
+const mockInitialReportData: ReportData[] = [
+  {
+    period: '2025-01-01',
+    totalInflow: 15000,
+    totalOutflow: 12000,
+    categories: {
+      Salary: {
+        inflow: 12000,
+        outflow: 0,
+        children: {
+          John: { inflow: 4000, outflow: 0 },
+          Sarah: { inflow: 4000, outflow: 0 },
+          Emily: { inflow: 4000, outflow: 0 },
+        },
+      },
+      Marketing: { inflow: 0, outflow: 3000 },
+      'Office Supplies': { inflow: 0, outflow: 1000 },
+    },
+  },
+  {
+    period: '2025-01-15',
+    totalInflow: 20000,
+    totalOutflow: 18000,
+    categories: {
+      Salary: {
+        inflow: 15000,
+        outflow: 0,
+        children: {
+          John: { inflow: 5000, outflow: 0 },
+          Sarah: { inflow: 5000, outflow: 0 },
+          Emily: { inflow: 5000, outflow: 0 },
+        },
+      },
+      Marketing: { inflow: 0, outflow: 4000 },
+      'Office Supplies': { inflow: 0, outflow: 1000 },
+    },
+  },
+];
 
 const ReportPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
+  const companyId = params?.id as string;
+
   const [filterType, setFilterType] = useState<'daily' | 'monthly' | 'yearly' | 'custom'>('monthly');
-  const [startDate, setStartDate] = useState<Date>(() => new Date());
-  const [endDate, setEndDate] = useState<Date>(() => new Date());
-  const [reportData, setReportData] = useState<ReportData[]>([]);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [reportData, setReportData] = useState<ReportData[]>(mockInitialReportData);
   const [showDateRange, setShowDateRange] = useState(false);
+  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // Number of rows per page
+
+  useEffect(() => {
+    const fetchCompanyData = async () => {
+      if (!companyId) return;
+
+      try {
+        setIsLoading(true);
+        // Replace this with your actual API call
+        const response = await fetch(`/api/companies/${companyId}`);
+        const data = await response.json();
+
+        setCompanyData(data);
+        const companyStartDate = new Date(data.startDate);
+        const companyEndDate = new Date(data.endDate);
+
+        setStartDate(companyStartDate);
+        setEndDate(companyEndDate);
+      } catch (error) {
+        console.error('Error fetching company data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCompanyData();
+  }, [companyId]);
 
   const handleFilterChange = (value: string) => {
     setFilterType(value as 'daily' | 'monthly' | 'yearly' | 'custom');
-    if (value === 'custom') {
-      setShowDateRange(true);
-    } else {
-      setShowDateRange(false);
-      // Set date range based on filter type
-      const now = new Date();
-      let start = new Date();
-      let end = new Date();
-
-      switch (value) {
-        case 'daily':
-          start.setDate(now.getDate() - 7); // Last 7 days
-          break;
-        case 'monthly':
-          start.setMonth(now.getMonth() - 1); // Last month
-          break;
-        case 'yearly':
-          start.setFullYear(now.getFullYear() - 1); // Last year
-          break;
-      }
-      
-      setStartDate(start);
-      setEndDate(end);
-      generateReport(start, end, value as 'daily' | 'monthly' | 'yearly');
-    }
+    setShowDateRange(value === 'custom');
   };
 
   const handleDateRangeChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
-    if (start && end) {
-      setStartDate(start);
-      setEndDate(end);
-      generateReport(start, end, filterType);
-    }
+    setStartDate(start);
+    setEndDate(end);
   };
 
-  const generateReport = async (
-    start: Date,
-    end: Date,
-    type: 'daily' | 'monthly' | 'yearly' | 'custom'
-  ) => {
-    // Add API call to generate report based on type and date range
-    console.log('Generating report:', { start, end, type });
-    
-    // Mock data based on filter type
-    const mockData: ReportData[] = [
-      {
-        period: start.toISOString().slice(0, 10),
-        totalInflow: 10000,
-        totalOutflow: 8000,
-        categories: {
-          Salary: { inflow: 9000, outflow: 0 },
-          Marketing: { inflow: 0, outflow: 2000 },
-          'Office Supplies': { inflow: 0, outflow: 500 }
-        }
-      }
-    ];
-    setReportData(mockData);
+  const exportToCSV = () => {
+    const ws = utils.json_to_sheet(reportData);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, 'Report');
+    const wbout = write(wb, { bookType: 'csv', type: 'binary' });
+    saveAs(new Blob([s2ab(wbout)], { type: 'application/octet-stream' }), 'report.csv');
+  };
+
+  // Calculate total pages based on data length and page size
+  const totalPages = Math.ceil(reportData.length / pageSize);
+
+  // Get the data for the current page
+  const paginatedData = reportData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const styles = StyleSheet.create({
+    page: {
+      padding: 20,
+    },
+    title: {
+      fontSize: 18,
+      marginBottom: 10,
+    },
+    section: {
+      marginBottom: 10,
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      fontWeight: 'bold',
+      borderBottomWidth: 1,
+      paddingBottom: 4,
+    },
+    tableRow: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      paddingVertical: 2,
+    },
+    cell: {
+      flex: 1,
+      textAlign: 'left',
+    },
+  });
+
+  const ReportPDF = ({ data }: { data: ReportData[] }) => (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.title}>Financial Report</Text>
+        {data.map((report, index) => (
+          <View key={index} style={styles.section}>
+            <Text>Period: {report.period}</Text>
+            <Text>Total Inflow: {report.totalInflow}</Text>
+            <Text>Total Outflow: {report.totalOutflow}</Text>
+            <View style={styles.tableHeader}>
+              <Text style={[styles.cell, { flex: 2 }]}>Category</Text>
+              <Text style={styles.cell}>Inflow</Text>
+              <Text style={styles.cell}>Outflow</Text>
+            </View>
+            {Object.entries(report.categories).map(([category, details], i) => (
+              <View key={i} style={styles.tableRow}>
+                <Text style={[styles.cell, { flex: 2 }]}>{category}</Text>
+                <Text style={styles.cell}>{details.inflow}</Text>
+                <Text style={styles.cell}>{details.outflow}</Text>
+              </View>
+            ))}
+          </View>
+        ))}
+      </Page>
+    </Document>
+  );
+
+  function s2ab(s: string) {
+    const buf = new ArrayBuffer(s.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
+    return buf;
+  }
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
   };
 
   return (
     <div className="container flex flex-col justify-center p-6">
       <CompanyNav />
 
-      <div className="mb-8 space-y-6 flex items-center max-md:flex-col justify-center md:justify-between ">
+      <div className="mb-8 space-y-6 flex items-center max-md:flex-col justify-center md:justify-between">
         <h1 className="text-2xl font-semibold">Financial Reports</h1>
-        <div className="flex space-x-4 ">
+        <div className="flex space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
@@ -125,75 +247,71 @@ const ReportPage: React.FC = () => {
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+          {showDateRange && (
+            <DatePickerRange
+              onChange={handleDateRangeChange}
+              selectedDate={[startDate, endDate]}
+            />
+          )}
+        </div>
+      </div>
 
-          
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Period</TableHead>
+              <TableHead>Total Inflow</TableHead>
+              <TableHead>Total Outflow</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.map((data, index) => (
+              <TableRow key={index}>
+                <TableCell>{data.period}</TableCell>
+                <TableCell>{data.totalInflow}</TableCell>
+                <TableCell>{data.totalOutflow}</TableCell>
+                
+       
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
-          <Button 
-            onClick={() => generateReport(startDate, endDate, filterType)}
-            className="ml-4 hover:bg-[#a78bfa] hover:text-white"
+      <div className="mt-6 flex justify-between items-center">
+        <div className='flex gap-4'>
+
+       
+          <Button className='hover:bg-[#a78bfa] hover:text-white' onClick={exportToCSV}>Export to CSV</Button>
+          <Button className='hover:bg-[#a78bfa] hover:text-white'>
+
+          <PDFDownloadLink
+            document={<ReportPDF data={reportData} />}
+            fileName="financial_report.pdf"
+            
+            >
+            {({ loading }) => (loading ? "Preparing PDF..." : "Export PDF")}
+          </PDFDownloadLink>
+            </Button>
+          </div>
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
           >
-            Generate Report
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
           </Button>
         </div>
-        {showDateRange && (
-            <div className="mt-2 md:hidden">
-              <DatePickerRange
-                startDate={startDate}
-                endDate={endDate}
-                onChange={handleDateRangeChange}
-              />
-            </div>
-          )}
-
       </div>
-        {showDateRange && (
-            <div className=" flex  justify-end items-center pb-8 ">
-              <DatePickerRange
-                startDate={startDate}
-                endDate={endDate}
-                onChange={handleDateRangeChange}
-              />
-            </div>
-          )}
-
-      
-
-
-      {reportData.length > 0 && (
-        <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Period</TableHead>
-                <TableHead>Inflow</TableHead>
-                <TableHead>Outflow</TableHead>
-                <TableHead>Net</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reportData.map((data, index) => (
-                <TableRow key={index}>
-                  <TableCell>{data.period}</TableCell>
-                  <TableCell>{data.totalInflow}</TableCell>
-                  <TableCell>{data.totalOutflow}</TableCell>
-                  <TableCell>{data.totalInflow - data.totalOutflow}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          <div className="mt-4">
-            {/* <PDFDownloadLink
-              document={<PDFReport />}
-              fileName="financial_report.pdf"
-            >
-              {({ blob, url, loading, error }) =>
-                loading ? 'Loading document...' : 'Download PDF Report'
-              }
-            </PDFDownloadLink> */}
-          </div>
-        </>
-      )}
     </div>
   );
 };

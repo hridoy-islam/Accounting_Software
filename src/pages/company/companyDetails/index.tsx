@@ -68,7 +68,8 @@ const CompanyDashboard: React.FC = () => {
         <div className="relative rounded-lg bg-white p-6 shadow-md lg:col-span-2">
           {/* Header with flex container for alignment */}
           <div className="mb-8 flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">Company Dashboard</h1>
+            <h1 className="text-2xl font-semibold">ABC Company <br /> <span className='text-lg font-semibold'>Recent Transactions</span></h1>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">Filter</Button>
@@ -94,6 +95,7 @@ const CompanyDashboard: React.FC = () => {
           </div>
 
           <Table>
+            
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>

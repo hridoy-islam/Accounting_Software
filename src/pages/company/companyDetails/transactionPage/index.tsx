@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-
+import { useParams } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -12,76 +11,87 @@ import {
 
 import CompanyNav from '../../components/CompanyNav';
 import AddTransaction from '@/pages/company/companyDetails/transactionPage/components/AddTransaction.jsx';
+import { Button } from '@/components/ui/button';
 
 interface Transaction {
   id: string;
   tcid: string;
   transactionDate: Date;
-  invoiceNumber?: string;
-  invoiceDate?: Date;
-  details?: string;
-  description?: string;
   transactionAmount: number;
-  transactionDoc?: File;
   transactionCategory: string;
   transactionMethod: string;
-  storage: string;
   transactionType: 'inflow' | 'outflow';
 }
 
+const mockTransactions: Transaction[] = [
+  {
+    id: '1',
+    tcid: 'TC001',
+    transactionDate: new Date('2025-01-01'),
+    transactionAmount: 5000,
+    transactionCategory: 'Sales',
+    transactionMethod: 'Bank Transfer',
+    transactionType: 'inflow',
+  },
+  {
+    id: '2',
+    tcid: 'TC002',
+    transactionDate: new Date('2025-01-03'),
+    transactionAmount: -1500,
+    transactionCategory: 'Utilities',
+    transactionMethod: 'Credit Card',
+    transactionType: 'outflow',
+  },
+  {
+    id: '3',
+    tcid: 'TC003',
+    transactionDate: new Date('2025-01-05'),
+    transactionAmount: 2000,
+    transactionCategory: 'Investment',
+    transactionMethod: 'Cash',
+    transactionType: 'inflow',
+  },
+  {
+    id: '4',
+    tcid: 'TC004',
+    transactionDate: new Date('2025-01-07'),
+    transactionAmount: -750,
+    transactionCategory: 'Office Supplies',
+    transactionMethod: 'Debit Card',
+    transactionType: 'outflow',
+  },
+  // Add more transactions if needed
+];
+
 const TransactionPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [newTransaction, setNewTransaction] = useState<Partial<Transaction>>({
-    transactionType: 'inflow',
-    transactionDate: new Date(),
-  });
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Set the number of items per page
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setNewTransaction((prev) => ({ ...prev, [name]: value }));
-  };
+  // Calculate the index of the first and last transaction for the current page
+  const indexOfLastTransaction = currentPage * itemsPerPage;
+  const indexOfFirstTransaction = indexOfLastTransaction - itemsPerPage;
+  
+  // Slice the transactions array to show only the current page's transactions
+  const currentTransactions = transactions.slice(indexOfFirstTransaction, indexOfLastTransaction);
 
-  const handleSelectChange = (name: string, value: string) => {
-    setNewTransaction((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleDateChange = (
-    date: Date,
-    field: 'transactionDate' | 'invoiceDate'
-  ) => {
-    if (date) {
-      setNewTransaction((prev) => ({ ...prev, [field]: date }));
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, files } = e.target;
-    if (files) {
-      setNewTransaction((prev) => ({ ...prev, [name]: files[0] }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Add API call to save the transaction
-    console.log('Saving transaction:', newTransaction);
-    setIsDialogOpen(false);
-    // Refresh transactions list
-  };
+  // Change page handler
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className="container mx-auto p-6">
       <CompanyNav />
 
       <h1 className="mb-8 text-2xl font-semibold">Transactions</h1>
-    {/* Add Transaction Component */}
-    <div className="flex justify-end mb-4">
-      <AddTransaction />
-    </div>
+
+      <div className="flex justify-end mb-4">
+        <AddTransaction />
+      </div>
+
       <div className="flex gap-8">
-        {/* Main Table Content */}
         <div className="flex-grow">
           <Table>
             <TableHeader>
@@ -95,12 +105,10 @@ const TransactionPage: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.map((transaction) => (
+              {currentTransactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>{transaction.tcid}</TableCell>
-                  <TableCell>
-                    {transaction.transactionDate.toLocaleDateString()}
-                  </TableCell>
+                  <TableCell>{transaction.transactionDate.toLocaleDateString()}</TableCell>
                   <TableCell>{transaction.transactionType}</TableCell>
                   <TableCell>{transaction.transactionAmount}</TableCell>
                   <TableCell>{transaction.transactionCategory}</TableCell>
@@ -109,9 +117,28 @@ const TransactionPage: React.FC = () => {
               ))}
             </TableBody>
           </Table>
-        </div>
 
-        
+          {/* Pagination Controls */}
+          <div className="mt-4 flex justify-center items-center gap-2 py-4">
+            <Button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-2 py-1 bg-gray-300 rounded-lg"
+            >
+              Previous
+            </Button>
+            <span className="mx-2">
+              Page {currentPage} of {Math.ceil(transactions.length / itemsPerPage)}
+            </span>
+            <Button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === Math.ceil(transactions.length / itemsPerPage)}
+              className="px-2 py-1 bg-gray-300 rounded-lg"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
