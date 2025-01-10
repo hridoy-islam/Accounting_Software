@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-
 import CompanyNav from '../../components/CompanyNav';
 import AddTransaction from '@/pages/company/companyDetails/transactionPage/components/AddTransaction.jsx';
 import { Button } from '@/components/ui/button';
@@ -60,63 +51,58 @@ const mockTransactions: Transaction[] = [
     transactionMethod: 'Debit Card',
     transactionType: 'outflow',
   },
-  // Add more transactions if needed
 ];
 
 const TransactionPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Set the number of items per page
+  const itemsPerPage = 10;
 
-  // Calculate the index of the first and last transaction for the current page
+  // Pagination logic
   const indexOfLastTransaction = currentPage * itemsPerPage;
   const indexOfFirstTransaction = indexOfLastTransaction - itemsPerPage;
-  
-  // Slice the transactions array to show only the current page's transactions
   const currentTransactions = transactions.slice(indexOfFirstTransaction, indexOfLastTransaction);
 
-  // Change page handler
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className="container mx-auto p-6">
       <CompanyNav />
-
       <h1 className="mb-8 text-2xl font-semibold">Transactions</h1>
-
       <div className="flex justify-end mb-4">
         <AddTransaction />
       </div>
-
       <div className="flex gap-8">
         <div className="flex-grow">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>TCID</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Method</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <table className="w-full border-collapse border border-gray-300">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border border-gray-300 px-4 py-2 text-left">TCID</th>
+                <th className="border border-gray-300 px-4 py-2 text-left">Date</th>
+                <th className="border border-gray-300 px-4 py-2 text-left">Type</th>
+                <th className="border border-gray-300 px-4 py-2 text-left">Amount</th>
+                <th className="border border-gray-300 px-4 py-2 text-left">Category</th>
+                <th className="border border-gray-300 px-4 py-2 text-left">Method</th>
+              </tr>
+            </thead>
+            <tbody>
               {currentTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>{transaction.tcid}</TableCell>
-                  <TableCell>{transaction.transactionDate.toLocaleDateString()}</TableCell>
-                  <TableCell>{transaction.transactionType}</TableCell>
-                  <TableCell>{transaction.transactionAmount}</TableCell>
-                  <TableCell>{transaction.transactionCategory}</TableCell>
-                  <TableCell>{transaction.transactionMethod}</TableCell>
-                </TableRow>
+                <tr key={transaction.id} className="hover:bg-gray-50">
+                  <td className="border border-gray-300 px-4 py-2">{transaction.tcid}</td>
+                  <td className="border border-gray-300 px-4 py-2">
+                    {transaction.transactionDate.toLocaleDateString()}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2">{transaction.transactionType}</td>
+                  <td className="border border-gray-300 px-4 py-2">{transaction.transactionAmount}</td>
+                  <td className="border border-gray-300 px-4 py-2">{transaction.transactionCategory}</td>
+                  <td className="border border-gray-300 px-4 py-2">{transaction.transactionMethod}</td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
+            </tbody>
+          </table>
 
           {/* Pagination Controls */}
           <div className="mt-4 flex justify-center items-center gap-2 py-4">

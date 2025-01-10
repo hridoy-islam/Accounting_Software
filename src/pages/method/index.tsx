@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pen, Plus, Trash } from "lucide-react";
+import { Divide, Pen, Plus, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -13,6 +13,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 
 interface Method {
   id: number;
@@ -74,6 +75,14 @@ export function Method() {
   };
 
   return (
+    <div className='space-y-4 p-4 md:p-8'>
+<Breadcrumbs
+        items={[
+          { title: 'Dashboard', link: '/admin' },
+          { title: 'Method', link: '/methods' }
+        ]}
+      />
+    
     <div className="space-y-6 ">
         <h1 className="text-2xl font-semibold">Methods</h1>
       <div className="flex justify-between items-center">
@@ -193,6 +202,7 @@ export function Method() {
           </form>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }

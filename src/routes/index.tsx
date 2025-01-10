@@ -33,6 +33,7 @@ import ReportPage from '@/pages/company/companyDetails/reportPage';
 import TransactionPage from '@/pages/company/companyDetails/transactionPage';
 import ProfilePage from '@/pages/profile';
 import ResetPassword from '@/pages/resetPassword';
+import StoragePage from '@/pages/company/companyDetails/storagePage';
 
 
 
@@ -78,8 +79,8 @@ export default function AppRouter() {
           element: <ReportPage  />
         },
         {
-          path: 'storages',
-          element: <StorageManagement />
+          path: 'companies/:id/storages',
+          element: <StoragePage  />
         },
         {
           path: 'categories',

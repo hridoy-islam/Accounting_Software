@@ -7,7 +7,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from '@/components/ui/table';
 import { DatePickerRange } from '@/components/ui/DatePickerRange';
 import {
@@ -17,18 +17,25 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import CompanyNav from '../../components/CompanyNav';
 import { saveAs } from 'file-saver';
 import { utils, write } from 'xlsx';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import {
+  PDFDownloadLink,
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet
+} from '@react-pdf/renderer';
 
 interface CompanyData {
-  id: string;
+  id: number;
   name: string;
-  startDate: Date;
-  endDate: Date;
+  email: string;
+  phone: string;
 }
 
 interface ReportData {
@@ -49,6 +56,14 @@ interface ReportData {
   };
 }
 
+const CompanyData: CompanyData[] = [
+  {
+    id: 1,
+    name: 'Mock Company Name',
+    email: 'contact@mockcompany.com',
+    phone: '+123456789'
+  }
+];
 // Mock initial report data
 const mockInitialReportData: ReportData[] = [
   {
@@ -62,12 +77,12 @@ const mockInitialReportData: ReportData[] = [
         children: {
           John: { inflow: 4000, outflow: 0 },
           Sarah: { inflow: 4000, outflow: 0 },
-          Emily: { inflow: 4000, outflow: 0 },
-        },
+          Emily: { inflow: 4000, outflow: 0 }
+        }
       },
       Marketing: { inflow: 0, outflow: 3000 },
-      'Office Supplies': { inflow: 0, outflow: 1000 },
-    },
+      'Office Supplies': { inflow: 0, outflow: 1000 }
+    }
   },
   {
     period: '2025-01-15',
@@ -80,25 +95,29 @@ const mockInitialReportData: ReportData[] = [
         children: {
           John: { inflow: 5000, outflow: 0 },
           Sarah: { inflow: 5000, outflow: 0 },
-          Emily: { inflow: 5000, outflow: 0 },
-        },
+          Emily: { inflow: 5000, outflow: 0 }
+        }
       },
       Marketing: { inflow: 0, outflow: 4000 },
-      'Office Supplies': { inflow: 0, outflow: 1000 },
-    },
-  },
+      'Office Supplies': { inflow: 0, outflow: 1000 }
+    }
+  }
 ];
 
 const ReportPage: React.FC = () => {
   const params = useParams();
   const companyId = params?.id as string;
 
-  const [filterType, setFilterType] = useState<'daily' | 'monthly' | 'yearly' | 'custom'>('monthly');
+  const [filterType, setFilterType] = useState<
+    'daily' | 'monthly' | 'yearly' | 'custom'
+  >('monthly');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  const [reportData, setReportData] = useState<ReportData[]>(mockInitialReportData);
+  const [reportData, setReportData] = useState<ReportData[]>(
+    mockInitialReportData
+  );
   const [showDateRange, setShowDateRange] = useState(false);
-  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
+  const [companyData, setCompanyData] = useState<CompanyData[]>();
   const [isLoading, setIsLoading] = useState(true);
 
   // Pagination state
@@ -147,41 +166,47 @@ const ReportPage: React.FC = () => {
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, 'Report');
     const wbout = write(wb, { bookType: 'csv', type: 'binary' });
-    saveAs(new Blob([s2ab(wbout)], { type: 'application/octet-stream' }), 'report.csv');
+    saveAs(
+      new Blob([s2ab(wbout)], { type: 'application/octet-stream' }),
+      'report.csv'
+    );
   };
 
   // Calculate total pages based on data length and page size
   const totalPages = Math.ceil(reportData.length / pageSize);
 
   // Get the data for the current page
-  const paginatedData = reportData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginatedData = reportData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const styles = StyleSheet.create({
     page: {
-      padding: 20,
+      padding: 20
     },
     title: {
       fontSize: 18,
-      marginBottom: 10,
+      marginBottom: 10
     },
     section: {
-      marginBottom: 10,
+      marginBottom: 10
     },
     tableHeader: {
       flexDirection: 'row',
       fontWeight: 'bold',
       borderBottomWidth: 1,
-      paddingBottom: 4,
+      paddingBottom: 4
     },
     tableRow: {
       flexDirection: 'row',
       borderBottomWidth: 1,
-      paddingVertical: 2,
+      paddingVertical: 2
     },
     cell: {
       flex: 1,
-      textAlign: 'left',
-    },
+      textAlign: 'left'
+    }
   });
 
   const ReportPDF = ({ data }: { data: ReportData[] }) => (
@@ -223,95 +248,145 @@ const ReportPage: React.FC = () => {
     setCurrentPage(page);
   };
 
+  const [showTable, setShowTable] = useState(false);
+
+  const handleGenerateReport = () => {
+    setShowTable(true); // Show the table when the button is clicked
+  };
+
   return (
-    <div className="container flex flex-col justify-center p-6">
+    <div className="container mx-auto p-6">
       <CompanyNav />
 
-      <div className="mb-8 space-y-6 flex items-center max-md:flex-col justify-center md:justify-between">
+      <div className="mb-8  flex flex-col items-center justify-between  md:flex-row">
         <h1 className="text-2xl font-semibold">Financial Reports</h1>
-        <div className="flex space-x-4">
+        <div className="flex gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
-                {filterType.charAt(0).toUpperCase() + filterType.slice(1)} Report
+                {filterType.charAt(0).toUpperCase() + filterType.slice(1)}{' '}
+                Report
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
               <DropdownMenuLabel>Filter Type</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={filterType} onValueChange={handleFilterChange}>
-                <DropdownMenuRadioItem value="daily">Daily</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="monthly">Monthly</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="yearly">Yearly</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="custom">Custom Range</DropdownMenuRadioItem>
+              <DropdownMenuRadioGroup
+                value={filterType}
+                onValueChange={handleFilterChange}
+              >
+                <DropdownMenuRadioItem value="daily">
+                  Daily
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="monthly">
+                  Monthly
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="yearly">
+                  Yearly
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="custom">
+                  Custom Range
+                </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+
           {showDateRange && (
             <DatePickerRange
               onChange={handleDateRangeChange}
               selectedDate={[startDate, endDate]}
             />
           )}
+          <Button variant="theme" onClick={handleGenerateReport} className="">
+            Generate Report
+          </Button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Period</TableHead>
-              <TableHead>Total Inflow</TableHead>
-              <TableHead>Total Outflow</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedData.map((data, index) => (
-              <TableRow key={index}>
-                <TableCell>{data.period}</TableCell>
-                <TableCell>{data.totalInflow}</TableCell>
-                <TableCell>{data.totalOutflow}</TableCell>
-                
-       
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      {/* Table visibility based on state */}
+      {showTable && (
+        <>
+          <div className="mb-8 overflow-x-auto">
+            {companyData && (
+              <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <h2 className="mb-4 text-xl font-semibold text-gray-800">
+                  Company Details
+                </h2>
+                <div className="grid gap-2 text-gray-600">
+                  <p>{companyData?.[0]?.name}</p>
+                  <p>{companyData?.[0]?.email}</p>
+                  <p>{companyData?.[0]?.phone}</p>
 
-      <div className="mt-6 flex justify-between items-center">
-        <div className='flex gap-4'>
+                  <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                    <p className="font-medium">Report Period:</p>
+                    <p>
+                      {startDate?.toLocaleDateString()} -{' '}
+                      {endDate?.toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-       
-          <Button className='hover:bg-[#a78bfa] hover:text-white' onClick={exportToCSV}>Export to CSV</Button>
-          <Button className='hover:bg-[#a78bfa] hover:text-white'>
-
-          <PDFDownloadLink
-            document={<ReportPDF data={reportData} />}
-            fileName="financial_report.pdf"
-            
-            >
-            {({ loading }) => (loading ? "Preparing PDF..." : "Export PDF")}
-          </PDFDownloadLink>
-            </Button>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Period</TableHead>
+                  <TableHead>Total Inflow</TableHead>
+                  <TableHead>Total Outflow</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedData.map((data, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{data.period}</TableCell>
+                    <TableCell>${data.totalInflow.toLocaleString()}</TableCell>
+                    <TableCell>${data.totalOutflow.toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+
+          <div className="mt-6 flex items-center justify-between">
+            <div className="flex gap-4">
+              <Button variant="outline" onClick={exportToCSV}>
+                Export to CSV
+              </Button>
+              <Button variant="outline">
+                <PDFDownloadLink
+                  document={<ReportPDF data={reportData} />}
+                  fileName="financial_report.pdf"
+                >
+                  {({ loading }) =>
+                    loading ? 'Preparing PDF...' : 'Export PDF'
+                  }
+                </PDFDownloadLink>
+              </Button>
+            </div>
+
+            {/* <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <span className="text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div> */}
+          </div>
+        </>
+      )}
     </div>
   );
 };

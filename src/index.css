@@ -32,7 +32,8 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --supperagent: 180 84% 30%;
-    --supperagent-foreground: 0 0% 98%; /* Optional, adjust as needed */
+    --supperagent-foreground: 0 0% 98%;
+    --theme:255.14, 91.74%, 76.27% /* Optional, adjust as needed */
   }
 
   .dark {
