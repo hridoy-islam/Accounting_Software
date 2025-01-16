@@ -98,12 +98,12 @@ const CompanyDashboard: React.FC = () => {
             
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
+                <TableHead className=' font-bold'>Date</TableHead>
                 {showInflow && (
-                  <TableHead className="text-right">Inflow</TableHead>
+                  <TableHead className=' font-bold'>Inflow</TableHead>
                 )}
                 {showOutflow && (
-                  <TableHead className="text-right">Outflow</TableHead>
+                  <TableHead className=' font-bold' >Outflow</TableHead>
                 )}
               </TableRow>
             </TableHeader>
@@ -114,12 +114,12 @@ const CompanyDashboard: React.FC = () => {
                     {new Date(transaction.date).toLocaleDateString()}
                   </TableCell>
                   {showInflow && (
-                    <TableCell className="text-right">
+                    <TableCell >
                       {transaction.inflow}
                     </TableCell>
                   )}
                   {showOutflow && (
-                    <TableCell className="text-right">
+                    <TableCell >
                       {transaction.outflow}
                     </TableCell>
                   )}

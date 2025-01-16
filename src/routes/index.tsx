@@ -7,21 +7,13 @@ import { Suspense, lazy } from 'react';
 import { Navigate, Outlet, useRoutes } from 'react-router-dom';
 // import NotificationsPage from '@/pages/notification';
 import Otp from '@/pages/auth/otp';
-import NewPassword from '@/pages/new-password';
+
 import AdminLayout from '@/components/layout/admin-layout';
 // import StudentsPage from '@/pages/students';
-import { StudentQuiz } from '@/pages/students/quiz';
-import InstitutionsPage from '@/pages/institutions';
-import CoursesPage from '@/pages/courses';
-import TermsPage from '@/pages/terms';
-import AcademicYearPage from '@/pages/academic-year';
-import StaffPage from '@/pages/staff';
-import AgentsPage from '@/pages/agent';
-import CourseRelationPage from '@/pages/course-relation';
-// import StudentViewPage from '@/pages/students/view';
+
 
 import { Company } from '@/pages/company/index';
-import { StorageManagement } from '@/components/shared/StorageManagement';
+
 
 import { Dashboard } from '@/pages/dashboard/index';
 import { Method } from '@/pages/method';
@@ -34,6 +26,7 @@ import TransactionPage from '@/pages/company/companyDetails/transactionPage';
 import ProfilePage from '@/pages/profile';
 import ResetPassword from '@/pages/resetPassword';
 import StoragePage from '@/pages/company/companyDetails/storagePage';
+import CompanyUser from '@/pages/company/companyDetails/companyUser';
 
 
 
@@ -81,6 +74,10 @@ export default function AppRouter() {
         {
           path: 'companies/:id/storages',
           element: <StoragePage  />
+        },
+        {
+          path: 'companies/:id/users',
+          element: <CompanyUser  />
         },
         {
           path: 'categories',

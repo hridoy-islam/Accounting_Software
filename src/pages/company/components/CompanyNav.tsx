@@ -43,6 +43,14 @@ const CompanyNav = () => {
             Storage
           </button>
         </li>
+        <li>
+          <button
+            onClick={() => handleNavigation(`/admin/companies/${id}/users`)}
+            className="text-blue-500 hover:underline"
+          >
+            User
+          </button>
+        </li>
       </ul>
     </nav>
   );

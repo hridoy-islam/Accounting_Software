@@ -117,9 +117,10 @@ export function Method() {
           <TableBody>
             {paginatedMethods.map((method) => (
               <TableRow key={method.id}>
-                <TableCell>{method.id}</TableCell>
-                <TableCell>{method.name}</TableCell>
-                <TableCell className="text-center space-x-2">
+                
+                <TableCell className="text-center">{method.id}</TableCell>
+                <TableCell className="text-center">{method.name}</TableCell>
+                <TableCell className="text-center space-x-4 ">
                   <Button
                     variant="ghost"
                     className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80 border-none"

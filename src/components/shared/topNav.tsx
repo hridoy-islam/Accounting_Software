@@ -78,7 +78,7 @@ export function TopNavigation() {
               className="flex items-center justify-center py-2 hover:bg-[#a78bfa] md:justify-start md:py-3"
             >
               <Link to="users">
-                <Users className="mr-2 h-4 w-4" /> User
+                <Users className="mr-2 h-4 w-4" /> All Users
               </Link>
             </Button>
             <Button

@@ -11,39 +11,59 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import placeholder from '@/assets/imges/home/logos/placeholder.jpg';
 
-interface Company {
-  id: number;
+export interface TCompany {
+  id: string;
+  companyName: string;
   email: string;
-  name: string;
   phone: string;
-  logo: string;
+  companyAddress: string;
+  assignUser?: string[];
+  logo?: string;
 }
 
 export function Company() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]); // State for filtered companies
+  const [companies, setCompanies] = useState<TCompany[]>([]);
+  const [filteredCompanies, setFilteredCompanies] = useState<TCompany[]>([]); // State for filtered companies
   const [searchQuery, setSearchQuery] = useState(''); // State for search query
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [companyToEdit, setCompanyToEdit] = useState<Company | null>(null);
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<Company>();
+  const [companyToEdit, setCompanyToEdit] = useState<TCompany | null>(null);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors }
+  } = useForm<TCompany>();
   const navigate = useNavigate(); // Initialize the navigate hook
 
   useEffect(() => {
-    // Simulating fetch from API
     const fetchedCompanies = [
-      { id: 1, email: 'company1@example.com', name: 'Company 1', phone: '1234567890', logo: '' },
-      { id: 2, email: 'company2@example.com', name: 'Company 2', phone: '0987654321', logo: '' },
+      {
+        id: '1',
+        email: 'company1@example.com',
+        companyName: 'Company 1',
+        phone: '1234567890',
+        companyAddress: 'ABC',
+        logo: ''
+      },
+      {
+        id: '2',
+        email: 'company2@example.com',
+        companyName: 'Company 2',
+        phone: '0987654321',
+        companyAddress: 'XYZ',
+        logo: ''
+      }
     ];
     setCompanies(fetchedCompanies);
     setFilteredCompanies(fetchedCompanies);
@@ -51,9 +71,10 @@ export function Company() {
 
   useEffect(() => {
     // Filter companies based on the search query
-    const results = companies.filter((company) =>
-      company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      company.email.toLowerCase().includes(searchQuery.toLowerCase())
+    const results = companies.filter(
+      (company) =>
+        company.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        company.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredCompanies(results);
   }, [searchQuery, companies]);
@@ -65,11 +86,13 @@ export function Company() {
     if (companyToEdit) {
       setCompanies((prevCompanies) =>
         prevCompanies.map((company) =>
-          company.id === companyToEdit.id ? { ...companyToEdit, ...data, logo: logoUrl } : company
+          company.id === companyToEdit.id
+            ? { ...companyToEdit, ...data, logo: logoUrl }
+            : company
         )
       );
     } else {
-      const newCompany = { ...data, id: Date.now(), logo: logoUrl };
+      const newCompany = { ...data, logo: logoUrl };
       setCompanies((prevCompanies) => [...prevCompanies, newCompany]);
     }
 
@@ -78,11 +101,11 @@ export function Company() {
     setCompanyToEdit(null);
   };
 
-  const deleteCompany = (id: number) => {
+  const deleteCompany = (id: string) => {
     setCompanies(companies.filter((company) => company.id !== id));
   };
 
-  const editCompany = (company: Company) => {
+  const editCompany = (company: TCompany) => {
     setIsDialogOpen(true);
     setCompanyToEdit(company);
     reset(company);
@@ -130,40 +153,41 @@ export function Company() {
         <div className="rounded-md bg-white p-4 shadow-2xl">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Logo</TableHead>
+              <TableRow className="text-center">
+                <TableHead className="text-center">Logo</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>View Company</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredCompanies.map((company) => (
                 <TableRow key={company.id}>
-                  <TableCell>{company.id}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <img
                       src={company.logo || placeholder}
-                      alt={company.name}
-                      className="w-10 h-10 object-cover"
+                      alt={company.companyName}
+                      className="mx-auto h-10 w-10 object-cover"
                     />
                   </TableCell>
-                  <TableCell>{company.name}</TableCell>
-                  <TableCell>{company.email}</TableCell>
-                  <TableCell>{company.phone}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
+                    {company.companyName}
+                  </TableCell>
+                  <TableCell className="text-center">{company.email}</TableCell>
+                  <TableCell className="text-center">{company.phone}</TableCell>
+                  <TableCell className="text-center align-middle">
                     <Button
                       variant="theme"
                       onClick={() => navigate(`${company.id}`)} // Navigate to company details page
-                      className="flex items-center"
+                      className="inline-block"
                     >
                       View
                     </Button>
                   </TableCell>
-                  <TableCell className="text-right space-x-2">
+
+                  <TableCell className="space-x-4 text-center">
                     <Button
                       variant="ghost"
                       className="border-none bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
@@ -178,7 +202,7 @@ export function Company() {
                       size="icon"
                       onClick={() => deleteCompany(company.id)}
                     >
-                      <Trash className="w-4 h-4" />
+                      <Trash className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -188,19 +212,30 @@ export function Company() {
         </div>
 
         {/* Dialog for adding/editing a company */}
-        <Dialog open={isDialogOpen} onOpenChange={(open) => setIsDialogOpen(open)}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => setIsDialogOpen(open)}
+        >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{companyToEdit ? 'Edit Company' : 'Add New Company'}</DialogTitle>
+              <DialogTitle>
+                {companyToEdit ? 'Edit Company' : 'Add New Company'}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
                 <Label htmlFor="name">Company Name</Label>
                 <Input
                   id="name"
-                  {...register('name', { required: 'Company Name is required' })}
+                  {...register('companyName', {
+                    required: 'Company Name is required'
+                  })}
                 />
-                {errors.name && <span className="text-red-500 text-sm">{errors.name.message}</span>}
+                {errors.companyName && (
+                  <span className="text-sm text-red-500">
+                    {errors.companyName.message}
+                  </span>
+                )}
               </div>
               <div>
                 <Label htmlFor="email">Company Email</Label>
@@ -209,16 +244,40 @@ export function Company() {
                   type="email"
                   {...register('email', { required: 'Email is required' })}
                 />
-                {errors.email && <span className="text-red-500 text-sm">{errors.email.message}</span>}
+                {errors.email && (
+                  <span className="text-sm text-red-500">
+                    {errors.email.message}
+                  </span>
+                )}
               </div>
               <div>
                 <Label htmlFor="phone">Company Phone</Label>
                 <Input
                   id="phone"
                   type="tel"
-                  {...register('phone', { required: 'Phone number is required' })}
+                  {...register('phone', {
+                    required: 'Phone number is required'
+                  })}
                 />
-                {errors.phone && <span className="text-red-500 text-sm">{errors.phone.message}</span>}
+                {errors.phone && (
+                  <span className="text-sm text-red-500">
+                    {errors.phone.message}
+                  </span>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="address">Company Address</Label>
+                <Input
+                  id="address"
+                  {...register('companyAddress', {
+                    required: 'Address is required'
+                  })}
+                />
+                {errors.companyAddress && (
+                  <span className="text-sm text-red-500">
+                    {errors.companyAddress.message}
+                  </span>
+                )}
               </div>
               <div>
                 <Label htmlFor="logo">Company Logo</Label>
@@ -228,8 +287,13 @@ export function Company() {
                   accept="image/*"
                   {...register('logo', { required: 'Logo is required' })}
                 />
-                {errors.logo && <span className="text-red-500 text-sm">{errors.logo.message}</span>}
+                {errors.logo && (
+                  <span className="text-sm text-red-500">
+                    {errors.logo.message}
+                  </span>
+                )}
               </div>
+
               <Button
                 type="submit"
                 variant="default"

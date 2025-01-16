@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import CompanyNav from '../../components/CompanyNav';
+import { Pen, Trash } from 'lucide-react';
 
 interface Storage {
   id: number;
@@ -13,6 +14,7 @@ interface Storage {
   logo?: string;
   status: boolean;
   auditStatus: boolean;
+  createdBy?: string;
 }
 
 const mockStorages: Storage[] = [
@@ -73,12 +75,23 @@ const StoragePage: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    const newStorage = {
-      id: storages.length + 1, // Simulate auto-increment ID
-      ...formData,
-    } as Storage;
-
-    setStorages([...storages, newStorage]);
+    if (formData.id) {
+      // If formData.id exists, update the existing storage entry
+      setStorages(
+        storages.map((storage) =>
+          storage.id === formData.id ? { ...storage, ...formData } : storage
+        )
+      );
+    } else {
+      // If no id, it's a new entry, so create a new storage
+      const newStorage = {
+        id: storages.length + 1, // Simulate auto-increment ID
+        ...formData,
+      } as Storage;
+      setStorages([...storages, newStorage]);
+    }
+  
+    // Reset form and close dialog
     setFormData({
       storageName: '',
       openingBalance: 0,
@@ -88,6 +101,16 @@ const StoragePage: React.FC = () => {
       auditStatus: true,
     });
     setIsDialogOpen(false);
+  };
+  
+
+  const handleDelete = (id: number) => {
+    setStorages(storages.filter(storage => storage.id !== id));
+  };
+
+  const handleEdit = (storage: Storage) => {
+    setFormData(storage);
+    setIsDialogOpen(true);
   };
 
   return (
@@ -103,27 +126,56 @@ const StoragePage: React.FC = () => {
         <table className="w-full border-collapse border border-gray-300 text-left">
           <thead>
             <tr>
-              <th className="border border-gray-300 px-4 py-2">ID</th>
-              <th className="border border-gray-300 px-4 py-2">Name</th>
-              <th className="border border-gray-300 px-4 py-2">Opening Balance</th>
-              <th className="border border-gray-300 px-4 py-2">Opening Date</th>
-              <th className="border border-gray-300 px-4 py-2">Logo</th>
-              <th className="border border-gray-300 px-4 py-2">Status</th>
-              <th className="border border-gray-300 px-4 py-2">Audit Status</th>
+              <th className="border border-gray-300 px-4 py-2 text-center">Name</th>
+              <th className="border border-gray-300 px-4 py-2 text-center">Opening Balance</th>
+              <th className="border border-gray-300 px-4 py-2 text-center">Opening Date</th>
+              <th className="border border-gray-300 px-4 py-2 text-center">Logo</th>
+              <th className="border border-gray-300 px-4 py-2 text-center">Status</th>
+              <th className="border border-gray-300 px-4 py-2 text-center">Audit Status</th>
+              <th className="border border-gray-300 px-4 py-2 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {storages.map((storage) => (
               <tr key={storage.id}>
-                <td className="border border-gray-300 px-4 py-2">{storage.id}</td>
-                <td className="border border-gray-300 px-4 py-2">{storage.storageName}</td>
-                <td className="border border-gray-300 px-4 py-2">{storage.openingBalance}</td>
-                <td className="border border-gray-300 px-4 py-2">{storage.openingDate}</td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-4 py-2 text-center">{storage.storageName}</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">{storage.openingBalance}</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">{storage.openingDate}</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
                   {storage.logo ? <img src={storage.logo} alt="Logo" className="h-8 w-8" /> : 'N/A'}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">{storage.status ? 'Active' : 'Inactive'}</td>
-                <td className="border border-gray-300 px-4 py-2">{storage.auditStatus ? 'Enabled' : 'Disabled'}</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  <Switch
+                    checked={storage.status}
+                    onCheckedChange={(checked) =>
+                      setStorages(
+                        storages.map((s) =>
+                          s.id === storage.id ? { ...s, status: checked } : s
+                        )
+                      )
+                    }
+                  />
+                </td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  <Switch
+                    checked={storage.auditStatus}
+                    onCheckedChange={(checked) =>
+                      setStorages(
+                        storages.map((s) =>
+                          s.id === storage.id ? { ...s, auditStatus: checked } : s
+                        )
+                      )
+                    }
+                  />
+                </td>
+                <td className="border border-gray-300 px-4 py-2 space-x-4 text-center">
+                  <Button onClick={() => handleEdit(storage)}  variant="ghost"
+                      className="border-none bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
+                      size="icon"><Pen className="h-4 w-4" /></Button>
+                  <Button onClick={() => handleDelete(storage.id)} variant="ghost"
+                      className="border-none bg-red-500 text-white hover:bg-red-500/90"
+                      size="icon"><Trash className="h-4 w-4" /></Button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -134,7 +186,7 @@ const StoragePage: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Storage</DialogTitle>
+            <DialogTitle>{formData.id ? 'Edit' : 'Add'} Storage</DialogTitle>
           </DialogHeader>
           <form className="space-y-4">
             <label>
@@ -197,7 +249,7 @@ const StoragePage: React.FC = () => {
             </div>
           </form>
           <DialogFooter>
-            <Button onClick={handleSubmit}>Add Storage</Button>
+            <Button onClick={handleSubmit}>{formData.id ? 'Update' : 'Add'} Storage</Button>
             <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>

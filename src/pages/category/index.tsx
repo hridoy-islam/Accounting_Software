@@ -23,10 +23,10 @@ import {
 import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
   type: string;
-  parentCategoryId: number | null;
+  parentCategoryId: string | null;
 }
 
 export function CategoryManagement() {
@@ -35,21 +35,29 @@ export function CategoryManagement() {
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const { register, handleSubmit, reset } = useForm<Category>();
+  const { register, handleSubmit, reset, watch } = useForm<Category>();
+  const [filterType, setFilterType] = useState<string | null>(null);
+
+const filteredCategories = categories.filter((category) => {
+  const matchesName = category.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const matchesType = filterType ? category.type === filterType : true;
+  return matchesName && matchesType;
+});
+
 
   const categoriesPerPage = 5;
 
   const initialCategories: Category[] = [
-    { id: 1, name: 'Salary', type: 'inflow', parentCategoryId: null },
-    { id: 2, name: 'Category 2', type: 'outflow', parentCategoryId: 3 },
-    { id: 3, name: 'Category 3', type: 'inflow', parentCategoryId: 1 },
-    { id: 4, name: 'Category 4', type: 'outflow', parentCategoryId: 1 },
-    { id: 5, name: 'Category 5', type: 'inflow', parentCategoryId: 3 },
-    { id: 6, name: 'Category 6', type: 'outflow', parentCategoryId: 2 },
-    { id: 7, name: 'Category 7', type: 'inflow', parentCategoryId: 3 },
-    { id: 8, name: 'Category 8', type: 'outflow', parentCategoryId: 2 },
-    { id: 9, name: 'Category 9', type: 'inflow', parentCategoryId: 5 },
-    { id: 10, name: 'Category 10', type: 'outflow', parentCategoryId: 4 }
+    { id: '1', name: 'Salary', type: 'inflow', parentCategoryId: null },
+    { id: '2', name: 'Category 2', type: 'outflow', parentCategoryId: '3' },
+    { id: '3', name: 'Category 3', type: 'inflow', parentCategoryId: '1' },
+    { id: '4', name: 'Category 4', type: 'outflow', parentCategoryId: '1' },
+    { id: '5', name: 'Category 5', type: 'inflow', parentCategoryId: '3' },
+    { id: '6', name: 'Category 6', type: 'outflow', parentCategoryId: '2' },
+    { id: '7', name: 'Category 7', type: 'inflow', parentCategoryId: '3' },
+    { id: '8', name: 'Category 8', type: 'outflow', parentCategoryId: '2' },
+    { id: '9', name: 'Category 9', type: 'inflow', parentCategoryId: '5' },
+    { id: '10', name: 'Category 10', type: 'outflow', parentCategoryId: '4' }
   ];
 
   useEffect(() => {
@@ -66,7 +74,7 @@ export function CategoryManagement() {
         )
       );
     } else {
-      const newCategory = { ...data, id: Date.now() };
+      const newCategory = { ...data, id: Date.now().toString() };
       setCategories([...categories, newCategory]);
     }
     reset();
@@ -74,7 +82,7 @@ export function CategoryManagement() {
     setCategoryToEdit(null);
   };
 
-  const deleteCategory = (id: number) => {
+  const deleteCategory = (id: string) => {
     setCategories(categories.filter((category) => category.id !== id));
   };
 
@@ -84,9 +92,9 @@ export function CategoryManagement() {
     reset(category);
   };
 
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // const filteredCategories = categories.filter((category) =>
+  //   category.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // );
 
   const paginatedCategories = filteredCategories.slice(
     (currentPage - 1) * categoriesPerPage,
@@ -101,7 +109,7 @@ export function CategoryManagement() {
     } else if (currentPage > totalPages) {
       setCurrentPage(totalPages);
     }
-  }, [filteredCategories, totalPages]);
+  }, [filteredCategories, totalPages, currentPage]);
 
   return (
     <div className="space-y-4 p-4 md:p-8">
@@ -123,16 +131,29 @@ export function CategoryManagement() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="max-w-md"
             />
+
+            <div className='flex gap-4 '>
+            <select
+  value={filterType || ''}
+  onChange={(e) => setFilterType(e.target.value || null)}
+  className="max-w-md bg-white p-2 bg-transparent rounded-lg border border-gray-400"
+>
+  <option value="">All Types</option>
+  <option value="inflow">Inflow</option>
+  <option value="outflow">Outflow</option>
+</select>
+
             <Button
               className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
               onClick={() => {
                 setCategoryToEdit(null);
                 setIsDialogOpen(true);
               }}
-            >
+              >
               <Plus className="mr-2 h-4 w-4" />
               New Category
             </Button>
+              </div>
           </div>
         </div>
 
@@ -144,17 +165,19 @@ export function CategoryManagement() {
                 <TableHead>Category Name</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Parent Category ID</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedCategories.map((category) => (
                 <TableRow key={category.id}>
-                  <TableCell>{category.id}</TableCell>
-                  <TableCell>{category.name}</TableCell>
-                  <TableCell>{category.type}</TableCell>
-                  <TableCell>{category.parentCategoryId || 'None'}</TableCell>
-                  <TableCell className="space-x-2 text-right">
+                  <TableCell className="text-center">{category.id}</TableCell>
+                  <TableCell className="text-center">{category.name}</TableCell>
+                  <TableCell className="text-center">{category.type}</TableCell>
+                  <TableCell className="text-center">
+        {categories.find((cat) => cat.id === category.parentCategoryId)?.name || 'None'}
+      </TableCell>
+                  <TableCell className="space-x-4 text-center">
                     <Button
                       variant="ghost"
                       className="border-none bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
@@ -209,32 +232,52 @@ export function CategoryManagement() {
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Category Name</Label>
-                <Input id="name" {...register('name', { required: true })} />
-              </div>
-              <div>
+              <div className='flex items-start flex-col gap-2 '>
                 <Label htmlFor="type">Category Type</Label>
                 <select
                   id="type"
                   {...register('type', { required: true })}
-                  className="flex h-9 w-3/7 rounded-md border border-gray-300 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-1/2 p-2 bg-transparent rounded-lg border border-gray-400"
                 >
                   <option value="" disabled selected>
-                Select category type
-              </option>
+                    Select category type
+                  </option>
                   <option value="inflow">Inflow</option>
                   <option value="outflow">Outflow</option>
                 </select>
               </div>
+
               <div>
-                <Label htmlFor="parentCategoryId">Parent Category ID</Label>
+                <Label htmlFor="name">Category Name</Label>
                 <Input
-                  id="parentCategoryId"
-                  type="number"
-                  {...register('parentCategoryId')}
+                  id="name"
+                  {...register('name', { required: true })}
+                  placeholder="Enter category name"
                 />
               </div>
+
+              <div className='flex items-start flex-col gap-2 '>
+                <Label htmlFor="parentCategoryId">Parent Category</Label>
+                <select
+                  id="parentCategoryId"
+                  {...register('parentCategoryId')}
+                   className="w-1/2 bg-transparent p-2 rounded-lg border border-gray-400"
+                >
+                  <option value="">No Parent</option>
+                  {categories
+                    .filter(
+                      (cat) =>
+                        cat.type === watch('type') &&
+                        cat.id !== categoryToEdit?.id
+                    )
+                    .map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
               <Button
                 type="submit"
                 className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
