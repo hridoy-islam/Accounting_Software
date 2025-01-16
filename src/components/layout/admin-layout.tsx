@@ -13,8 +13,7 @@ export default function AdminLayout({
       <AutoLogout inactivityLimit={30 * 60 * 1000} />
       {/* <TopNav /> */}
       <TopNavigation />
-
-      
+      {children}
       <Toaster />
     </div>
   )

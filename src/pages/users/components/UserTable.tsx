@@ -17,8 +17,10 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
+import axiosInstance from '@/lib/axios'
+import { toast } from '@/components/ui/use-toast';
+import { useSelector } from 'react-redux';
 
 export interface TCompany {
   id: string;
@@ -29,25 +31,6 @@ export interface TCompany {
   assignUser?: string[];
   logo?: string;
 }
-
-const companies: TCompany[] = [
-  {
-    id: '1',
-    email: 'company1@example.com',
-    companyName: 'Company 1',
-    phone: '1234567890',
-    companyAddress: 'ABC',
-    logo: ''
-  },
-  {
-    id: '2',
-    email: 'company2@example.com',
-    companyName: 'Company 2',
-    phone: '0987654321',
-    companyAddress: 'XYZ',
-    logo: ''
-  }
-];
 
 interface TUser {
   id: string;
@@ -64,60 +47,20 @@ interface TUser {
   createdBy?: string;
   otp?: string;
   otpExpiry?: Date | null;
-  companyId?: string ;
+  companyId?: string;
 }
 
 export function UserTable() {
-  const [users, setUsers] = useState<TUser[]>([
-    {
-      createdBy: 'admin',
-      otp: '',
-      otpExpiry: null,
-      id: '673b24cdcd2222fd626678c5',
-      name: 'Kishour Zadid',
-      email: 'kishour@outlook.com',
-      role: 'user',
-      status: 'active',
-      isDeleted: false,
-      authroized: false,
-      phone: '0987654321',
-      password: 'password456',
-      companyId: '1'
-    }
-  ]);
+  const user = useSelector((state: any) => state.auth.user); // Get user from Redux state
+  const [users, setUsers] = useState<any>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<TUser | null>(null);
-  const [currentPage, setCurrentPage] = useState('1');
-  const itemsPerPage = 5;
+  const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
+   
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phone.includes(searchTerm)
-  );
-
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const paginatedUsers = filteredUsers.slice(
-    (parseInt(currentPage, 10) - 1) * itemsPerPage,
-    parseInt(currentPage, 10) * itemsPerPage
-  );
-
-  const { register, handleSubmit, reset, control } = useForm<TUser>({
-    defaultValues: editingUser || {
-      name: '',
-      email: '',
-      phone: '',
-      password: '',
-      role: 'user',
-      status: 'active',
-      isDeleted: false,
-      authroized: false,
-      companyId: '' // Set default value for companyId
-    }
-  });
+  const { register, handleSubmit, reset } = useForm();
 
   useEffect(() => {
     if (editingUser) {
@@ -125,31 +68,49 @@ export function UserTable() {
     }
   }, [editingUser, reset]);
 
-  const onSubmit = (data: TUser) => {
-    if (editingUser) {
-      setUsers(
-        users.map((user) => (user.id === editingUser.id ? { ...user, ...data } : user))
-      );
-      setEditingUser(null);
-    } else {
-      const newId = (Math.max(...users.map((u) => parseInt(u.id, 10)), 0) + 1).toString();
-      const { id, ...restData } = data;
-      setUsers([...users, { id: newId, ...restData }]);
-    }
-    setDialogOpen(false);
-    reset();
-  };
+  
 
   const handleDelete = (id: string) => {
     setUsers(users.filter((user) => user.id !== id));
   };
 
-  const goToPage = (page: string) => {
-    const pageNumber = parseInt(page, 10);
-    if (pageNumber >= 1 && pageNumber <= totalPages) {
-      setCurrentPage(pageNumber.toString());
+ 
+
+  const fetchData = async () => {
+    try {
+      if (initialLoading) setInitialLoading(true);
+      const response = await axiosInstance.get(`/users?createdBy=${user._id}`);
+      setUsers(response.data.data.result);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setInitialLoading(false); // Disable initial loading after the first fetch
     }
   };
+
+  useEffect(() => {
+    fetchData()
+  }, []);
+
+
+  const onSubmit = async (data: any) => {
+    if (editingUser) {
+      await axiosInstance.patch(`/users/${editingUser?._id}`, data);
+      toast({ title: "Record Updated successfully", className: "bg-background border-none text-white", });
+      fetchData();
+      setEditingUser(null)
+    } else {
+      const formattedData = {...data, createdBy: user._id}
+      await axiosInstance.post('/auth/signup', formattedData)
+      fetchData();
+    }
+
+    reset();
+    setDialogOpen(false);
+    setEditingUser(null);
+  };
+
+
 
   return (
     <div className="space-y-6">
@@ -181,19 +142,16 @@ export function UserTable() {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
-              <TableHead>Company</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedUsers.map((user) => (
+            {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="text-center">{user.name}</TableCell>
                 <TableCell className="text-center">{user.email}</TableCell>
                 <TableCell className="text-center">{user.phone}</TableCell>
-                <TableCell className="text-center">
-                  {user.companyId ? companies.find((company) => company.id === user.companyId)?.companyName : '-'}
-                </TableCell>
+
                 <TableCell className="space-x-4 text-center">
                   <Button
                     variant="ghost"
@@ -206,36 +164,19 @@ export function UserTable() {
                   >
                     <Pen className="h-4 w-4" />
                   </Button>
-                  <Button
+                  {/* <Button
                     variant="ghost"
                     className="border-none bg-red-500 text-white hover:bg-red-500/90"
                     size="icon"
                     onClick={() => handleDelete(user.id)}
                   >
                     <Trash className="h-4 w-4" />
-                  </Button>
+                  </Button> */}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </div>
-      <div className="mt-4 flex flex-col items-center justify-center gap-4 space-y-2 sm:flex-row sm:space-y-0">
-        <Button
-          disabled={parseInt(currentPage, 10) === 1}
-          onClick={() => goToPage((parseInt(currentPage, 10) - 1).toString())}
-        >
-          Previous
-        </Button>
-        <div className="flex items-center gap-2">
-          Page {currentPage} of {totalPages}
-        </div>
-        <Button
-          disabled={parseInt(currentPage, 10) === totalPages}
-          onClick={() => goToPage((parseInt(currentPage, 10) + 1).toString())}
-        >
-          Next
-        </Button>
       </div>
 
       <Dialog
@@ -264,30 +205,10 @@ export function UserTable() {
                 <Input id="phone" {...register('phone', { required: 'This field is required' })} />
               </div>
               <div>
-                <Label htmlFor="companyId">Company</Label>
-                <Controller
-  name="companyId"
-  control={control}
-  render={({ field }) => (
-    <Select {...field} value={field.value } onValueChange={field.onChange}>
-      <SelectTrigger>
-        <span>
-          {companies.find((company) => company.id === field.value)?.companyName || 'Select a company'}
-        </span>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="">None</SelectItem> {/* Use null for "None" option */}
-        {companies.map((company) => (
-          <SelectItem key={company.id} value={company.id}>
-            {company.companyName}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )}
-/>
-
+                <Label htmlFor="phone">Password</Label>
+                <Input id="phone" {...register('password', { required: 'This field is required' })} />
               </div>
+
             </div>
             <Button type="submit" className="w-full">Save</Button>
           </form>

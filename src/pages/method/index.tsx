@@ -109,7 +109,7 @@ export function Method() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
+              
               <TableHead>Method Name</TableHead>
               <TableHead className="w-32 text-center">Actions</TableHead>
             </TableRow>
@@ -118,8 +118,8 @@ export function Method() {
             {paginatedMethods.map((method) => (
               <TableRow key={method.id}>
                 
-                <TableCell className="text-center">{method.id}</TableCell>
-                <TableCell className="text-center">{method.name}</TableCell>
+                
+                <TableCell>{method.name}</TableCell>
                 <TableCell className="text-center space-x-4 ">
                   <Button
                     variant="ghost"

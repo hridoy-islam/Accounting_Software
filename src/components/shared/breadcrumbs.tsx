@@ -8,6 +8,7 @@ import {
   BreadcrumbSeparator
 } from '@/components/ui/breadcrumb';
 import { Fragment } from 'react';
+import { Link } from 'react-router-dom';
 
 type BreadcrumbItemProps = {
   title: string;
@@ -22,7 +23,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItemProps[] }) {
           <Fragment key={item.title}>
             {index !== items.length - 1 && (
               <BreadcrumbItem>
-                <BreadcrumbLink href={item.link}>{item.title}</BreadcrumbLink>
+                <Link to={item.link}>{item.title}</Link>
               </BreadcrumbItem>
             )}
             {index < items.length - 1 && (

@@ -1,38 +1,36 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import placeholder from '@/assets/imges/home/logos/placeholder.jpg';
-
+import axiosInstance from '@/lib/axios'
+import { useSelector } from 'react-redux';
 interface Company {
-  id: number;
-  name: string;
+  _id: number;
+  companyName: string;
   logo: string;
 }
 
 export function Dashboard() {
+  const user = useSelector((state: any) => state.auth.user); // Get user from Redux state
   const [companies, setCompanies] = useState<Company[]>([]);
-  const navigate = useNavigate();
+  const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
 
-  useEffect(() => {
-    // Simulating API call to fetch companies
-    const fetchCompanies = async () => {
-      // In a real application, this would be an API call
-      const response = await new Promise<Company[]>((resolve) =>
-        setTimeout(
-          () =>
-            resolve([
-              { id: 1, name: 'Company 1', logo: '' },
-              { id: 2, name: 'Company 2', logo: '' },
-              { id: 3, name: 'Company 3', logo: '' }
-            ]),
-          1000
-        )
-      );
-      setCompanies(response);
+  const fetchData = async () => {
+      try {
+        if (initialLoading) setInitialLoading(true);
+        const response = await axiosInstance.get(`/companies?createdBy=${user._id}`);
+        setCompanies(response.data.data.result);
+      } catch (error) {
+        console.error("Error fetching institutions:", error);
+      } finally {
+        setInitialLoading(false); // Disable initial loading after the first fetch
+      }
     };
 
-    fetchCompanies();
-  }, []);
+
+  useEffect(()=> {
+    fetchData();
+  }, [])
 
   return (
     <div className="space-y-8">
@@ -76,22 +74,23 @@ export function Dashboard() {
           <CardTitle>Registered Companies</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 justify-items-center gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-6">
             {companies.map((company) => (
+              <Link to={`companies/${company._id}`}>
               <Card
                 key={company.id}
                 className="w-auto cursor-pointer transition-shadow hover:shadow-lg"
-                onClick={() => navigate(`companies/${company.id}`)}
               >
                 <CardContent className="p-4">
                   <img
                     src={company.logo || placeholder}
-                    alt={`${company.name} logo`}
+                    alt={`${company.companyName} logo`}
                     className="mb-2 h-full w-full object-cover"
                   />
-                  <h3 className="font-bold">{company.name}</h3>
+                  <h3 className="font-bold">{company.companyName}</h3>
                 </CardContent>
               </Card>
+              </Link>
             ))}
           </div>
         </CardContent>

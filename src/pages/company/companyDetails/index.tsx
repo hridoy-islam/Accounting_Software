@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import CompanyNav from '../components/CompanyNav';
-
+import axiosInstance from '@/lib/axios'
 
 type Checked = DropdownMenuCheckboxItemProps['checked'];
 
@@ -32,13 +32,30 @@ interface Transaction {
 }
 
 const CompanyDashboard: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [startDate, setStartDate] = useState<Date>(() => new Date());
   const [endDate, setEndDate] = useState<Date>(() => new Date());
   const [showInflow, setShowInflow] = useState<Checked>(true);
   const [showOutflow, setShowOutflow] = useState<Checked>(true);
+  const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
+  const [companyData, setCompanyData] = useState<any>();
+
+
+  const fetchData = async () => {
+      try {
+        if (initialLoading) setInitialLoading(true);
+        const response = await axiosInstance.get(`/companies/${id}`);
+        setCompanyData(response.data.data);
+      } catch (error) {
+        console.error("Error fetching company single data:", error);
+      } finally {
+        setInitialLoading(false); // Disable initial loading after the first fetch
+      }
+    };
+
+
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -47,7 +64,7 @@ const CompanyDashboard: React.FC = () => {
       setTransactions(data);
       setFilteredTransactions(data);
     };
-
+    fetchData();
     fetchTransactions();
   }, [id]);
 
@@ -68,7 +85,7 @@ const CompanyDashboard: React.FC = () => {
         <div className="relative rounded-lg bg-white p-6 shadow-md lg:col-span-2">
           {/* Header with flex container for alignment */}
           <div className="mb-8 flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">ABC Company <br /> <span className='text-lg font-semibold'>Recent Transactions</span></h1>
+            <h1 className="text-2xl font-semibold">{companyData?.companyName} <br /> <span className='text-lg font-semibold'>Recent Transactions</span></h1>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

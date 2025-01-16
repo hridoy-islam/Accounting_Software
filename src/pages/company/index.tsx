@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for routing
-import { Pen, Plus, Trash } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate for routing
+import { Pen, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import axiosInstance from '@/lib/axios'
 import {
   Table,
   TableBody,
@@ -21,23 +22,24 @@ import {
 } from '@/components/ui/dialog';
 import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import placeholder from '@/assets/imges/home/logos/placeholder.jpg';
+import { toast } from '@/components/ui/use-toast';
+import { useSelector } from 'react-redux';
 
 export interface TCompany {
-  id: string;
+  _id: string;
   companyName: string;
   email: string;
   phone: string;
   companyAddress: string;
-  assignUser?: string[];
-  logo?: string;
 }
 
 export function Company() {
+  const user = useSelector((state: any) => state.auth.user); // Get user from Redux state
   const [companies, setCompanies] = useState<TCompany[]>([]);
-  const [filteredCompanies, setFilteredCompanies] = useState<TCompany[]>([]); // State for filtered companies
   const [searchQuery, setSearchQuery] = useState(''); // State for search query
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [companyToEdit, setCompanyToEdit] = useState<TCompany | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
   const {
     register,
     handleSubmit,
@@ -46,54 +48,33 @@ export function Company() {
   } = useForm<TCompany>();
   const navigate = useNavigate(); // Initialize the navigate hook
 
+  const fetchData = async () => {
+    try {
+      if (initialLoading) setInitialLoading(true);
+      const response = await axiosInstance.get(`/companies?createdBy=${user._id}`);
+      setCompanies(response.data.data.result);
+    } catch (error) {
+      console.error("Error fetching institutions:", error);
+    } finally {
+      setInitialLoading(false); // Disable initial loading after the first fetch
+    }
+  };
+
   useEffect(() => {
-    const fetchedCompanies = [
-      {
-        id: '1',
-        email: 'company1@example.com',
-        companyName: 'Company 1',
-        phone: '1234567890',
-        companyAddress: 'ABC',
-        logo: ''
-      },
-      {
-        id: '2',
-        email: 'company2@example.com',
-        companyName: 'Company 2',
-        phone: '0987654321',
-        companyAddress: 'XYZ',
-        logo: ''
-      }
-    ];
-    setCompanies(fetchedCompanies);
-    setFilteredCompanies(fetchedCompanies);
+    fetchData()
   }, []);
 
-  useEffect(() => {
-    // Filter companies based on the search query
-    const results = companies.filter(
-      (company) =>
-        company.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        company.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredCompanies(results);
-  }, [searchQuery, companies]);
-
   const onSubmit = async (data: any) => {
-    const logoFile = data.logo[0];
-    const logoUrl = await convertToBase64(logoFile);
 
     if (companyToEdit) {
-      setCompanies((prevCompanies) =>
-        prevCompanies.map((company) =>
-          company.id === companyToEdit.id
-            ? { ...companyToEdit, ...data, logo: logoUrl }
-            : company
-        )
-      );
+      await axiosInstance.patch(`/companies/${companyToEdit?._id}`, data);
+      toast({ title: "Record Updated successfully", className: "bg-background border-none text-white", });
+      fetchData();
+      setCompanyToEdit(undefined)
     } else {
-      const newCompany = { ...data, logo: logoUrl };
-      setCompanies((prevCompanies) => [...prevCompanies, newCompany]);
+      const formattedData = {...data, createdBy: user._id}
+      await axiosInstance.post('/companies', formattedData)
+      fetchData();
     }
 
     reset();
@@ -111,14 +92,7 @@ export function Company() {
     reset(company);
   };
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
+ 
 
   return (
     <div className="space-y-4 p-4 md:p-8">
@@ -158,13 +132,14 @@ export function Company() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead>Address</TableHead>
                 <TableHead>View Company</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCompanies.map((company) => (
-                <TableRow key={company.id}>
+              {companies.map((company) => (
+                <TableRow key={company._id}>
                   <TableCell className="text-center">
                     <img
                       src={company.logo || placeholder}
@@ -177,33 +152,37 @@ export function Company() {
                   </TableCell>
                   <TableCell className="text-center">{company.email}</TableCell>
                   <TableCell className="text-center">{company.phone}</TableCell>
+                  <TableCell className="text-center">{company.companyAddress}</TableCell>
                   <TableCell className="text-center align-middle">
                     <Button
                       variant="theme"
-                      onClick={() => navigate(`${company.id}`)} // Navigate to company details page
+                      // Navigate to company details page
                       className="inline-block"
                     >
+                      <Link to={company._id}>
                       View
+                      </Link>
+                      
                     </Button>
                   </TableCell>
 
                   <TableCell className="space-x-4 text-center">
                     <Button
-                      variant="ghost"
-                      className="border-none bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
+                      variant={'default'}
+                      className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
                       size="icon"
                       onClick={() => editCompany(company)}
                     >
                       <Pen className="h-4 w-4" />
                     </Button>
-                    <Button
+                    {/* <Button
                       variant="ghost"
                       className="border-none bg-red-500 text-white hover:bg-red-500/90"
                       size="icon"
                       onClick={() => deleteCompany(company.id)}
                     >
                       <Trash className="h-4 w-4" />
-                    </Button>
+                    </Button> */}
                   </TableCell>
                 </TableRow>
               ))}
@@ -280,18 +259,8 @@ export function Company() {
                 )}
               </div>
               <div>
-                <Label htmlFor="logo">Company Logo</Label>
-                <Input
-                  id="logo"
-                  type="file"
-                  accept="image/*"
-                  {...register('logo', { required: 'Logo is required' })}
-                />
-                {errors.logo && (
-                  <span className="text-sm text-red-500">
-                    {errors.logo.message}
-                  </span>
-                )}
+                
+                
               </div>
 
               <Button

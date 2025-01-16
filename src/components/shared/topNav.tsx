@@ -33,7 +33,7 @@ export function TopNavigation() {
     <div className="flex h-screen flex-col">
       {/* Top Navigation Bar */}
       <header className="bg-[#a78bfa] shadow-sm">
-        <div className="flex items-center justify-between px-4 py-2">
+        <div className="flex  justify-between px-4 py-2">
           <button
             className="rounded-md p-2 text-gray-600 md:hidden"
             onClick={toggleSidebar}
