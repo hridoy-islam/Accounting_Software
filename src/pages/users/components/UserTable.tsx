@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pen, Plus, Trash } from 'lucide-react';
+import { Pen, Plus} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -33,7 +33,7 @@ export interface TCompany {
 }
 
 interface TUser {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   phone: string;
@@ -53,8 +53,6 @@ interface TUser {
 export function UserTable() {
   const user = useSelector((state: any) => state.auth.user); // Get user from Redux state
   const [users, setUsers] = useState<any>([]);
-
-  const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<TUser | null>(null);
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
@@ -68,11 +66,6 @@ export function UserTable() {
     }
   }, [editingUser, reset]);
 
-  
-
-  const handleDelete = (id: string) => {
-    setUsers(users.filter((user) => user.id !== id));
-  };
 
  
 
@@ -114,15 +107,11 @@ export function UserTable() {
 
   return (
     <div className="p-4">
-      <h1 className="pb-6 text-2xl font-semibold">User Management</h1>
+      
       <div className="flex items-center justify-between pb-12">
         <div className="flex flex-1 items-center justify-between space-x-4">
-          <Input
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md border-2"
-          />
+        <h1 className="pb-6 text-2xl font-semibold">User Management</h1>
+         
           <Button
             variant='theme'
             onClick={() => {
@@ -163,14 +152,7 @@ export function UserTable() {
                   >
                     <Pen className="h-4 w-4" />
                   </Button>
-                  {/* <Button
-                    variant="ghost"
-                    className="border-none bg-red-500 text-white hover:bg-red-500/90"
-                    size="icon"
-                    onClick={() => handleDelete(user.id)}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button> */}
+                  
                 </TableCell>
               </TableRow>
             ))}

@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import CompanyNav from '../../components/CompanyNav';
-import { Pen, Trash } from 'lucide-react';
+import { Pen } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
+import axiosInstance from '@/lib/axios'
+import { useParams } from 'react-router-dom';
+import ErrorMessage from '@/components/shared/error-message';
+import { useForm } from 'react-hook-form';
+import { toast } from '@/components/ui/use-toast';
 interface Storage {
   id: number;
   storageName: string;
@@ -39,80 +43,59 @@ const mockStorages: Storage[] = [
   },
 ];
 
-const StoragePage: React.FC = () => {
+const StoragePage = () => {
   const [storages, setStorages] = useState<Storage[]>(mockStorages);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { id } = useParams();
+  const [storageToEdit, setStorageToEdit] = useState<any>(null);
 
-  // Form state
-  const [formData, setFormData] = useState<Partial<Storage>>({
-    storageName: '',
-    openingBalance: 0,
-    openingDate: '',
-    logo: '',
-    status: true,
-    auditStatus: true,
-  });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors }
+  } = useForm();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({
-          ...formData,
-          logo: reader.result as string, // The result is a data URL
-        });
-      };
-      reader.readAsDataURL(file); // Convert the file to a data URL
+  const fetchData = async () => {
+    try {
+      const response = await axiosInstance.get(`/storages?companyId=${id}`);
+      setStorages(response.data.data.result);
+    } catch (error) {
+      console.error('Error fetching storages:', error);
     }
   };
 
-  const handleSubmit = () => {
-    if (formData.id) {
-      // If formData.id exists, update the existing storage entry
-      setStorages(
-        storages.map((storage) =>
-          storage.id === formData.id ? { ...storage, ...formData } : storage
-        )
-      );
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const onSubmit = async (data: any) => {
+    if (storageToEdit) {
+      await axiosInstance.patch(`/storages/${storageToEdit?._id}`, data);
+      toast({
+        title: 'Storage Updated successfully',
+        className: 'bg-background border-none text-white'
+      });
+      fetchData();
+      setStorageToEdit(null);
     } else {
-      // If no id, it's a new entry, so create a new storage
-      const newStorage = {
-        id: storages.length + 1, // Simulate auto-increment ID
-        ...formData,
-      } as Storage;
-      setStorages([...storages, newStorage]);
+      const formattedData = { ...data, companyId: id };
+      await axiosInstance.post('/storages', formattedData);
+      fetchData();
     }
-  
-    // Reset form and close dialog
-    setFormData({
-      storageName: '',
-      openingBalance: 0,
-      openingDate: '',
-      logo: '',
-      status: true,
-      auditStatus: true,
-    });
+
+    reset();
     setIsDialogOpen(false);
-  };
-  
-
-  const handleDelete = (id: number) => {
-    setStorages(storages.filter(storage => storage.id !== id));
+    setStorageToEdit(null);
   };
 
-  const handleEdit = (storage: Storage) => {
-    setFormData(storage);
+  const editStorage = (storage) => {
     setIsDialogOpen(true);
+    setStorageToEdit(storage);
+    reset(storage);
   };
+
+
 
   return (
     <div className="py-6">
@@ -124,119 +107,107 @@ const StoragePage: React.FC = () => {
       </div>
 
       <div className="flex flex-col gap-4">
-      <Table className="w-full border-collapse ">
-      <TableHeader>
-        <TableRow>
-          <TableHead >Name</TableHead>
-          <TableHead >Opening Balance</TableHead>
-          <TableHead >Opening Date</TableHead>
-          <TableHead >Logo</TableHead>
-          <TableHead >Status</TableHead>
-          <TableHead >Audit Status</TableHead>
-          <TableHead >Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {storages.map((storage) => (
-          <TableRow key={storage.id}>
-            <TableCell >{storage.storageName}</TableCell>
-            <TableCell >{storage.openingBalance}</TableCell>
-            <TableCell >{storage.openingDate}</TableCell>
-            <TableCell >
-              {storage.logo ? (
-                <img src={storage.logo} alt="Logo" className="h-8 w-8 " />
-              ) : (
-                "N/A"
-              )}
-            </TableCell>
-            <TableCell >
-              <Switch
-                checked={storage.status}
-                onCheckedChange={(checked) =>
-                  setStorages(
-                    storages.map((s) =>
-                      s.id === storage.id ? { ...s, status: checked } : s
-                    )
-                  )
-                }
-              />
-            </TableCell>
-            <TableCell >
-              <Switch
-                checked={storage.auditStatus}
-                onCheckedChange={(checked) =>
-                  setStorages(
-                    storages.map((s) =>
-                      s.id === storage.id ? { ...s, auditStatus: checked } : s
-                    )
-                  )
-                }
-              />
-            </TableCell>
-            <TableCell className=" space-x-4">
-              <Button
-                onClick={() => handleEdit(storage)}
-                variant="ghost"
-                className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
-                size="icon"
-              >
-                <Pen className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={() => handleDelete(storage.id)}
-                variant="ghost"
-                className="bg-red-500 text-white hover:bg-red-500/90"
-                size="icon"
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        <Table className="w-full border-collapse ">
+          <TableHeader>
+            <TableRow>
+              <TableHead >Name</TableHead>
+              <TableHead >Opening Balance</TableHead>
+              <TableHead >Opening Date</TableHead>
+              <TableHead >Logo</TableHead>
+              <TableHead >Status</TableHead>
+              <TableHead >Audit Status</TableHead>
+              <TableHead >Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {storages.map((storage) => (
+              <TableRow key={storage.id}>
+                <TableCell >{storage.storageName}</TableCell>
+                <TableCell >{storage.openingBalance}</TableCell>
+                <TableCell >{storage.openingDate}</TableCell>
+                <TableCell >
+                  {storage.logo ? (
+                    <img src={storage.logo} alt="Logo" className="h-8 w-8 " />
+                  ) : (
+                    "N/A"
+                  )}
+                </TableCell>
+                <TableCell >
+                  <Switch
+                    checked={storage.status}
+                    onCheckedChange={(checked) =>
+                      setStorages(
+                        storages.map((s) =>
+                          s.id === storage.id ? { ...s, status: checked } : s
+                        )
+                      )
+                    }
+                  />
+                </TableCell>
+                <TableCell >
+                  <Switch
+                    checked={storage.auditStatus}
+                    onCheckedChange={(checked) =>
+                      setStorages(
+                        storages.map((s) =>
+                          s.id === storage.id ? { ...s, auditStatus: checked } : s
+                        )
+                      )
+                    }
+                  />
+                </TableCell>
+                <TableCell className=" space-x-4">
+                  <Button
+                    onClick={() => editStorage(storage)}
+                    variant="ghost"
+                    className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
+                    size="icon"
+                  >
+                    <Pen className="h-4 w-4" />
+                  </Button>
+                  
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Dialog Form */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{formData.id ? 'Edit' : 'Add'} Storage</DialogTitle>
+            <DialogTitle>{storageToEdit ? 'Edit' : 'Add'} Storage</DialogTitle>
           </DialogHeader>
-          <form className="space-y-4 p-4 flex flex-col gap-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4 flex flex-col gap-4">
             <label >
               Storage Name
               <Input
-                name="storageName"
+                
                 className='mt-2'
-                value={formData.storageName || ''}
-                onChange={handleInputChange}
-                required
+                {...register('storageName', { required: 'Storage Name is required' })}
               />
+              <ErrorMessage message={errors.storageName?.message?.toString()} />
             </label>
             <label>
               Opening Balance
               <Input
-                name="openingBalance"
-                 className='mt-2'
+                className='mt-2'
                 type="number"
-                value={formData.openingBalance || 0}
-                onChange={handleInputChange}
-                required
+                {...register('openingBalance', { required: 'Opening Balance is required' })}
               />
+              <ErrorMessage message={errors.openingBalance?.message?.toString()} />
             </label>
             <label>
               Opening Date
               <Input
-                name="openingDate"
-                 className='mt-2'
+                className='mt-2'
                 type="date"
-                value={formData.openingDate || ''}
-                onChange={handleInputChange}
-                required
+                {...register('openingDate', { required: 'Opening Date is required' })}
               />
+              <ErrorMessage message={errors.openingDate?.message?.toString()} />
             </label>
-            <label>
+            {/* <label>
               Logo Upload
               <input
                className='mt-2'
@@ -249,26 +220,26 @@ const StoragePage: React.FC = () => {
                   <img src={formData.logo} alt="Preview" className="h-16 w-16 mt-2" />
                 </div>
               )}
-            </label>
+            </label> */}
             <div className="flex items-center gap-2">
               <label htmlFor="status">Status</label>
               <Switch
                 id="status"
-                checked={formData.status || false}
-                onCheckedChange={(checked) => setFormData({ ...formData, status: checked })}
+                checked={Boolean(storageToEdit?.status)}
+                onCheckedChange={(checked) => setStorageToEdit({ ...storageToEdit, status: checked })}
               />
             </div>
             <div className="flex items-center gap-2">
               <label htmlFor="auditStatus">Audit Status</label>
               <Switch
                 id="auditStatus"
-                checked={formData.auditStatus || false}
-                onCheckedChange={(checked) => setFormData({ ...formData, auditStatus: checked })}
+                checked={Boolean(storageToEdit?.auditStatus)}
+                onCheckedChange={(checked) => setStorageToEdit({ ...storageToEdit, auditStatus: checked })}
               />
             </div>
           </form>
           <DialogFooter>
-            <Button variant='theme' onClick={handleSubmit}>{formData.id ? 'Update' : 'Add'} Storage</Button>
+            <Button variant='theme' type='submit'>{storageToEdit ? 'Update' : 'Submit'} Storage</Button>
             <Button variant="default" className='border border-gray-400 hover:bg-black hover:text-white' onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>

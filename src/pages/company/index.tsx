@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate for routing
+import { Link } from 'react-router-dom'; // Import useNavigate for routing
 import { Pen, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,6 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs';
 import placeholder from '@/assets/imges/home/logos/placeholder.jpg';
 import { toast } from '@/components/ui/use-toast';
 import { useSelector } from 'react-redux';
@@ -46,12 +45,11 @@ export function Company() {
     reset,
     formState: { errors }
   } = useForm<TCompany>();
-  const navigate = useNavigate(); // Initialize the navigate hook
 
   const fetchData = async () => {
     try {
       if (initialLoading) setInitialLoading(true);
-      const response = await axiosInstance.get(`/companies`);
+      const response = await axiosInstance.get(`/companies?createdBy=${user._id}`);
       setCompanies(response.data.data.result);
     } catch (error) {
       console.error('Error fetching institutions:', error);
@@ -72,7 +70,7 @@ export function Company() {
         className: 'bg-background border-none text-white'
       });
       fetchData();
-      setCompanyToEdit(undefined);
+      setCompanyToEdit(null);
     } else {
       const formattedData = { ...data, createdBy: user._id };
       await axiosInstance.post('/companies', formattedData);
@@ -84,10 +82,6 @@ export function Company() {
     setCompanyToEdit(null);
   };
 
-  const deleteCompany = (id: string) => {
-    setCompanies(companies.filter((company) => company.id !== id));
-  };
-
   const editCompany = (company: TCompany) => {
     setIsDialogOpen(true);
     setCompanyToEdit(company);
@@ -97,12 +91,7 @@ export function Company() {
   return (
     <div className="space-y-4 rounded-lg bg-white shadow-md">
       <div className="p-4 ">
-        {/* <Breadcrumbs
-        items={[
-          { title: 'Dashboard', link: '/admin' },
-          { title: 'Company', link: '/companies' }
-        ]}
-      /> */}
+        
         <h1 className="pb-6 text-2xl font-semibold">Company Management</h1>
 
         <div className="flex justify-between ">
@@ -144,7 +133,7 @@ export function Company() {
                 <TableRow key={company._id}>
                   <TableCell className="">
                     <img
-                      src={company.logo || placeholder}
+                      src={company?.logo || placeholder}
                       alt={company.companyName}
                       className="mx-auto h-10 w-10 object-cover"
                     />
@@ -154,13 +143,15 @@ export function Company() {
                   <TableCell className="">{company.phone}</TableCell>
                   <TableCell className="">{company.companyAddress}</TableCell>
                   <TableCell className="">
+                  <Link to={company._id}>
                     <Button
                       variant="theme"
                       // Navigate to company details page
                       className=" w-full"
                     >
-                      <Link to={company._id}>View</Link>
+                      View
                     </Button>
+                    </Link>
                   </TableCell>
 
                   <TableCell className="space-x-4 ">

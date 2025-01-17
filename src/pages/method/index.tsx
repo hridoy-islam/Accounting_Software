@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Divide, Pen, Plus, Trash } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Pen, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import {
@@ -18,7 +18,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Breadcrumbs } from '@/components/shared/breadcrumbs';
+import axiosInstance from '@/lib/axios'
+import { toast } from '@/components/ui/use-toast';
+import { useForm } from 'react-hook-form';
 
 interface Method {
   id: number;
@@ -27,72 +29,65 @@ interface Method {
 }
 
 export function Method() {
-  const [methods, setMethods] = useState<Method[]>([
-    { id: 1, name: 'Method 1', active: true },
-    { id: 2, name: 'Method 2', active: false },
-    { id: 3, name: 'Method 3', active: true },
-    { id: 4, name: 'Method 4', active: true },
-    { id: 5, name: 'Method 5', active: false },
-    { id: 6, name: 'Method 6', active: true }
-  ]);
-
+  const [methods, setMethods] = useState<any>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingMethod, setEditingMethod] = useState<Method | null>(null);
+  const [editingMethod, setEditingMethod] = useState<any>(null);
+  const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const {
+      register,
+      handleSubmit,
+      reset,
+      formState: { errors }
+    } = useForm();
 
-  const filteredMethods = methods.filter((method) =>
-    method.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchData = async () => {
+    try {
+      if (initialLoading) setInitialLoading(true);
+      const response = await axiosInstance.get(`/methods`);
+      setMethods(response.data.data.result);
+    } catch (error) {
+      console.error('Error fetching institutions:', error);
+    } finally {
+      setInitialLoading(false); // Disable initial loading after the first fetch
+    }
+  };
 
-  const handleSubmit = (data: Method) => {
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const onSubmit = async (data: any) => {
     if (editingMethod) {
-      setMethods(
-        methods.map((method) =>
-          method.id === editingMethod.id ? { ...method, ...data } : method
-        )
-      );
+      await axiosInstance.patch(`/methods/${editingMethod?._id}`, data);
+      toast({
+        title: 'Record Updated successfully',
+        className: 'bg-background border-none text-white'
+      });
+      fetchData();
       setEditingMethod(null);
     } else {
-      const newId = Math.max(...methods.map((m) => m.id), 0) + 1;
-      setMethods([...methods, { id: newId, ...data, active: true }]);
+      await axiosInstance.post('/methods', data);
+      fetchData();
     }
+    reset();
     setDialogOpen(false);
+    setEditingMethod(null);
   };
 
-  const handleDelete = (id: number) => {
-    setMethods(methods.filter((method) => method.id !== id));
-  };
-
-  const handleStatusChange = (id: number, active: boolean) => {
-    setMethods(
-      methods.map((method) =>
-        method.id === id ? { ...method, active } : method
-      )
-    );
-  };
+  const editData = (method) => {
+      setDialogOpen(true);
+      setEditingMethod(method);
+      reset(method);
+    };
 
   return (
     <div className="space-y-4 rounded-lg bg-white shadow-md">
-      {/* <Breadcrumbs
-              items={[
-                { title: 'Dashboard', link: '/admin' },
-                { title: 'Method', link: '/methods' }
-              ]}
-            /> */}
 
       <div className="p-4 ">
-        <h1 className=" pb-6 text-2xl font-semibold">Methods</h1>
-
         <div className="flex  justify-between ">
-          <Input
-            placeholder="Search methods..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md border-2"
-          />
+        <h1 className=" text-2xl font-semibold">Methods</h1>
           <Button
             variant="theme"
             onClick={() => {
@@ -123,21 +118,11 @@ export function Method() {
                       variant="ghost"
                       className="border-none bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
                       size="icon"
-                      onClick={() => {
-                        setEditingMethod(method);
-                        setDialogOpen(true);
-                      }}
+                      onClick={() => editData(method)}
                     >
                       <Pen className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      className="border-none bg-red-500 text-white hover:bg-red-500/90"
-                      size="icon"
-                      onClick={() => handleDelete(method.id)}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
+                    
                   </TableCell>
                 </TableRow>
               ))}
@@ -147,10 +132,7 @@ export function Method() {
 
         <Dialog
           open={dialogOpen}
-          onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) setEditingMethod(null);
-          }}
+          onOpenChange={(open) => setDialogOpen(open)}
         >
           <DialogContent>
             <DialogHeader>
@@ -158,28 +140,16 @@ export function Method() {
                 {editingMethod ? 'Edit Method' : 'New Method'}
               </DialogTitle>
             </DialogHeader>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(
-                  e.currentTarget as HTMLFormElement
-                );
-                const name = formData.get('name') as string;
-                handleSubmit({
-                  id: editingMethod?.id || 0,
-                  name,
-                  active: editingMethod?.active || true
-                });
-              }}
+            <form onSubmit={handleSubmit(onSubmit)}
               className="space-y-4"
             >
               <div>
                 <Label htmlFor="name">Method Name</Label>
                 <Input
                   id="name"
-                  name="name"
-                  defaultValue={editingMethod?.name || ''}
-                  required
+                  {...register('name', {
+                    required: 'Name is required'
+                  })}
                 />
               </div>
               <Button variant="theme" type="submit">

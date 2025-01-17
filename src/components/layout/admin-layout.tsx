@@ -4,16 +4,17 @@ import { Toaster } from "@/components/ui/toaster";
 import { TopNavigation } from "../shared/topNav";
 
 export default function AdminLayout({
-    children
-  }: {
-    children: React.ReactNode;
-  })  {
+  children
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="min-h-screen bg-gray-50 z-999">
       <AutoLogout inactivityLimit={30 * 60 * 1000} />
-      {/* <TopNav /> */}
       <TopNavigation />
-      {children}
+      <main className="px-4 mx-auto py-6">
+        {children}
+      </main>
       <Toaster />
     </div>
   )

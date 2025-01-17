@@ -7,20 +7,15 @@ import { Suspense, lazy } from 'react';
 import { Navigate, Outlet, useRoutes } from 'react-router-dom';
 // import NotificationsPage from '@/pages/notification';
 import Otp from '@/pages/auth/otp';
-
 import AdminLayout from '@/components/layout/admin-layout';
 // import StudentsPage from '@/pages/students';
-
-
 import { Company } from '@/pages/company/index';
-
-
 import { Dashboard } from '@/pages/dashboard/index';
 import { Method } from '@/pages/method';
-import  CompanyDetails  from '@/pages/company/companyDetails';
+import CompanyDetails from '@/pages/company/companyDetails';
 import QRPage from '@/pages/auth/qr';
 import UserPage from '@/pages/users';
-import { CategoryManagement } from '@/pages/category';
+import CategoriesPage from '@/pages/category';
 import ReportPage from '@/pages/company/companyDetails/reportPage';
 import TransactionPage from '@/pages/company/companyDetails/transactionPage';
 import ProfilePage from '@/pages/profile';
@@ -28,12 +23,7 @@ import ResetPassword from '@/pages/resetPassword';
 import StoragePage from '@/pages/company/companyDetails/storagePage';
 import CompanyUser from '@/pages/company/companyDetails/companyUser';
 
-
-
-
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
-
-
 // ----------------------------------------------------------------------
 
 export default function AppRouter() {
@@ -46,14 +36,13 @@ export default function AppRouter() {
             <Suspense>
               <Outlet />
             </Suspense>
-            </ProtectedRoute>
+          </ProtectedRoute>
         </AdminLayout>
       ),
       children: [
-        { path:'',
+        {
           element: <Dashboard />,
-          index:true
-     
+          index: true
         },
         {
           path: 'companies',
@@ -61,27 +50,27 @@ export default function AppRouter() {
         },
         {
           path: 'companies/:id',
-          element: <CompanyDetails  />
+          element: <CompanyDetails />
         },
         {
           path: 'companies/:id/transactions',
-          element: <TransactionPage  />
+          element: <TransactionPage />
         },
         {
           path: 'companies/:id/reports',
-          element: <ReportPage  />
+          element: <ReportPage />
         },
         {
           path: 'companies/:id/storages',
-          element: <StoragePage  />
+          element: <StoragePage />
         },
         {
           path: 'companies/:id/users',
-          element: <CompanyUser  />
+          element: <CompanyUser />
         },
         {
           path: 'categories',
-          element: <CategoryManagement />
+          element: <CategoriesPage />
         },
         {
           path: 'methods',
@@ -91,17 +80,17 @@ export default function AppRouter() {
           path: 'users',
           element: <UserPage />
         },
-        
+
         {
           path: 'profile',
           element: <ProfilePage />
         },
         {
           path: 'reset',
-          element:<ResetPassword />
-         
+          element: <ResetPassword />
+
         }
-        
+
       ]
     }
   ];
@@ -132,7 +121,7 @@ export default function AppRouter() {
       element: <Otp />,
       index: true
     },
-    
+
     {
       path: '/404',
       element: <NotFound />

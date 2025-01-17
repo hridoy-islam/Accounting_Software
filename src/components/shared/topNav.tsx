@@ -30,7 +30,7 @@ export function TopNavigation() {
   }, [sidebarOpen]);
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex flex-col">
       {/* Top Navigation Bar */}
       <header className="bg-[#a78bfa] shadow-sm">
         <div className="flex  justify-between px-4 py-2">
@@ -165,11 +165,6 @@ export function TopNavigation() {
             </Button>
           </nav>
         </aside>
-
-        {/* Main content */}
-        <main className="flex-1 overflow-auto bg-gray-100 p-8">
-          <Outlet />
-        </main>
       </div>
     </div>
   );
