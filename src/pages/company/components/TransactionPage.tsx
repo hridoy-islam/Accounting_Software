@@ -31,6 +31,7 @@ import {
 import axiosInstance from '@/lib/axios';
 import { ImageUploader } from '@/components/shared/image-uploader';
 import { DataTablePagination } from '@/pages/students/view/components/data-table-pagination';
+import { string } from 'zod';
 
 // Sample categories and transactionMethods
 export const categories = {
@@ -96,6 +97,7 @@ interface Transaction {
   transactionCategory: string;
   transactionMethod: string;
   storage: string;
+  companyId:string;
 }
 
 const TransactionPage: React.FC = () => {
@@ -140,7 +142,7 @@ const TransactionPage: React.FC = () => {
   const fetchData = async () => {
     try {
       if (initialLoading) setInitialLoading(true);
-      const response = await axiosInstance.get(`/transactions`);
+      const response = await axiosInstance.get(`/transactions?companyId=${id}`);
       setTransactions(response.data.data.result);
     } catch (error) {
       console.error('Error fetching institutions:', error);
@@ -211,6 +213,7 @@ const TransactionPage: React.FC = () => {
     }
 
     const newTransaction: Transaction = {
+      companyId: formData._id,
       transactionType: formData.transactionType,
       transactionDate: new Date(formData.transactionDate),
       transactionAmount: parseFloat(formData.transactionAmount),
