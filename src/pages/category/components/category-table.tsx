@@ -108,11 +108,12 @@ export function CategoryTable({ type, categories, onUpdate, onDelete }: Category
                     {type === 'inflow' ? 'Inflow Categories' : 'Outflow Categories'}
                 </CardTitle>
                 <Button
+                    variant='theme'
                     onClick={() => {
                         setEditingCategory(undefined)
                         setDialogOpen(true)
                     }}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
+
                 >
                     Add Category
                 </Button>
@@ -153,7 +154,7 @@ export function CategoryTable({ type, categories, onUpdate, onDelete }: Category
                     if (editingCategory) {
                         onUpdate({ ...editingCategory, ...data })
                     } else {
-                        onUpdate({ type, ...data})
+                        onUpdate({ type, ...data })
                     }
                     setDialogOpen(false)
                     setEditingCategory(undefined)

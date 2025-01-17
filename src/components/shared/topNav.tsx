@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, Users, Settings, Menu, X } from 'lucide-react';
 import { UserNav } from './user-nav';

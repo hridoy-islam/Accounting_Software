@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import CompanyNav from '../../components/CompanyNav';
+import CompanyNav from './CompanyNav';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/table';
 import axiosInstance from '@/lib/axios';
 import { ImageUploader } from '@/components/shared/image-uploader';
+import { DataTablePagination } from '@/pages/students/view/components/data-table-pagination';
 
 // Sample categories and transactionMethods
 export const categories = {
@@ -104,6 +105,10 @@ const TransactionPage: React.FC = () => {
     useState<Transaction | null>(null);
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
   const [searchQuery, setSearchQuery] = useState(''); // State for search query
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
 
   const initialFormData = {
     transactionType: '',
@@ -241,9 +246,9 @@ const TransactionPage: React.FC = () => {
   // Filter categories based on transaction type
   const filteredCategories =
     formData.transactionType &&
-    Array.isArray(
-      categories.TransactionCategory[formData.transactionType]?.categories
-    )
+      Array.isArray(
+        categories.TransactionCategory[formData.transactionType]?.categories
+      )
       ? categories.TransactionCategory[formData.transactionType].categories
       : [];
 
@@ -259,20 +264,48 @@ const TransactionPage: React.FC = () => {
   };
   return (
     <div className=" py-6">
-      <CompanyNav />
       <div className="rounded-md bg-white p-4 shadow-lg">
+        <div className="flex gap-4">
         <h1 className="mb-8 text-2xl font-semibold">Transactions</h1>
-        <div className="mb-4 flex justify-between">
+        <Button onClick={() => setIsOpen(true)} variant="theme">
+                  Add Transaction
+                </Button>
+                <Button variant="destructive" onClick={handleCSVButtonClick}>
+                Upload CSV
+              </Button>
+              <Button variant="outline">
+                Download CSV Example
+              </Button>
+        </div>
+        <div className="mb-4 flex gap-2 justify-between">
           <Input
             placeholder="Search Transactions..."
             className="max-w-md border-2"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)} // Update search query state
           />
-          <div className="flex items-center justify-center gap-4">
-            <div>
-              <Button variant="theme" onClick={handleCSVButtonClick}>
-                Upload CSV
+          <select className="w-full rounded-md border border-gray-300 bg-white p-1 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500">
+            <option>Select Type</option>
+            <option value='inflow'>Inflow</option>
+            <option value='outflow'>Outflow</option>
+            </select>
+            <select className="w-full rounded-md border border-gray-300 bg-white p-1 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500">
+            <option>Filter By Category</option>
+            <option value='inflow'>Inflow</option>
+            <option value='outflow'>Outflow</option>
+            </select>
+            <Button variant="outline">
+                Todays Report
+              </Button>
+              <Button variant="destructive">
+                Weekly Report
+              </Button>
+              <Button variant="outline">
+                Monthly Report
+              </Button>
+              
+              <Button variant="destructive">
+                Export PDF
               </Button>
               <ImageUploader
                 open={isCSVOpen}
@@ -280,7 +313,8 @@ const TransactionPage: React.FC = () => {
                 onUploadComplete={() => console.log('Upload Complete')}
                 companyId={id}
               />
-            </div>
+          <div className="flex items-center justify-center gap-4">
+            
 
             <Dialog
               open={isOpen}
@@ -292,11 +326,7 @@ const TransactionPage: React.FC = () => {
                 setIsOpen(open);
               }}
             >
-              <DialogTrigger asChild>
-                <Button onClick={() => setIsOpen(true)} variant="theme">
-                  Add Transaction
-                </Button>
-              </DialogTrigger>
+              
               <DialogContent className="max-h-[90vh] w-full overflow-y-auto p-4 sm:max-w-[600px] md:p-6">
                 <DialogHeader>
                   <DialogTitle className="text-xl font-semibold">
@@ -624,6 +654,13 @@ const TransactionPage: React.FC = () => {
                 ))}
               </TableBody>
             </Table>
+            <DataTablePagination
+              pageSize={entriesPerPage}
+              setPageSize={setEntriesPerPage}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         </div>
       </div>

@@ -20,17 +20,7 @@ const CompanyUser: React.FC = () => {
   // Use react-hook-form
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
-  const onSubmit: SubmitHandler<TUser> = (data) => {
-    if (!data.id || !data.name || !data.email || !data.phone || !data.password || !data.role || !data.status) {
-      alert('All required fields must be filled.');
-      return;
-    }
-    setUsers([...users, newUser]);
-
-    // Reset form after submission
-    reset();
-    setIsDialogOpen(false);
-  };
+  
 
 
   const fetchData = async () => {
@@ -49,14 +39,17 @@ const CompanyUser: React.FC = () => {
     fetchData()
   }, []);
 
+  const onSubmit = (data) => {
+    console.log('Form submitted with data:', data);
+    // Handle form submission (e.g., API call)
+    setIsDialogOpen(false); // Close dialog after submission
+  };
+
   return (
 
     <div className="py-6">
-      <CompanyNav />
 
       <div className="rounded-md bg-white p-4 shadow-lg">
-
-     
      
       <h1 className="mb-8 text-2xl font-semibold">Assigned Users</h1>
       <div className="flex justify-end mb-4">
@@ -99,7 +92,9 @@ const CompanyUser: React.FC = () => {
             <DialogTitle>Add New User</DialogTitle>
           </DialogHeader>
           <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-            <select className="w-full rounded-md border border-gray-300 bg-white p-2 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500">
+            <select 
+            {...register('userId', { required: true })}
+            className="w-full rounded-md border border-gray-300 bg-white p-2 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500">
               {users.map((user) => (
                 <option key={user._id} value={user._id}>{user.name}</option>))}
             </select>

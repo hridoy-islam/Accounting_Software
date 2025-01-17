@@ -53,22 +53,6 @@ export default function AppRouter() {
           element: <CompanyDetails />
         },
         {
-          path: 'companies/:id/transactions',
-          element: <TransactionPage />
-        },
-        {
-          path: 'companies/:id/reports',
-          element: <ReportPage />
-        },
-        {
-          path: 'companies/:id/storages',
-          element: <StoragePage />
-        },
-        {
-          path: 'companies/:id/users',
-          element: <CompanyUser />
-        },
-        {
           path: 'categories',
           element: <CategoriesPage />
         },
