@@ -52,7 +52,7 @@ export function TopNavigation() {
           </div>
           <UserNav />
         </div>
-        <div className="hidden justify-center  bg-white py-2 md:flex">
+        <div className="hidden justify-start px-4  bg-white py-2 md:flex">
           <nav className="flex flex-row items-center space-x-2">
             <Button
               asChild

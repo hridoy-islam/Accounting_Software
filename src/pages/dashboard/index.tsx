@@ -14,11 +14,12 @@ export function Dashboard() {
   const user = useSelector((state: any) => state.auth.user); // Get user from Redux state
   const [companies, setCompanies] = useState<Company[]>([]);
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
-
+  const [users, setUsers] = useState([])
   const fetchData = async () => {
       try {
         if (initialLoading) setInitialLoading(true);
         const response = await axiosInstance.get(`/companies?createdBy=${user._id}`);
+
         setCompanies(response.data.data.result);
       } catch (error) {
         console.error("Error fetching institutions:", error);
@@ -27,10 +28,23 @@ export function Dashboard() {
       }
     };
 
+  const fetchUserData = async () => {
+      try {
+        const response = await axiosInstance.get(`/users`);
+        console.log(response.data.data.meta)
+        setUsers(response.data.data.meta);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
 
   useEffect(()=> {
     fetchData();
+    fetchUserData();
   }, [])
+
+  
 
   return (
     <div className="space-y-8">
@@ -45,10 +59,11 @@ export function Dashboard() {
         </Card>
         <Card>
           <CardHeader className='p-6'>
-            <CardTitle>Total Storage Profiles</CardTitle>
+            <CardTitle>Total Users</CardTitle>
+             
           </CardHeader>
           <CardContent>
-            <p className="text-center text-8xl font-bold">0</p>
+            <p className="text-center text-8xl font-bold"> {users.total}  </p>
           </CardContent>
         </Card>
         <Card>

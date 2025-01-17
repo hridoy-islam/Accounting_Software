@@ -113,18 +113,18 @@ export function UserTable() {
 
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">User Management</h1>
-      <div className="flex items-center justify-between">
+    <div className="p-4">
+      <h1 className="pb-6 text-2xl font-semibold">User Management</h1>
+      <div className="flex items-center justify-between pb-12">
         <div className="flex flex-1 items-center justify-between space-x-4">
           <Input
             placeholder="Search users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md"
+            className="max-w-md border-2"
           />
           <Button
-            className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
+            variant='theme'
             onClick={() => {
               setEditingUser(null);
               setDialogOpen(true);
@@ -135,7 +135,7 @@ export function UserTable() {
           </Button>
         </div>
       </div>
-      <div className="rounded-md bg-white p-4 shadow-2xl">
+      <div className="rounded-md   ">
         <Table>
           <TableHeader>
             <TableRow>
@@ -148,14 +148,13 @@ export function UserTable() {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="text-center">{user.name}</TableCell>
-                <TableCell className="text-center">{user.email}</TableCell>
-                <TableCell className="text-center">{user.phone}</TableCell>
+                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.phone}</TableCell>
 
-                <TableCell className="space-x-4 text-center">
+                <TableCell className="space-x-4 ">
                   <Button
-                    variant="ghost"
-                    className="border-none bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
+                    variant="theme"
                     size="icon"
                     onClick={() => {
                       setEditingUser(user);
@@ -210,7 +209,7 @@ export function UserTable() {
               </div>
 
             </div>
-            <Button type="submit" className="w-full">Save</Button>
+            <Button type="submit" variant='theme' className="w-full">Save</Button>
           </form>
         </DialogContent>
       </Dialog>

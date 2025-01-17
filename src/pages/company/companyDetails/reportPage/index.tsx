@@ -255,7 +255,7 @@ const ReportPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="py-6">
       <CompanyNav />
 
       <div className="mb-8  flex flex-col items-center justify-between  md:flex-row">

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import CompanyNav from '../../components/CompanyNav';
 import { Pen, Trash } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Storage {
   id: number;
@@ -114,72 +115,86 @@ const StoragePage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="py-6">
       <CompanyNav />
       <h1 className="mb-8 text-2xl font-semibold">Storages</h1>
 
       <div className="flex justify-end mb-4">
-        <Button onClick={() => setIsDialogOpen(true)}>Add Storage</Button>
+        <Button variant='theme' onClick={() => setIsDialogOpen(true)}>Add Storage</Button>
       </div>
 
       <div className="flex flex-col gap-4">
-        <table className="w-full border-collapse border border-gray-300 text-left">
-          <thead>
-            <tr>
-              <th className="border border-gray-300 px-4 py-2 text-center">Name</th>
-              <th className="border border-gray-300 px-4 py-2 text-center">Opening Balance</th>
-              <th className="border border-gray-300 px-4 py-2 text-center">Opening Date</th>
-              <th className="border border-gray-300 px-4 py-2 text-center">Logo</th>
-              <th className="border border-gray-300 px-4 py-2 text-center">Status</th>
-              <th className="border border-gray-300 px-4 py-2 text-center">Audit Status</th>
-              <th className="border border-gray-300 px-4 py-2 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {storages.map((storage) => (
-              <tr key={storage.id}>
-                <td className="border border-gray-300 px-4 py-2 text-center">{storage.storageName}</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">{storage.openingBalance}</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">{storage.openingDate}</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">
-                  {storage.logo ? <img src={storage.logo} alt="Logo" className="h-8 w-8" /> : 'N/A'}
-                </td>
-                <td className="border border-gray-300 px-4 py-2 text-center">
-                  <Switch
-                    checked={storage.status}
-                    onCheckedChange={(checked) =>
-                      setStorages(
-                        storages.map((s) =>
-                          s.id === storage.id ? { ...s, status: checked } : s
-                        )
-                      )
-                    }
-                  />
-                </td>
-                <td className="border border-gray-300 px-4 py-2 text-center">
-                  <Switch
-                    checked={storage.auditStatus}
-                    onCheckedChange={(checked) =>
-                      setStorages(
-                        storages.map((s) =>
-                          s.id === storage.id ? { ...s, auditStatus: checked } : s
-                        )
-                      )
-                    }
-                  />
-                </td>
-                <td className="border border-gray-300 px-4 py-2 space-x-4 text-center">
-                  <Button onClick={() => handleEdit(storage)}  variant="ghost"
-                      className="border-none bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
-                      size="icon"><Pen className="h-4 w-4" /></Button>
-                  <Button onClick={() => handleDelete(storage.id)} variant="ghost"
-                      className="border-none bg-red-500 text-white hover:bg-red-500/90"
-                      size="icon"><Trash className="h-4 w-4" /></Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <Table className="w-full border-collapse ">
+      <TableHeader>
+        <TableRow>
+          <TableHead >Name</TableHead>
+          <TableHead >Opening Balance</TableHead>
+          <TableHead >Opening Date</TableHead>
+          <TableHead >Logo</TableHead>
+          <TableHead >Status</TableHead>
+          <TableHead >Audit Status</TableHead>
+          <TableHead >Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {storages.map((storage) => (
+          <TableRow key={storage.id}>
+            <TableCell >{storage.storageName}</TableCell>
+            <TableCell >{storage.openingBalance}</TableCell>
+            <TableCell >{storage.openingDate}</TableCell>
+            <TableCell >
+              {storage.logo ? (
+                <img src={storage.logo} alt="Logo" className="h-8 w-8 " />
+              ) : (
+                "N/A"
+              )}
+            </TableCell>
+            <TableCell >
+              <Switch
+                checked={storage.status}
+                onCheckedChange={(checked) =>
+                  setStorages(
+                    storages.map((s) =>
+                      s.id === storage.id ? { ...s, status: checked } : s
+                    )
+                  )
+                }
+              />
+            </TableCell>
+            <TableCell >
+              <Switch
+                checked={storage.auditStatus}
+                onCheckedChange={(checked) =>
+                  setStorages(
+                    storages.map((s) =>
+                      s.id === storage.id ? { ...s, auditStatus: checked } : s
+                    )
+                  )
+                }
+              />
+            </TableCell>
+            <TableCell className=" space-x-4">
+              <Button
+                onClick={() => handleEdit(storage)}
+                variant="ghost"
+                className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
+                size="icon"
+              >
+                <Pen className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => handleDelete(storage.id)}
+                variant="ghost"
+                className="bg-red-500 text-white hover:bg-red-500/90"
+                size="icon"
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
       </div>
 
       {/* Dialog Form */}
@@ -188,11 +203,12 @@ const StoragePage: React.FC = () => {
           <DialogHeader>
             <DialogTitle>{formData.id ? 'Edit' : 'Add'} Storage</DialogTitle>
           </DialogHeader>
-          <form className="space-y-4">
-            <label>
+          <form className="space-y-4 p-4 flex flex-col gap-4">
+            <label >
               Storage Name
               <Input
                 name="storageName"
+                className='mt-2'
                 value={formData.storageName || ''}
                 onChange={handleInputChange}
                 required
@@ -202,6 +218,7 @@ const StoragePage: React.FC = () => {
               Opening Balance
               <Input
                 name="openingBalance"
+                 className='mt-2'
                 type="number"
                 value={formData.openingBalance || 0}
                 onChange={handleInputChange}
@@ -212,6 +229,7 @@ const StoragePage: React.FC = () => {
               Opening Date
               <Input
                 name="openingDate"
+                 className='mt-2'
                 type="date"
                 value={formData.openingDate || ''}
                 onChange={handleInputChange}
@@ -221,6 +239,7 @@ const StoragePage: React.FC = () => {
             <label>
               Logo Upload
               <input
+               className='mt-2'
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
@@ -249,8 +268,8 @@ const StoragePage: React.FC = () => {
             </div>
           </form>
           <DialogFooter>
-            <Button onClick={handleSubmit}>{formData.id ? 'Update' : 'Add'} Storage</Button>
-            <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
+            <Button variant='theme' onClick={handleSubmit}>{formData.id ? 'Update' : 'Add'} Storage</Button>
+            <Button variant="default" className='border border-gray-400 hover:bg-black hover:text-white' onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
           </DialogFooter>

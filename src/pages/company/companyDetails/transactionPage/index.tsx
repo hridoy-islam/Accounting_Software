@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'; // Add Input component
 import { Label } from '@/components/ui/label'; // Add Label component
 import { Textarea } from '@/components/ui/textarea'; // Add Textarea component
 import { Pen, Trash } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 // Sample categories and transactionMethods
 export const categories = {
@@ -220,7 +221,7 @@ const TransactionPage: React.FC = () => {
    const subCategories = selectedCategory?.children || [];
 
   return (
-    <div className="container mx-auto p-6">
+    <div className=" py-6">
       <CompanyNav />
       <h1 className="mb-8 text-2xl font-semibold">Transactions</h1>
       <div className="flex justify-end mb-4">
@@ -234,8 +235,8 @@ const TransactionPage: React.FC = () => {
               <DialogTrigger asChild>
                 <Button
                   onClick={() => setIsOpen(true)}
-                  className="hover:bg-[#a78bfa] hover:text-white"
-                >
+
+                  variant='theme'>
                   Add Transaction
                 </Button>
               </DialogTrigger>
@@ -255,9 +256,9 @@ const TransactionPage: React.FC = () => {
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="inflow">Inflow</SelectItem>
-                          <SelectItem value="outflow">Outflow</SelectItem>
+                        <SelectContent >
+                          <SelectItem className='hover:bg-[#a78bfa]' value="inflow">Inflow</SelectItem>
+                          <SelectItem className='hover:bg-[#a78bfa]' value="outflow">Outflow</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -275,7 +276,7 @@ const TransactionPage: React.FC = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {filteredCategories?.map((category) => (
-                            <SelectItem key={category.name} value={category.name}>
+                            <SelectItem className='hover:bg-[#a78bfa]' key={category.name} value={category.name}>
                               {category.name}
                             </SelectItem>
                           ))}
@@ -297,7 +298,7 @@ const TransactionPage: React.FC = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {subCategories.map((subCategory) => (
-                            <SelectItem key={subCategory.name} value={subCategory.name}>
+                            <SelectItem className='hover:bg-[#a78bfa]' key={subCategory.name} value={subCategory.name}>
                               {subCategory.name}
                             </SelectItem>
                           ))}
@@ -385,7 +386,7 @@ const TransactionPage: React.FC = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {transactionMethods.map((method) => (
-                            <SelectItem key={method} value={method}>
+                            <SelectItem className='hover:bg-[#a78bfa]' key={method} value={method}>
                               {method}
                             </SelectItem>
                           ))}
@@ -404,7 +405,7 @@ const TransactionPage: React.FC = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {storageOptions.map((option) => (
-                            <SelectItem key={option} value={option}>
+                            <SelectItem  className='hover:bg-[#a78bfa]' key={option} value={option}>
                               {option}
                             </SelectItem>
                           ))}
@@ -415,7 +416,7 @@ const TransactionPage: React.FC = () => {
         
                   <Button
                     type="submit"
-                    className="mt-6 w-full bg-[#5c6bc0] hover:bg-[#3f4c8b] text-white"
+                    className="mt-6 w-full bg-[#a78bfa] hover:bg-[#a78bfa]/80 text-white"
                   >
                     Add Transaction
                   </Button>
@@ -427,67 +428,57 @@ const TransactionPage: React.FC = () => {
       {/* Transactions Table */}
       <div className="flex gap-8">
         <div className="flex-grow">
-          <table className="w-full border-collapse border border-gray-300">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border border-gray-300 px-4 py-2 text-left">TCID</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Date</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Type</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Amount</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Category</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Method</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Storage</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentTransactions.map((transaction) => (
-                <tr key={transaction.tcid}>
-                  <td className="border border-gray-300 px-4 py-2">{transaction.tcid}</td>
-                  <td className="border border-gray-300 px-4 py-2">{new Date(transaction.transactionDate).toLocaleDateString()}</td>
-                  <td className="border border-gray-300 px-4 py-2">{transaction.transactionType}</td>
-                  <td className="border border-gray-300 px-4 py-2">${transaction.transactionAmount}</td>
-                  <td className="border border-gray-300 px-4 py-2">{transaction.transactionCategory}</td>
-                  <td className="border border-gray-300 px-4 py-2">{transaction.transactionMethod}</td>
-                  <td className="border border-gray-300 px-4 py-2">{transaction.storage}</td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(transaction)}
-                        className="p-2 hover:bg-gray-100"
-                      >
-                        <Pen className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(transaction.tcid)}
-                        className="p-2 hover:bg-gray-100 text-red-600 hover:text-red-700"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>TCID</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Amount</TableHead>
+          <TableHead>Category</TableHead>
+          <TableHead>Method</TableHead>
+          <TableHead>Storage</TableHead>
+          <TableHead>Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {currentTransactions.map((transaction) => (
+          <TableRow key={transaction.tcid}>
+            <TableCell>{transaction.tcid}</TableCell>
+            <TableCell>
+              {new Date(transaction.transactionDate).toLocaleDateString()}
+            </TableCell>
+            <TableCell>{transaction.transactionType}</TableCell>
+            <TableCell>${transaction.transactionAmount}</TableCell>
+            <TableCell>{transaction.transactionCategory}</TableCell>
+            <TableCell>{transaction.transactionMethod}</TableCell>
+            <TableCell>{transaction.storage}</TableCell>
+            <TableCell>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className='"border-none bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80'
+                  onClick={() => handleEdit(transaction)}
+                >
+                  <Pen className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDelete(transaction.tcid)}
+                  className="border-none bg-red-500 text-white hover:bg-red-500/90"
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
 
-          {/* Pagination */}
-          <div className="flex justify-end mt-4">
-            <Button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1}>
-              Previous
-            </Button>
-            <span className="mx-4">{currentPage}</span>
-            <Button
-              onClick={() => paginate(currentPage + 1)}
-              disabled={indexOfLastTransaction >= transactions.length}
-            >
-              Next
-            </Button>
-          </div>
+         
         </div>
       </div>
     </div>

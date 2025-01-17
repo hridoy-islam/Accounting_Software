@@ -38,12 +38,13 @@ export function CategoryManagement() {
   const { register, handleSubmit, reset, watch } = useForm<Category>();
   const [filterType, setFilterType] = useState<string | null>(null);
 
-const filteredCategories = categories.filter((category) => {
-  const matchesName = category.name.toLowerCase().includes(searchQuery.toLowerCase());
-  const matchesType = filterType ? category.type === filterType : true;
-  return matchesName && matchesType;
-});
-
+  const filteredCategories = categories.filter((category) => {
+    const matchesName = category.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesType = filterType ? category.type === filterType : true;
+    return matchesName && matchesType;
+  });
 
   const categoriesPerPage = 5;
 
@@ -96,72 +97,50 @@ const filteredCategories = categories.filter((category) => {
   //   category.name.toLowerCase().includes(searchQuery.toLowerCase())
   // );
 
-  const paginatedCategories = filteredCategories.slice(
-    (currentPage - 1) * categoriesPerPage,
-    currentPage * categoriesPerPage
-  );
-
-  const totalPages = Math.ceil(filteredCategories.length / categoriesPerPage);
-
-  useEffect(() => {
-    if (filteredCategories.length === 0) {
-      setCurrentPage(1);
-    } else if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [filteredCategories, totalPages, currentPage]);
-
   return (
-    <div className="space-y-4 p-4 md:p-8">
-      <Breadcrumbs
-        items={[
-          { title: 'Dashboard', link: '/admin' },
-          { title: 'Category', link: '/categories' }
-        ]}
-      />
+    <div className="bg-whitespace-y-4 space-y-4 rounded-lg bg-white shadow-md">
+      <div className="p-4">
+        <h1 className=" pb-6 text-2xl font-semibold">Category Management</h1>
 
-      <div className="space-y-6">
-        <h1 className="text-2xl font-semibold">Category Management</h1>
-
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pb-10">
           <div className="flex flex-1 items-center justify-between space-x-4">
             <Input
               placeholder="Search categories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-md"
+              className="max-w-md border-2"
             />
 
-            <div className='flex gap-4 '>
-            <select
-  value={filterType || ''}
-  onChange={(e) => setFilterType(e.target.value || null)}
-  className="max-w-md bg-white p-2 bg-transparent rounded-lg border border-gray-400"
->
-  <option value="">All Types</option>
-  <option value="inflow">Inflow</option>
-  <option value="outflow">Outflow</option>
-</select>
-
-            <Button
-              className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
-              onClick={() => {
-                setCategoryToEdit(null);
-                setIsDialogOpen(true);
-              }}
+            <div className="flex gap-4 items-center ">
+              <select
+                value={filterType || ''}
+                onChange={(e) => setFilterType(e.target.value || null)}
+                className="max-w-md rounded-lg border border-gray-400 bg-transparent bg-white p-1.5"
               >
-              <Plus className="mr-2 h-4 w-4" />
-              New Category
-            </Button>
-              </div>
+                <option value="">All Types</option>
+                <option value="inflow">Inflow</option>
+                <option value="outflow">Outflow</option>
+              </select>
+
+              <Button
+                className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
+                onClick={() => {
+                  setCategoryToEdit(null);
+                  setIsDialogOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                New Category
+              </Button>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-md bg-white p-4 shadow-2xl">
+        <div className="">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Category ID</TableHead>
+             
                 <TableHead>Category Name</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Parent Category ID</TableHead>
@@ -169,15 +148,17 @@ const filteredCategories = categories.filter((category) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedCategories.map((category) => (
+              {categories.map((category) => (
                 <TableRow key={category.id}>
-                  <TableCell className="text-center">{category.id}</TableCell>
-                  <TableCell className="text-center">{category.name}</TableCell>
-                  <TableCell className="text-center">{category.type}</TableCell>
-                  <TableCell className="text-center">
-        {categories.find((cat) => cat.id === category.parentCategoryId)?.name || 'None'}
-      </TableCell>
-                  <TableCell className="space-x-4 text-center">
+          
+                  <TableCell >{category.name}</TableCell>
+                  <TableCell >{category.type}</TableCell>
+                  <TableCell >
+                    {categories.find(
+                      (cat) => cat.id === category.parentCategoryId
+                    )?.name || 'None'}
+                  </TableCell>
+                  <TableCell className="space-x-4 ">
                     <Button
                       variant="ghost"
                       className="border-none bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
@@ -201,26 +182,6 @@ const filteredCategories = categories.filter((category) => {
           </Table>
         </div>
 
-        <div className="mt-4 flex flex-col items-center justify-center gap-4 space-y-2 sm:flex-row sm:space-y-0">
-          <Button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          >
-            Previous
-          </Button>
-          <div className="flex items-center gap-2">
-            Page {currentPage} of {totalPages}
-          </div>
-          <Button
-            disabled={currentPage === totalPages}
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-          >
-            Next
-          </Button>
-        </div>
-
         <Dialog
           open={isDialogOpen}
           onOpenChange={(open) => setIsDialogOpen(open)}
@@ -232,12 +193,12 @@ const filteredCategories = categories.filter((category) => {
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className='flex items-start flex-col gap-2 '>
+              <div className="flex flex-col items-start gap-2 ">
                 <Label htmlFor="type">Category Type</Label>
                 <select
                   id="type"
                   {...register('type', { required: true })}
-                  className="w-1/2 p-2 bg-transparent rounded-lg border border-gray-400"
+                  className="w-1/2 rounded-lg border border-gray-400 bg-transparent p-2"
                 >
                   <option value="" disabled selected>
                     Select category type
@@ -256,12 +217,12 @@ const filteredCategories = categories.filter((category) => {
                 />
               </div>
 
-              <div className='flex items-start flex-col gap-2 '>
+              <div className="flex flex-col items-start gap-2 ">
                 <Label htmlFor="parentCategoryId">Parent Category</Label>
                 <select
                   id="parentCategoryId"
                   {...register('parentCategoryId')}
-                   className="w-1/2 bg-transparent p-2 rounded-lg border border-gray-400"
+                  className="w-1/2 rounded-lg border border-gray-400 bg-transparent p-2"
                 >
                   <option value="">No Parent</option>
                   {categories

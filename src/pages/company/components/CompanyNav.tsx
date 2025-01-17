@@ -40,7 +40,7 @@ const CompanyNav = () => {
             onClick={() => handleNavigation(`/admin/companies/${id}/storages`)}
             className="text-blue-500 hover:underline"
           >
-            Storage
+            Storages
           </button>
         </li>
         <li>
@@ -48,7 +48,7 @@ const CompanyNav = () => {
             onClick={() => handleNavigation(`/admin/companies/${id}/users`)}
             className="text-blue-500 hover:underline"
           >
-            User
+            Users
           </button>
         </li>
       </ul>

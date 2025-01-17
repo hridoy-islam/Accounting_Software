@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import CompanyNav from '../../components/CompanyNav';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useParams } from 'react-router-dom';  // Assuming you're using React Router for route params
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface TUser {
   id: string;
@@ -104,35 +105,36 @@ const CompanyUser: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="py-6">
       <CompanyNav />
       <h1 className="mb-8 text-2xl font-semibold">Users</h1>
 
       <div className="flex justify-end mb-4">
-        <Button onClick={() => setIsDialogOpen(true)}>Add User</Button>
+
+        <Button variant='theme' onClick={() => setIsDialogOpen(true)}>Add User</Button>
       </div>
 
       <div className="flex flex-col gap-4">
-        <table className="w-full border-collapse border border-gray-300 text-left">
-          <thead>
-            <tr>
-              <th className="border border-gray-300 px-4 py-2">Name</th>
-              <th className="border border-gray-300 px-4 py-2">Email</th>
-              <th className="border border-gray-300 px-4 py-2">Phone</th>
-              <th className="border border-gray-300 px-4 py-2">Address</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td className="border border-gray-300 px-4 py-2">{user.name}</td>
-                <td className="border border-gray-300 px-4 py-2">{user.email}</td>
-                <td className="border border-gray-300 px-4 py-2">{user.phone}</td>
-                <td className="border border-gray-300 px-4 py-2">{user.address || 'N/A'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <Table className="w-full border-collapse">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Phone</TableHead>
+          <TableHead>Address</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {users.map((user) => (
+          <TableRow key={user.id}>
+            <TableCell>{user.name}</TableCell>
+            <TableCell>{user.email}</TableCell>
+            <TableCell>{user.phone}</TableCell>
+            <TableCell>{user.address || "N/A"}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
       </div>
 
       {/* Dialog Form */}

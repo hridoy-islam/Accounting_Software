@@ -10,14 +10,14 @@ export default function UserPage() {
   //   setRefreshKey((prev) => prev + 1); // Update the key to trigger re-fetch
   // };
   return (
-    <div className="space-y-4 p-4 md:p-8">
-      <PageHead title="Profile Page" />
-      <Breadcrumbs
+    <div className="space-y-4 rounded-lg bg-white shadow-md">
+      
+      {/* <Breadcrumbs
         items={[
           { title: 'Dashboard', link: '/admin' },
           { title: 'Users', link: '/users' }
         ]}
-      />
+      /> */}
       {/* <CreateUser onUserCreated={handleUserCreated} /> */}
       {/* <UserTableList refreshKey={refreshKey} /> */}
       <UserTable />

@@ -83,3 +83,7 @@
     font-family: 'Montserrat', sans-serif;
   }
 }
+
+.btn-theme{
+  @apply bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80
+}

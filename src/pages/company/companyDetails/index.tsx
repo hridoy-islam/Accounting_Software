@@ -77,7 +77,7 @@ const CompanyDashboard: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className=" py-6">
       <CompanyNav />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

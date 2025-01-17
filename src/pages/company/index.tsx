@@ -5,7 +5,7 @@ import { Pen, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import axiosInstance from '@/lib/axios'
+import axiosInstance from '@/lib/axios';
 import {
   Table,
   TableBody,
@@ -51,29 +51,31 @@ export function Company() {
   const fetchData = async () => {
     try {
       if (initialLoading) setInitialLoading(true);
-      const response = await axiosInstance.get(`/companies?createdBy=${user._id}`);
+      const response = await axiosInstance.get(`/companies`);
       setCompanies(response.data.data.result);
     } catch (error) {
-      console.error("Error fetching institutions:", error);
+      console.error('Error fetching institutions:', error);
     } finally {
       setInitialLoading(false); // Disable initial loading after the first fetch
     }
   };
 
   useEffect(() => {
-    fetchData()
+    fetchData();
   }, []);
 
   const onSubmit = async (data: any) => {
-
     if (companyToEdit) {
       await axiosInstance.patch(`/companies/${companyToEdit?._id}`, data);
-      toast({ title: "Record Updated successfully", className: "bg-background border-none text-white", });
+      toast({
+        title: 'Record Updated successfully',
+        className: 'bg-background border-none text-white'
+      });
       fetchData();
-      setCompanyToEdit(undefined)
+      setCompanyToEdit(undefined);
     } else {
-      const formattedData = {...data, createdBy: user._id}
-      await axiosInstance.post('/companies', formattedData)
+      const formattedData = { ...data, createdBy: user._id };
+      await axiosInstance.post('/companies', formattedData);
       fetchData();
     }
 
@@ -92,28 +94,27 @@ export function Company() {
     reset(company);
   };
 
- 
-
   return (
-    <div className="space-y-4 p-4 md:p-8">
-      <Breadcrumbs
+    <div className="space-y-4 rounded-lg bg-white shadow-md">
+      <div className="p-4 ">
+        {/* <Breadcrumbs
         items={[
           { title: 'Dashboard', link: '/admin' },
           { title: 'Company', link: '/companies' }
         ]}
-      />
-      <div className="space-y-6">
-        <h1 className="text-2xl font-semibold">Company Management</h1>
+      /> */}
+        <h1 className="pb-6 text-2xl font-semibold">Company Management</h1>
 
-        <div className="flex justify-between">
+        <div className="flex justify-between ">
           <Input
             placeholder="Search companies..."
-            className="max-w-md"
+            className="max-w-md border-2"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)} // Update search query state
           />
           <Button
-            className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
+            variant="theme"
+            
             onClick={() => {
               setCompanyToEdit(null);
               setIsDialogOpen(true);
@@ -123,12 +124,13 @@ export function Company() {
             New Company
           </Button>
         </div>
-
-        <div className="rounded-md bg-white p-4 shadow-2xl">
+      </div>
+      <div className="space-y-1">
+        <div className="rounded-md  p-4 ">
           <Table>
             <TableHeader>
-              <TableRow className="text-center">
-                <TableHead className="text-center">Logo</TableHead>
+              <TableRow className="">
+                <TableHead className="">Logo</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
@@ -140,33 +142,28 @@ export function Company() {
             <TableBody>
               {companies.map((company) => (
                 <TableRow key={company._id}>
-                  <TableCell className="text-center">
+                  <TableCell className="">
                     <img
                       src={company.logo || placeholder}
                       alt={company.companyName}
                       className="mx-auto h-10 w-10 object-cover"
                     />
                   </TableCell>
-                  <TableCell className="text-center">
-                    {company.companyName}
-                  </TableCell>
-                  <TableCell className="text-center">{company.email}</TableCell>
-                  <TableCell className="text-center">{company.phone}</TableCell>
-                  <TableCell className="text-center">{company.companyAddress}</TableCell>
-                  <TableCell className="text-center align-middle">
+                  <TableCell className="">{company.companyName}</TableCell>
+                  <TableCell className="">{company.email}</TableCell>
+                  <TableCell className="">{company.phone}</TableCell>
+                  <TableCell className="">{company.companyAddress}</TableCell>
+                  <TableCell className="">
                     <Button
                       variant="theme"
                       // Navigate to company details page
-                      className="inline-block"
+                      className=" w-full"
                     >
-                      <Link to={company._id}>
-                      View
-                      </Link>
-                      
+                      <Link to={company._id}>View</Link>
                     </Button>
                   </TableCell>
 
-                  <TableCell className="space-x-4 text-center">
+                  <TableCell className="space-x-4 ">
                     <Button
                       variant={'default'}
                       className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
@@ -258,10 +255,7 @@ export function Company() {
                   </span>
                 )}
               </div>
-              <div>
-                
-                
-              </div>
+              <div></div>
 
               <Button
                 type="submit"
