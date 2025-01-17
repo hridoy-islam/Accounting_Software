@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom';  // Assuming you're using React Ro
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSelector } from 'react-redux';
 import axiosInstance from '@/lib/axios'
+import { Switch } from '@/components/ui/switch';
 
 
 const CompanyUser: React.FC = () => {
@@ -49,8 +50,14 @@ const CompanyUser: React.FC = () => {
   }, []);
 
   return (
+
     <div className="py-6">
       <CompanyNav />
+
+      <div className="rounded-md bg-white p-4 shadow-lg">
+
+     
+     
       <h1 className="mb-8 text-2xl font-semibold">Assigned Users</h1>
       <div className="flex justify-end mb-4">
         <Button variant='theme' onClick={() => setIsDialogOpen(true)}>Assign User</Button>
@@ -67,13 +74,24 @@ const CompanyUser: React.FC = () => {
             {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.name}</TableCell>
-                <TableCell>Switch</TableCell>
+                <TableCell>
+                  <Switch
+                    checked={user.status}
+                      onCheckedChange={(checked) =>
+                        setUsers(
+                          users.map((s) =>
+                            s.id === user.id ? { ...s, auditStatus: checked } : s
+                          )
+                        )
+                      }
+                    />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </div>
 
+      </div>
       {/* Dialog Form */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
@@ -81,18 +99,20 @@ const CompanyUser: React.FC = () => {
             <DialogTitle>Add New User</DialogTitle>
           </DialogHeader>
           <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-            <select>
+            <select className="w-full rounded-md border border-gray-300 bg-white p-2 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500">
               {users.map((user) => (
                 <option key={user._id} value={user._id}>{user.name}</option>))}
             </select>
 
             <DialogFooter>
-              <Button type="submit">Add User</Button>
-              <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+              <Button variant="default" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+              <Button variant='theme' type="submit">Add User</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+      
+      </div>
     </div>
   );
 };

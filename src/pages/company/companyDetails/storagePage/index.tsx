@@ -22,29 +22,9 @@ interface Storage {
   createdBy?: string;
 }
 
-const mockStorages: Storage[] = [
-  {
-    id: 1,
-    storageName: "Main Warehouse",
-    openingBalance: 1000,
-    openingDate: "2025-01-01",
-    logo: " ",
-    status: true,
-    auditStatus: true,
-  },
-  {
-    id: 2,
-    storageName: "Secondary Warehouse",
-    openingBalance: 1500,
-    openingDate: "2025-02-01",
-    logo: " ",
-    status: false,
-    auditStatus: false,
-  },
-];
 
 const StoragePage = () => {
-  const [storages, setStorages] = useState<Storage[]>(mockStorages);
+  const [storages, setStorages] = useState<Storage[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { id } = useParams();
   const [storageToEdit, setStorageToEdit] = useState<any>(null);
@@ -94,26 +74,33 @@ const StoragePage = () => {
     setStorageToEdit(storage);
     reset(storage);
   };
-
+  const handleSwitchChange = (checked: boolean, field: string) => {
+    if (storageToEdit) {
+      setStorageToEdit({ ...storageToEdit, [field]: checked });
+    }
+  };
 
 
   return (
     <div className="py-6">
       <CompanyNav />
+
+      <div className="rounded-md bg-white p-4 shadow-lg">
+
+      
       <h1 className="mb-8 text-2xl font-semibold">Storages</h1>
 
       <div className="flex justify-end mb-4">
         <Button variant='theme' onClick={() => setIsDialogOpen(true)}>Add Storage</Button>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 pb-4">
         <Table className="w-full border-collapse ">
           <TableHeader>
             <TableRow>
               <TableHead >Name</TableHead>
               <TableHead >Opening Balance</TableHead>
               <TableHead >Opening Date</TableHead>
-              <TableHead >Logo</TableHead>
               <TableHead >Status</TableHead>
               <TableHead >Audit Status</TableHead>
               <TableHead >Actions</TableHead>
@@ -125,13 +112,7 @@ const StoragePage = () => {
                 <TableCell >{storage.storageName}</TableCell>
                 <TableCell >{storage.openingBalance}</TableCell>
                 <TableCell >{storage.openingDate}</TableCell>
-                <TableCell >
-                  {storage.logo ? (
-                    <img src={storage.logo} alt="Logo" className="h-8 w-8 " />
-                  ) : (
-                    "N/A"
-                  )}
-                </TableCell>
+                
                 <TableCell >
                   <Switch
                     checked={storage.status}
@@ -224,9 +205,19 @@ const StoragePage = () => {
             <div className="flex items-center gap-2">
               <label htmlFor="status">Status</label>
               <Switch
-                id="status"
-                checked={Boolean(storageToEdit?.status)}
-                onCheckedChange={(checked) => setStorageToEdit({ ...storageToEdit, status: checked })}
+              id="status"
+              checked={Boolean(storageToEdit?.status)}
+              onCheckedChange={(checked) => {
+                if (storageToEdit) {
+                setStorageToEdit({ ...storageToEdit, status: checked });
+                } else {
+                setStorages(
+                  storages.map((s) =>
+                  s.id === storageToEdit?.id ? { ...s, status: checked } : s
+                  )
+                );
+                }
+              }}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -234,18 +225,29 @@ const StoragePage = () => {
               <Switch
                 id="auditStatus"
                 checked={Boolean(storageToEdit?.auditStatus)}
-                onCheckedChange={(checked) => setStorageToEdit({ ...storageToEdit, auditStatus: checked })}
+                onCheckedChange={(checked) => {
+                  if (storageToEdit) {
+                  setStorageToEdit({ ...storageToEdit, status: checked });
+                  } else {
+                  setStorages(
+                    storages.map((s) =>
+                    s.id === storageToEdit?.id ? { ...s, status: checked } : s
+                    )
+                  );
+                  }
+                }}
               />
             </div>
           </form>
           <DialogFooter>
-            <Button variant='theme' type='submit'>{storageToEdit ? 'Update' : 'Submit'} Storage</Button>
+            <Button variant='theme' type='submit'>{storageToEdit ? 'Update' : 'Add'} Storage</Button>
             <Button variant="default" className='border border-gray-400 hover:bg-black hover:text-white' onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 };

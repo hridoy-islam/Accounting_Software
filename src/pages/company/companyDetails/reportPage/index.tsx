@@ -258,9 +258,16 @@ const ReportPage: React.FC = () => {
     <div className="py-6">
       <CompanyNav />
 
+        <div className="rounded-md bg-white p-4 shadow-lg">
+
+       
       <div className="mb-8  flex flex-col items-center justify-between  md:flex-row">
         <h1 className="text-2xl font-semibold">Financial Reports</h1>
         <div className="flex gap-4">
+
+
+
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
@@ -387,6 +394,7 @@ const ReportPage: React.FC = () => {
           </div>
         </>
       )}
+       </div>
     </div>
   );
 };

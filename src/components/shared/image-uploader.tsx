@@ -174,7 +174,7 @@ import { ImageIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axiosInstance from '../../lib/axios'; // Adjust the path as necessary
 
-export function ImageUploader({ open, onOpenChange, onUploadComplete, studentId }) {
+export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId }) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -197,14 +197,19 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, studentId 
     setDragActive(false);
 
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) {
+    if (file && file.type === "text/csv") {
       handleFile(file);
+    } else {
+      alert("Please upload a valid CSV file.");
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) handleFile(file);
+    if (file && file.type === "text/csv") handleFile(file);
+    else {
+      alert("Please upload a valid CSV file.");
+    }
   };
 
   const handleFile = (file: File) => {
@@ -228,7 +233,7 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, studentId 
       }
 
       const formData = new FormData();
-      formData.append("student_id", studentId);
+      formData.append("student_id", companyId);
       formData.append("file_type", "profile");
       formData.append("files[]", file);
 
@@ -261,7 +266,7 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, studentId 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload Profile Picture</DialogTitle>
+          <DialogTitle>Upload CSV File</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div
@@ -306,10 +311,10 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, studentId 
               <div className="flex flex-col items-center gap-2 text-center">
                 <ImageIcon className="h-8 w-8 text-muted-foreground" />
                 <div className="text-sm font-medium">
-                  Drag & drop an image here, or click to select
+                  Drag & drop an CSV here, or click to select
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  PNG, JPG or GIF (max. 2MB)
+                  CSV (max. 2MB)
                 </div>
               </div>
             )}
@@ -317,7 +322,7 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, studentId 
 
           {selectedImage && !uploading && (
             <Button className="w-full" onClick={uploadImage}>
-              Upload Image
+              Upload CSV
             </Button>
           )}
 
