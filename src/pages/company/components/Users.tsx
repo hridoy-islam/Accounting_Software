@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom'; // Assuming you're using React Rou
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSelector } from 'react-redux';
 import axiosInstance from '@/lib/axios';
-import { Switch } from '@/components/ui/switch';
+import { Trash } from 'lucide-react';
 
 const CompanyUser: React.FC = () => {
   const [users, setUsers] = useState<any>([]);
@@ -20,8 +20,9 @@ const CompanyUser: React.FC = () => {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   // Fetch all users created by the current user
-  const fetchData = async () => {
+  const fetchUsers = async () => {
     try {
+      if (initialLoading) setInitialLoading(true);
       const response = await axiosInstance.get(`/users?createdBy=${user._id}`);
       setUsers(response.data.data.result);
     } catch (error) {
@@ -32,12 +33,10 @@ const CompanyUser: React.FC = () => {
   };
 
   // Fetch assigned users for the company
-  const fetchAssignedUsers = async () => {
+  const fetchCompanyData = async () => {
     try {
       const response = await axiosInstance.get(`/companies/${id}`);
       const result = response.data.data.assignUser;
-
-      console.log(response.data.data)
       if (result) {
         setAssignUser(result); // Set the existing assigned users
       } else {
@@ -50,8 +49,8 @@ const CompanyUser: React.FC = () => {
 
   // Run both fetch functions on component mount
   useEffect(() => {
-    fetchData();
-    fetchAssignedUsers();
+    fetchUsers();
+    fetchCompanyData()
   }, []);
 
 
@@ -60,20 +59,23 @@ const CompanyUser: React.FC = () => {
   const onSubmit = async (data: any) => {
     try {
       const newUserId = data.userId; // The selected user's ID
-      const updatedAssignUser = [...assignUser, newUserId]; // Add the new user ID to the array
-
-      const response = await axiosInstance.patch(`/companies/${id}`, {
-        assignUser: updatedAssignUser,
-      });
-
-      setAssignUser(response.data.data.assignUser);
-    
+      await axiosInstance.post(`/companies/${id}/user/${newUserId}`);
       setIsDialogOpen(false); // Close dialog
       reset(); // Reset the form
+      fetchCompanyData()
     } catch (error) {
       console.error('Error assigning user:', error);
     }
   };
+
+  const handleDelete = async(userId) => {
+    try {
+      await axiosInstance.delete(`/companies/${id}/user/${userId}`);
+      fetchCompanyData()
+    } catch (error) {
+      console.error('Error assigning user:', error);
+    }
+  }
 
   return (
     <div className="py-6">
@@ -88,32 +90,32 @@ const CompanyUser: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-            {
-  assignUser.map((item: any, index: number) => (
-    <TableRow key={index}> {/* Use item._id for key */}
-      <TableCell>{item.name}</TableCell> {/* Access the 'name' of each user */}
-      {/* You can use the Switch component and handle status change */}
-      <TableCell>
-        <Switch
-          checked={item.status}
-          onCheckedChange={(checked) =>
-            setAssignUser(
-              assignUser.map((s: any, idx: number) =>
-                idx === index ? { ...s, status: checked } : s
-              )
-            )
-          }
-        />
-      </TableCell>
-    </TableRow>
-  ))
-}
+              {
+                assignUser.map((item: any, index: number) => (
+                  <TableRow key={index}> {/* Use item._id for key */}
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{item.email}</TableCell> {/* Access the 'name' of each user */}
+                    
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(item._id)}
+                        className="border-none bg-red-500 text-white hover:bg-red-500/90"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              }
 
-</TableBody>
+            </TableBody>
 
           </Table>
         </div>

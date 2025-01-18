@@ -64,7 +64,10 @@ export function Company() {
 
   const onSubmit = async (data: any) => {
     if (companyToEdit) {
-      await axiosInstance.patch(`/companies/${companyToEdit?._id}`, data);
+      const {companyName, email, phone, companyAddress} =  data
+      await axiosInstance.patch(`/companies/${companyToEdit?._id}`, {
+        companyName, email, phone, companyAddress
+      });
       toast({
         title: 'Record Updated successfully',
         className: 'bg-background border-none text-white'

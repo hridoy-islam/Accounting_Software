@@ -627,7 +627,7 @@ const TransactionPage: React.FC = () => {
                       ).toLocaleDateString()}
                     </TableCell>
                     <TableCell>{transaction.transactionType}</TableCell>
-                    <TableCell>${transaction.transactionAmount}</TableCell>
+                    <TableCell>£{transaction.transactionAmount}</TableCell>
                     <TableCell>
                       {transaction.transactionCategory.name}
                     </TableCell>

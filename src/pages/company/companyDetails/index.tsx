@@ -39,10 +39,10 @@ const CompanyDashboard = () => {
 
     <Tabs defaultValue="history" className="px-2 mt-1">
       <TabsList>
-        <TabsTrigger value="history" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white">Transaction History</TabsTrigger>
-        <TabsTrigger value="transaction" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white">Transactions</TabsTrigger>
-        <TabsTrigger value="storage" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white">Storage</TabsTrigger>
-        <TabsTrigger value="user" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white">Assigned User</TabsTrigger>
+        <TabsTrigger value="history" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white text-xl bg-gray-200 mr-1 py-3">Transaction History</TabsTrigger>
+        <TabsTrigger value="transaction" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white text-xl bg-gray-200 mr-1 py-3">Transactions</TabsTrigger>
+        <TabsTrigger value="storage" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white text-xl bg-gray-200 mr-1 py-3">Storage</TabsTrigger>
+        <TabsTrigger value="user" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white text-xl bg-gray-200 mr-1 py-3">Assigned User</TabsTrigger>
       </TabsList>
       <TabsContent value="history">
         <History companyData={companyData} />

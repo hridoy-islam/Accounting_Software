@@ -35,6 +35,8 @@ const StoragePage = () => {
       storageName: '',
       openingBalance: '',
       openingDate: '',
+      status: '', // for status dropdown
+      auditStatus: '', // for audit status dropdown
     },
   });
 
@@ -57,8 +59,13 @@ const StoragePage = () => {
   const onSubmit = async (data) => {
     try {
       const openingBalance = parseInt(data.openingBalance);
-      const formattedData = { ...data, companyId: id, openingBalance };
-
+      const formattedData = {
+        ...data,
+        companyId: id,
+        openingBalance,
+        status: data.status === 'true', // Convert string 'true' to boolean true
+        auditStatus: data.auditStatus === 'true', // Convert string 'true' to boolean true 
+      };
       if (storageToEdit) {
         // Edit existing storage
         await axiosInstance.patch(`/storages/${storageToEdit._id}`, formattedData);
@@ -80,6 +87,8 @@ const StoragePage = () => {
     setValue('storageName', storage.storageName);
     setValue('openingBalance', storage.openingBalance);
     setValue('openingDate', moment(storage.openingDate).format('YYYY-MM-DD'));
+    setValue('status', storage.status ? 'true' : 'false'); // Map to 'true'/'false'
+    setValue('auditStatus', storage.auditStatus ? 'true' : 'false'); // Map to 'true'/'false'
     setIsDialogOpen(true);
   };
 
@@ -160,6 +169,20 @@ const StoragePage = () => {
 
               <Label htmlFor="openingDate">Opening Date</Label>
               <Input type="date" {...register('openingDate', { required: true })} />
+
+              {/* Select for Status */}
+              <Label htmlFor="status">Status</Label>
+              <select {...register('status', { required: true })} className="w-full rounded-md border border-gray-300 bg-white p-2 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500">
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+
+              {/* Select for Audit Status */}
+              <Label htmlFor="auditStatus">Audit Status</Label>
+              <select {...register('auditStatus', { required: true })} className="w-full rounded-md border border-gray-300 bg-white p-2 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500">
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
 
               <DialogFooter>
                 <Button variant="default" onClick={handleDialogClose}>
