@@ -98,7 +98,9 @@ export default function TransactionPage() {
       <TransactionDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        categories={demoCategories}
+        categories={categories}
+        methods={methods}
+        storages={storages}
         onSubmit={handleAddTransaction}
       />
     </div>
