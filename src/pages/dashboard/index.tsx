@@ -16,35 +16,41 @@ export function Dashboard() {
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
   const [users, setUsers] = useState([])
   const fetchData = async () => {
-      try {
-        if (initialLoading) setInitialLoading(true);
-        const response = await axiosInstance.get(`/companies?createdBy=${user._id}`);
-
-        setCompanies(response.data.data.result);
-      } catch (error) {
-        console.error("Error fetching institutions:", error);
-      } finally {
-        setInitialLoading(false); // Disable initial loading after the first fetch
+    try {
+      if (initialLoading) setInitialLoading(true);
+      let url;
+      if (user.role === 'admin') {
+        url = `/companies?createdBy=${user._id}`;
+      } else if (user.role === 'user') {
+        url = `/companies?assignUser=${user._id}`;
       }
-    };
+      const response = await axiosInstance.get(url);
+
+      setCompanies(response.data.data.result);
+    } catch (error) {
+      console.error("Error fetching institutions:", error);
+    } finally {
+      setInitialLoading(false); // Disable initial loading after the first fetch
+    }
+  };
 
   const fetchUserData = async () => {
-      try {
-        const response = await axiosInstance.get(`/users`);
-        console.log(response.data.data.meta)
-        setUsers(response.data.data.meta);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
+    try {
+      const response = await axiosInstance.get(`/users`);
+      console.log(response.data.data.meta)
+      setUsers(response.data.data.meta);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
 
 
-  useEffect(()=> {
+  useEffect(() => {
     fetchData();
     fetchUserData();
   }, [])
 
-  
+
 
   return (
     <div className="space-y-8">
@@ -57,31 +63,7 @@ export function Dashboard() {
             <p className="text-center text-8xl font-bold">{companies.length}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className='p-6'>
-            <CardTitle>Total Users</CardTitle>
-             
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-8xl font-bold"> {users.total}  </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='p-6'>
-            <CardTitle>Total Categories</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-8xl font-bold">0</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='p-6'>
-            <CardTitle>Total Methods</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-8xl font-bold">0</p>
-          </CardContent>
-        </Card>
+        
       </div>
 
       <Card>
@@ -92,19 +74,19 @@ export function Dashboard() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-6">
             {companies.map((company) => (
               <Link to={`companies/${company._id}`}>
-              <Card
-                key={company.id}
-                className="w-auto cursor-pointer transition-shadow hover:shadow-lg"
-              >
-                <CardContent className="p-4">
-                  <img
-                    src={company.logo || placeholder}
-                    alt={`${company.companyName} logo`}
-                    className="mb-2 h-full w-full object-cover"
-                  />
-                  <h3 className="font-bold">{company.companyName}</h3>
-                </CardContent>
-              </Card>
+                <Card
+                  key={company.id}
+                  className="w-auto cursor-pointer transition-shadow hover:shadow-lg"
+                >
+                  <CardContent className="p-4">
+                    <img
+                      src={company.logo || placeholder}
+                      alt={`${company.companyName} logo`}
+                      className="mb-2 h-full w-full object-cover"
+                    />
+                    <h3 className="font-bold">{company.companyName}</h3>
+                  </CardContent>
+                </Card>
               </Link>
             ))}
           </div>

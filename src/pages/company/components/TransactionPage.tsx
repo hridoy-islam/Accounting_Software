@@ -11,7 +11,7 @@ import { useParams } from "react-router-dom"
 
 export default function TransactionPage() {
   const { id } = useParams();
-  const [transactions, setTransactions] = useState<Transaction[]>(demoTransactions)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState([]);
   const [methods, setMethods] = useState([]);
   const [storages, setStorages] = useState([]);
@@ -26,9 +26,7 @@ export default function TransactionPage() {
   })
 
   const handleFiltersChange = (newFilters: Filters) => {
-    setFilters(newFilters)
-    // In a real application, you would apply these filters to fetch data from an API
-    console.log("Filters changed:", newFilters)
+    
   }
 
   const handleAddTransaction = (data: Partial<Transaction>) => {
@@ -81,6 +79,7 @@ export default function TransactionPage() {
           </Button>
           <Button variant="outline">Upload CSV</Button>
           <Button variant="outline">Download CSV Example</Button>
+          <Button variant="destructive">Export PDF</Button>
         </div>
       </div>
 
@@ -89,7 +88,7 @@ export default function TransactionPage() {
         methods={methods}
         storages={storages}
         onFiltersChange={handleFiltersChange}
-      />
+      /> 
 
       <TransactionTable
         transactions={transactions}

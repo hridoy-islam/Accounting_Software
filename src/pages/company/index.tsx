@@ -49,7 +49,14 @@ export function Company() {
   const fetchData = async () => {
     try {
       if (initialLoading) setInitialLoading(true);
-      const response = await axiosInstance.get(`/companies?createdBy=${user._id}`);
+      let url;
+      if (user.role === 'admin') {
+        url = `/companies?createdBy=${user._id}`;
+      } else if (user.role === 'user') {
+        url = `/companies?assignUser=${user._id}`;
+      }
+      const response = await axiosInstance.get(url);
+      
       setCompanies(response.data.data.result);
     } catch (error) {
       console.error('Error fetching institutions:', error);

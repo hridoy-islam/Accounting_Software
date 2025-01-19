@@ -2,9 +2,7 @@ import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { format } from "date-fns"
-import { CalendarIcon, Upload } from 'lucide-react'
-
+import axiosInstance from '@/lib/axios'
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -29,21 +27,16 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Calendar } from "@/components/ui/calendar"
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
 import { Transaction, methods, storages } from "@/types"
 import { Category } from "@/types"
 import { CategorySelector } from "./category-selector"
+import { Label } from "@/components/ui/label"
+import { Upload } from "lucide-react"
 
 const formSchema = z.object({
-    transactionDate: z.date().nonempty({ message: "Transaction date is required" }),
+    transactionDate: z.date(),
     invoiceNumber: z.string().min(1, "Invoice number is required"),
-    invoiceDate: z.date().nonempty({ message: "Invoice date is required" }),
+    invoiceDate: z.date(),
     details: z.string().min(1, "Details are required"),
     description: z.string().optional(),
     type: z.enum(["inflow", "outflow"]),
@@ -78,6 +71,7 @@ export function TransactionDialog({
     })
 
     const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+        console.log(values)
         try {
             const formData = new FormData()
             formData.append("transactionDate", values.transactionDate.toISOString())
@@ -123,37 +117,10 @@ export function TransactionDialog({
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="transactionDate"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Transaction Date</FormLabel>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <FormControl>
-                                                    <Button
-                                                        variant="outline"
-                                                        className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-                                                    >
-                                                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                    </Button>
-                                                </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={field.value}
-                                                    onSelect={field.onChange}
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            <div className="space-y-2">
+                            <Label>Transaction Date</Label>
+                            <Input type="date" />
+                            </div>
                             <FormField
                                 control={form.control}
                                 name="invoiceNumber"
@@ -170,37 +137,10 @@ export function TransactionDialog({
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="invoiceDate"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Invoice Date</FormLabel>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <FormControl>
-                                                    <Button
-                                                        variant="outline"
-                                                        className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-                                                    >
-                                                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                    </Button>
-                                                </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={field.value}
-                                                    onSelect={field.onChange}
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                        <div className="space-y-2">
+                            <Label>Invoice Date</Label>
+                            <Input type="date" />
+                            </div>
                             <FormField
                                 control={form.control}
                                 name="type"

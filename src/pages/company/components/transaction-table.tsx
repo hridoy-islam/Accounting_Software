@@ -38,7 +38,7 @@ export function TransactionTable({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      <div className="">
         <Table>
           <TableHeader>
             <TableRow>

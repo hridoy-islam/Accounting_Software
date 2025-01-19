@@ -148,9 +148,8 @@ export function TransactionFilters({
           <Button variant="outline">Weekly Report</Button>
           <Button variant="outline">Monthly Report</Button>
         </div>
-        <Button variant="destructive">Export PDF</Button>
+        <Button variant="destructive">Generate Report</Button>
       </div>
     </div>
   )
 }
-
