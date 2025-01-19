@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { DropdownMenuCheckboxItemProps } from '@radix-ui/react-dropdown-menu';
 import axiosInstance from '@/lib/axios'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import History from '../components/History';

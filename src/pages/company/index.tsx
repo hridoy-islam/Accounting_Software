@@ -141,7 +141,7 @@ export function Company() {
                       className="mx-auto h-10 w-10 object-cover"
                     />
                   </TableCell>
-                  <TableCell className="">{company.companyName}</TableCell>
+                  <TableCell className=""><Link to={company._id}>{company.companyName}</Link></TableCell>
                   <TableCell className="">{company.email}</TableCell>
                   <TableCell className="">{company.phone}</TableCell>
                   <TableCell className="">{company.companyAddress}</TableCell>

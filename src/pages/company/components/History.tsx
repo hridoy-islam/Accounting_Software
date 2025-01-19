@@ -62,28 +62,6 @@ export default function History({ companyData }) {
                     <div className="mb-8 flex items-center justify-between">
                         <h1 className="text-2xl font-semibold">{companyData?.companyName} <br /> <span className='text-lg font-semibold'>Recent Transactions</span></h1>
 
-                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline">Filter</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56">
-                                <DropdownMenuLabel>Appearance</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-
-                                <DropdownMenuCheckboxItem
-                                    checked={showInflow}
-                                    onCheckedChange={handleInflowChange}
-                                >
-                                    Inflow
-                                </DropdownMenuCheckboxItem>
-                                <DropdownMenuCheckboxItem
-                                    checked={showOutflow}
-                                    onCheckedChange={handleOutflowChange}
-                                >
-                                    Outflow
-                                </DropdownMenuCheckboxItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu> 
                     </div>
 
                     <Table>

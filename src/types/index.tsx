@@ -90,25 +90,7 @@ export interface Company {
   phone: string
   logo: string
 }
-
-
-
-export const initialFormData: StudentFormData = {
-  title: '',
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  dateOfBirth: '',
-  maritalStatus: '',
-  addressLine1: '',
-  addressLine2: '',
-  townCity: '',
-  state: '',
-  postCode: '',
-  country: '',
-  agent: ''
-}
+ 
 
 export const mockData = {
   titles: ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'],
@@ -195,153 +177,198 @@ export const questions: Question[] = [
   { id: 'agent', question: "Who's your agent?", type: 'select', options: mockData.agents, required: true },
 ];
 
-export interface Student {
-  id: string
-  title: string
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  dob: string
-  maritualStatus: string
-  gender: string
-  nationality: string
-  countryOfResidence: string
-  countryOfBirth: string
-  nativeLanguage: string
-  institution: string
-  passportName: string
-  passportIssueLocation: string
-  passportNumber: string
-  profileImage?: string
-  address: {
-    street: string
-    city: string
-    country: string
-    postalCode: string
+
+
+export interface Category {
+  _id: string
+  name: string
+  type: 'inflow' | 'outflow'
+  parentId: string | null
+  audit: string
+  status: 'Active' | 'Inactive'
+  children?: Category[]
+}
+
+export const demoCategories: Category[] = [
+  {
+    _id: "1",
+    name: "Income",
+    type: "inflow",
+    parentId: null,
+    audit: "Active",
+    status: "Active"
+  },
+  {
+    _id: "2",
+    name: "Salary",
+    type: "inflow",
+    parentId: "1",
+    audit: "Active",
+    status: "Active"
+  },
+  {
+    _id: "3",
+    name: "Sales",
+    type: "inflow",
+    parentId: "1",
+    audit: "Active",
+    status: "Active"
+  },
+  {
+    _id: "4",
+    name: "Investments",
+    type: "inflow",
+    parentId: null,
+    audit: "Active",
+    status: "Active"
+  },
+  {
+    _id: "5",
+    name: "Expenses",
+    type: "outflow",
+    parentId: null,
+    audit: "Active",
+    status: "Active"
+  },
+  {
+    _id: "6",
+    name: "Rent",
+    type: "outflow",
+    parentId: "5",
+    audit: "Active",
+    status: "Active"
+  },
+  {
+    _id: "7",
+    name: "Utilities",
+    type: "outflow",
+    parentId: "5",
+    audit: "Active",
+    status: "Active"
+  },
+  {
+    _id: "8",
+    name: "Office Expenses",
+    type: "outflow",
+    parentId: "5",
+    audit: "Active",
+    status: "Active"
+  }
+]
+
+export interface Transaction {
+  tcid: string
+  date: string
+  transactionDate: string
+  invoiceNumber: string
+  invoiceDate: string
+  details: string
+  description: string
+  type: 'inflow' | 'outflow'
+  amount: number
+  category: string
+  method: string
+  storage: string
+  transactionDoc?: File | null
+}
+
+export interface TransactionFilters {
+  search: string
+  type: 'inflow' | 'outflow'
+  category: string
+  method: string
+  storage: string
+  dateRange?: {
+    from: Date
+    to: Date
   }
 }
 
-export interface VisaHistory {
-  id: string
-  purpose: string
-  arrival: string
-  departure: string
-  visaStart: string
-  visaExpiry: string
-  visaType: string
-  status: string
-}
+export const methods = [
+  "Cash",
+  "Bank Transfer",
+  "Credit Card",
+  "Debit Card",
+  "Check"
+]
 
-export interface RefusalHistory {
-  id: string
-  refusalType: string
-  refusalDate: string
-  details: string
-  country: string
-  visaType: string
-  status: string
-}
+export const storages = [
+  "Dutch Bangla Bank",
+  "City Bank",
+  "Cash Register",
+  "Petty Cash"
+]
 
-export interface AcademicRecord {
-  id: string
-  institution: string
-  course: string
-  studyLevel: string
-  resultScore: string
-  startDate: string
-  endDate: string
-  status: string
-}
-
-export interface EnglishExam {
-  id: string
-  exam: string
-  examDate: string
-  score: string
-  status: string
-}
-
-export interface WorkExperience {
-  id: string
-  jobTitle: string
-  organizationName: string
-  organizationAddress: string
-  phone: string
-  fromDate: string
-  toDate: string | null
-  currentlyWorking: boolean
-  status: string
-}
-export type DocumentType = 'passport' | 'bankStatement' | 'qualification' | 'workExperience' | 'cv'
-
-export interface Document {
-  id: string
-  type: DocumentType
-  fileName: string
-  fileUrl: string
-  uploadDate: string
-  status: 'pending' | 'approved' | 'rejected'
-}
-
-export interface Application {
-  id: number
-  institution: string
-  course: string
-  term: string
-  type: 'Local' | 'International'
-  amount: number
-  status: 'Pending' | 'Approved' | 'Rejected'
-  statusDate?: string
-  actions?: string
-}
-
-export interface EmergencyContact {
-  id: string
-  name: string
-  phone: string
-  email: string
-  address: string
-  relationship: string
-  status: boolean
-}
-
-export interface PersonalInfo {
-  disabilities: string
-  ethnicity: string
-  genderIdentity: string
-  sexualOrientation: string
-  religion: string
-}
-
-export const countries = [
-  "Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla",
-  "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
-  "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin",
-  "Bermuda", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei",
-  "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde",
-  "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros",
-  "Congo - Brazzaville", "Congo - Kinshasa", "Costa Rica", "Côte d’Ivoire", "Croatia",
-  "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica",
-  "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea",
-  "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia",
-  "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea",
-  "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India",
-  "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan",
-  "Jordan", "Kazakhstan", "Kenya", "Kiribati", "South Korea", "Kuwait", "Kyrgyzstan",
-  "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein",
-  "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali",
-  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia",
-  "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar",
-  "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger",
-  "Nigeria", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea",
-  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia",
-  "Rwanda", "Samoa", "San Marino", "Saudi Arabia", "Senegal", "Serbia", "Seychelles",
-  "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia",
-  "South Africa", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland",
-  "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo",
-  "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Uganda",
-  "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay",
-  "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
-];
+export const demoTransactions: Transaction[] = [
+  {
+    tcid: "TC868533",
+    date: "2024-01-14",
+    transactionDate: "2024-01-14",
+    invoiceNumber: "INV-001",
+    invoiceDate: "2024-01-14",
+    details: "Monthly Salary",
+    description: "January 2024 Salary",
+    type: "inflow",
+    amount: 5000,
+    category: "Salary",
+    method: "Bank Transfer",
+    storage: "Dutch Bangla Bank",
+  },
+  {
+    tcid: "TC868534",
+    date: "2024-01-15",
+    transactionDate: "2024-01-15",
+    invoiceNumber: "INV-002",
+    invoiceDate: "2024-01-15",
+    details: "Office Rent",
+    description: "January 2024 Office Rent",
+    type: "outflow",
+    amount: 2000,
+    category: "Rent",
+    method: "Bank Transfer",
+    storage: "City Bank",
+  },
+  {
+    tcid: "TC868535",
+    date: "2024-01-16",
+    transactionDate: "2024-01-16",
+    invoiceNumber: "INV-003",
+    invoiceDate: "2024-01-16",
+    details: "Client Payment",
+    description: "Project completion payment",
+    type: "inflow",
+    amount: 10000,
+    category: "Sales",
+    method: "Bank Transfer",
+    storage: "Dutch Bangla Bank",
+  },
+  {
+    tcid: "TC868536",
+    date: "2024-01-17",
+    transactionDate: "2024-01-17",
+    invoiceNumber: "INV-004",
+    invoiceDate: "2024-01-17",
+    details: "Office Supplies",
+    description: "Stationery and printer ink",
+    type: "outflow",
+    amount: 500,
+    category: "Office Expenses",
+    method: "Credit Card",
+    storage: "City Bank",
+  },
+  {
+    tcid: "TC868537",
+    date: "2024-01-18",
+    transactionDate: "2024-01-18",
+    invoiceNumber: "INV-005",
+    invoiceDate: "2024-01-18",
+    details: "Utility Bill",
+    description: "Electricity and water bill",
+    type: "outflow",
+    amount: 300,
+    category: "Utilities",
+    method: "Bank Transfer",
+    storage: "Dutch Bangla Bank",
+  }
+]
 

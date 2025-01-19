@@ -1,674 +1,108 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import CompanyNav from './CompanyNav';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'; // Add Dialog imports
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue
-} from '@/components/ui/select'; // Add Select imports
-import { Input } from '@/components/ui/input'; // Add Input component
-import { Label } from '@/components/ui/label'; // Add Label component
-import { Textarea } from '@/components/ui/textarea'; // Add Textarea component
-import { Pen, Trash } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
-import axiosInstance from '@/lib/axios';
-import { ImageUploader } from '@/components/shared/image-uploader';
-import { DataTablePagination } from '@/pages/students/view/components/data-table-pagination';
-import { string } from 'zod';
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
 
-// Sample categories and transactionMethods
-export const categories = {
-  TransactionCategory: {
-    inflow: {
-      categories: [
-        {
-          name: 'Revenue',
-          categoryId: '1',
-          children: [
-            { name: 'Sales', categoryId: '1' },
-            { name: 'Services', categoryId: '1' },
-            { name: 'Interest', categoryId: '1' }
-          ]
-        },
-        {
-          name: 'Loan',
-          categoryId: '2',
-          children: [
-            { name: 'Bank Loan', categoryId: '2' },
-            { name: 'Personal Loan', categoryId: '2' }
-          ]
-        }
-      ]
-    },
-    outflow: {
-      categories: [
-        {
-          name: 'Advertise',
-          categoryId: '3',
-          children: [
-            { name: 'Online Ads', categoryId: '3' },
-            { name: 'Print Ads', categoryId: '3' }
-          ]
-        },
-        {
-          name: 'Utility Bill',
-          categoryId: '4',
-          children: [
-            { name: 'Water Bill', categoryId: '4' },
-            { name: 'Electricity Bill', categoryId: '4' },
-            { name: 'Internet Bill', categoryId: '4' }
-          ]
-        }
-      ]
-    }
+import { Transaction, TransactionFilters as Filters, methods, storages, demoTransactions } from "@/types"
+import { demoCategories } from "@/types"
+import { TransactionFilters } from "./transaction-filter"
+import { TransactionTable } from "./transaction-table"
+import { TransactionDialog } from "./transaction-dialog"
+import axiosInstance from '@/lib/axios'
+import { useParams } from "react-router-dom"
+
+export default function TransactionPage() {
+  const { id } = useParams();
+  const [transactions, setTransactions] = useState<Transaction[]>(demoTransactions)
+  const [categories, setCategories] = useState([]);
+  const [methods, setMethods] = useState([]);
+  const [storages, setStorages] = useState([]);
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [filters, setFilters] = useState<Filters>({
+    search: "",
+    type: "inflow",
+    category: "",
+    method: "",
+    storage: "",
+  })
+
+  const handleFiltersChange = (newFilters: Filters) => {
+    setFilters(newFilters)
+    // In a real application, you would apply these filters to fetch data from an API
+    console.log("Filters changed:", newFilters)
   }
-};
 
-const transactionMethods = ['Cash', 'Credit', 'Bank Transfer', 'Paypal'];
+  const handleAddTransaction = (data: Partial<Transaction>) => {
+    const newTransaction: Transaction = {
+      tcid: `TC${Math.floor(Math.random() * 1000000)}`,
+      date: new Date().toISOString(),
+      ...data,
+    } as Transaction
 
-const storageOptions = ['Local', 'Cloud', 'Hybrid'];
+    setTransactions([...transactions, newTransaction])
+  }
 
-interface Transaction {
-  transactionType: string;
-  transactionDate: Date;
-  invoiceNumber?: string;
-  invoiceDate?: Date;
-  details?: string;
-  description?: string;
-  transactionAmount: number;
-  transactionDoc?: string;
-  transactionCategory: string;
-  transactionMethod: string;
-  storage: string;
-  companyId:string;
-}
-
-const TransactionPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [editingTransaction, setEditingTransaction] =
-    useState<Transaction | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
-  const [searchQuery, setSearchQuery] = useState(''); // State for search query
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [entriesPerPage, setEntriesPerPage] = useState(10);
-
-  const initialFormData = {
-    transactionType: '',
-    transactionCategory: '',
-    transactionDate: '',
-    invoiceDate: '',
-    details: '',
-    description: '',
-    transactionAmount: '',
-    transactionDoc: '',
-    transactionMethod: '',
-    storage: ''
-  };
-  const [isOpen, setIsOpen] = useState(false);
-  const [isCSVOpen, setIsCSVOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    transactionType: '',
-    transactionCategory: '',
-    transactionDate: '',
-    invoiceDate: '',
-    details: '',
-    description: '',
-    transactionAmount: '',
-    transactionDoc: '',
-    transactionMethod: '',
-    storage: ''
-  });
-
-  const fetchData = async () => {
-    try {
-      if (initialLoading) setInitialLoading(true);
-      const response = await axiosInstance.get(`/transactions?companyId=${id}`);
-      setTransactions(response.data.data.result);
-    } catch (error) {
-      console.error('Error fetching institutions:', error);
-    } finally {
-      setInitialLoading(false); // Disable initial loading after the first fetch
-    }
-  };
+  const handleEditTransaction = (transaction: Transaction) => {
+    setEditingTransaction(transaction)
+    setDialogOpen(true)
+  }
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [transactionsRes, categoriesRes, methodsRes, storagesRes] = await Promise.all([
+          axiosInstance.get(`/transactions?companyId=${id}`),
+          axiosInstance.get('/categories?limit=all'),
+          axiosInstance.get('/methods?limit=all'),
+          axiosInstance.get(`/storages?companyId=${id}`),
+        ]);
+
+        setTransactions(transactionsRes.data.data.result);
+        setCategories(categoriesRes.data.data.result);
+        setMethods(methodsRes.data.data.result);
+        setStorages(storagesRes.data.data.result);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
     fetchData();
   }, []);
 
-  // Handle input changes
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-      ...(name === 'transactionType' && {
-        transactionCategory: '' // Reset category when transaction type changes
-      })
-    }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
-
-  const handleEdit = (transaction: Transaction) => {
-    setEditingTransaction(transaction);
-    setFormData({
-      transactionType: transaction.transactionType,
-      transactionCategory: transaction.transactionCategory,
-      transactionDate: new Date(transaction.transactionDate)
-        .toISOString()
-        .split('T')[0],
-      invoiceDate: transaction.invoiceDate
-        ? new Date(transaction.invoiceDate).toISOString().split('T')[0]
-        : '',
-      details: transaction.details || '',
-      description: transaction.description || '',
-      transactionAmount: transaction.transactionAmount.toString(),
-      transactionDoc: transaction.transactionDoc || '',
-      transactionMethod: transaction.transactionMethod,
-      storage: transaction.storage
-    });
-    setIsOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this transaction?')) {
-      setTransactions((prevTransactions) =>
-        prevTransactions.filter((transaction) => transaction._id !== id)
-      );
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.transactionType) {
-      alert('Transaction Type is required');
-      return;
-    }
-
-    const newTransaction: Transaction = {
-      companyId: formData._id,
-      transactionType: formData.transactionType,
-      transactionDate: new Date(formData.transactionDate),
-      transactionAmount: parseFloat(formData.transactionAmount),
-      transactionCategory: formData.transactionCategory,
-      transactionMethod: formData.transactionMethod,
-      storage: formData.storage,
-      description: formData.description,
-      details: formData.details,
-      invoiceDate: formData.invoiceDate
-        ? new Date(formData.invoiceDate)
-        : undefined
-    };
-    if (editingTransaction) {
-      setTransactions((prevTransactions) =>
-        prevTransactions.map((transaction) =>
-          transaction._id === editingTransaction.id
-            ? newTransaction
-            : transaction
-        )
-      );
-    } else {
-      setTransactions((prevTransactions) => [
-        ...prevTransactions,
-        newTransaction
-      ]);
-    }
-
-    // addTransaction(newTransaction);
-    setFormData(initialFormData);
-    setIsOpen(false); // Close the dialog after submission
-  };
-
-  // Filter categories based on transaction type
-  const filteredCategories =
-    formData.transactionType &&
-      Array.isArray(
-        categories.TransactionCategory[formData.transactionType]?.categories
-      )
-      ? categories.TransactionCategory[formData.transactionType].categories
-      : [];
-
-  // Get subcategories for the selected category
-  const selectedCategory =
-    filteredCategories.find(
-      (cat) => cat.name === formData.transactionCategory
-    ) || {};
-  const subCategories = selectedCategory?.children || [];
-
-  const handleCSVButtonClick = () => {
-    setIsCSVOpen(true);
-  };
   return (
-    <div className=" py-6">
-      <div className="rounded-md bg-white p-4 shadow-lg">
-        <div className="flex gap-4">
-        <h1 className="mb-8 text-2xl font-semibold">Transactions</h1>
-        <Button onClick={() => setIsOpen(true)} variant="theme">
-                  Add Transaction
-                </Button>
-                <Button variant="destructive" onClick={handleCSVButtonClick}>
-                Upload CSV
-              </Button>
-              <Button variant="outline">
-                Download CSV Example
-              </Button>
-        </div>
-        <div className="mb-4 flex gap-2 justify-between">
-          <Input
-            placeholder="Search Transactions..."
-            className="max-w-md border-2"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)} // Update search query state
-          />
-          <select className="w-full rounded-md border border-gray-300 bg-white p-1 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500">
-            <option>Select Type</option>
-            <option value='inflow'>Inflow</option>
-            <option value='outflow'>Outflow</option>
-            </select>
-            <select className="w-full rounded-md border border-gray-300 bg-white p-1 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500">
-            <option>Filter By Category</option>
-            <option value='inflow'>Inflow</option>
-            <option value='outflow'>Outflow</option>
-            </select>
-            <Button variant="outline">
-                Todays Report
-              </Button>
-              <Button variant="destructive">
-                Weekly Report
-              </Button>
-              <Button variant="outline">
-                Monthly Report
-              </Button>
-              
-              <Button variant="destructive">
-                Export PDF
-              </Button>
-              <ImageUploader
-                open={isCSVOpen}
-                onOpenChange={setIsCSVOpen}
-                onUploadComplete={() => console.log('Upload Complete')}
-                companyId={id}
-              />
-          <div className="flex items-center justify-center gap-4">
-            
-
-            <Dialog
-              open={isOpen}
-              onOpenChange={(open) => {
-                if (!open) {
-                  setEditingTransaction(null);
-                  setFormData(initialFormData);
-                }
-                setIsOpen(open);
-              }}
-            >
-              
-              <DialogContent className="max-h-[90vh] w-full overflow-y-auto p-4 sm:max-w-[600px] md:p-6">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-semibold">
-                    {' '}
-                    {editingTransaction
-                      ? 'Edit Transaction'
-                      : 'Add New Transaction'}
-                  </DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="mt-4 grid gap-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {/* Transaction Type */}
-                    <div className="space-y-2">
-                      <Label htmlFor="transactionType">Transaction Type</Label>
-                      <Select
-                        name="transactionType"
-                        onValueChange={(value) =>
-                          handleSelectChange('transactionType', value)
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem
-                            className="hover:bg-[#a78bfa]"
-                            value="inflow"
-                          >
-                            Inflow
-                          </SelectItem>
-                          <SelectItem
-                            className="hover:bg-[#a78bfa]"
-                            value="outflow"
-                          >
-                            Outflow
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Transaction Category */}
-                    <div className="space-y-2">
-                      <Label htmlFor="transactionCategory">
-                        Transaction Category
-                      </Label>
-                      <Select
-                        name="transactionCategory"
-                        onValueChange={(value) =>
-                          handleSelectChange('transactionCategory', value)
-                        }
-                        disabled={!formData.transactionType} // Disable until type is selected
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {filteredCategories?.map((category) => (
-                            <li key={category.id} className="space-y-2">
-                              <SelectItem
-                                className="hover:bg-[#a78bfa]"
-                                value={category.name}
-                              >
-                                {category.name}
-                              </SelectItem>
-                              {category.children &&
-                                category.children.length > 0 && (
-                                  <ul className="pl-4">
-                                    {category.children.map((childCategory) => (
-                                      <li
-                                        key={childCategory.id}
-                                        className="space-y-2"
-                                      >
-                                        <SelectItem
-                                          className="hover:bg-[#a78bfa]"
-                                          value={childCategory.name}
-                                        >
-                                          {childCategory.name}
-                                        </SelectItem>
-                                        {childCategory.children &&
-                                          childCategory.children.length > 0 && (
-                                            <ul className="pl-4">
-                                              {childCategory.children.map(
-                                                (subChildCategory) => (
-                                                  <li key={subChildCategory.id}>
-                                                    <SelectItem
-                                                      className="hover:bg-[#a78bfa]"
-                                                      value={
-                                                        subChildCategory.name
-                                                      }
-                                                    >
-                                                      {subChildCategory.name}
-                                                    </SelectItem>
-                                                  </li>
-                                                )
-                                              )}
-                                            </ul>
-                                          )}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                            </li>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Subcategory
-                  {subCategories.length > 0 && (
-                    <div className="space-y-2">
-                      <Label htmlFor="subCategory">Subcategory</Label>
-                      <Select
-                        name="subCategory"
-                        onValueChange={(value) =>
-                          handleSelectChange('subCategory', value)
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select subcategory" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {subCategories.map((subCategory) => (
-                            <SelectItem
-                              className="hover:bg-[#a78bfa]"
-                              key={subCategory.name}
-                              value={subCategory.name}
-                            >
-                              {subCategory.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )} */}
-
-                  {/* Transaction Amount */}
-                  <div className="space-y-2">
-                    <Label htmlFor="transactionAmount">
-                      Transaction Amount
-                    </Label>
-                    <Input
-                      id="transactionAmount"
-                      name="transactionAmount"
-                      type="number"
-                      value={formData.transactionAmount}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full"
-                    />
-                  </div>
-
-                  {/* Dates Section */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="transactionDate">Transaction Date</Label>
-                      <Input
-                        id="transactionDate"
-                        name="transactionDate"
-                        type="date"
-                        value={formData.transactionDate}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="invoiceDate">Invoice Date</Label>
-                      <Input
-                        id="invoiceDate"
-                        name="invoiceDate"
-                        type="date"
-                        value={formData.invoiceDate}
-                        onChange={handleInputChange}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      className="min-h-[100px] w-full"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="details">Details</Label>
-                    <Textarea
-                      id="details"
-                      name="details"
-                      value={formData.details}
-                      onChange={handleInputChange}
-                      className="min-h-[80px] w-full"
-                      placeholder="Add any additional details about the transaction"
-                    />
-                  </div>
-
-                  {/* Transaction Method and Storage */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="transactionMethod">
-                        Transaction Method
-                      </Label>
-                      <Select
-                        name="transactionMethod"
-                        onValueChange={(value) =>
-                          handleSelectChange('transactionMethod', value)
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {transactionMethods.map((method) => (
-                            <SelectItem
-                              className="hover:bg-[#a78bfa]"
-                              key={method}
-                              value={method}
-                            >
-                              {method}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="storage">Storage</Label>
-                      <Select
-                        name="storage"
-                        onValueChange={(value) =>
-                          handleSelectChange('storage', value)
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select storage" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {storageOptions.map((option) => (
-                            <SelectItem
-                              className="hover:bg-[#a78bfa]"
-                              key={option}
-                              value={option}
-                            >
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="mt-6 w-full bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
-                  >
-                    Add Transaction
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-
-        {/* Transactions Table */}
-        <div className="flex gap-8 pb-4">
-          <div className="flex-grow">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>TCID</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Storage</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.map((transaction) => (
-                  <TableRow key={transaction._id}>
-                    <TableCell>{transaction.tcid}</TableCell>
-                    <TableCell>
-                      {new Date(
-                        transaction.transactionDate
-                      ).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>{transaction.transactionType}</TableCell>
-                    <TableCell>£{transaction.transactionAmount}</TableCell>
-                    <TableCell>
-                      {transaction.transactionCategory.name}
-                    </TableCell>
-                    <TableCell>{transaction.transactionMethod.name}</TableCell>
-                    <TableCell>{transaction.storage.storageName}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className='"border-none bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80'
-                          onClick={() => handleEdit(transaction)}
-                        >
-                          <Pen className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(transaction.tcid)}
-                          className="border-none bg-red-500 text-white hover:bg-red-500/90"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <DataTablePagination
-              pageSize={entriesPerPage}
-              setPageSize={setEntriesPerPage}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </div>
+    <div className="p-6 space-y-6 rounded-md bg-white mt-6 shadow-lg">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Transactions</h1>
+        <div className="space-x-2">
+          <Button 
+            variant="secondary" 
+            onClick={() => setDialogOpen(true)}
+          >
+            Add Transaction
+          </Button>
+          <Button variant="outline">Upload CSV</Button>
+          <Button variant="outline">Download CSV Example</Button>
         </div>
       </div>
-    </div>
-  );
-};
 
-export default TransactionPage;
+      <TransactionFilters
+        categories={categories}
+        methods={methods}
+        storages={storages}
+        onFiltersChange={handleFiltersChange}
+      />
+
+      <TransactionTable
+        transactions={transactions}
+        onEdit={handleEditTransaction}
+      />
+
+      <TransactionDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        categories={demoCategories}
+        onSubmit={handleAddTransaction}
+      />
+    </div>
+  )
+}
+
