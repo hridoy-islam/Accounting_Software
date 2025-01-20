@@ -28,7 +28,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
       email: '',
       password: '',
       phone: '',
-      role: 'user'
+      role: 'admin'
     }
   });
 
@@ -40,7 +40,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           title: 'Account Created',
           description: 'You have successfully created an account'
         });
-        router.push('/login');
+        router.push('/');
       } else {
         toast({
           title: 'Error',

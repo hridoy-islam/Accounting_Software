@@ -10,9 +10,9 @@ import { FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axiosInstance from '../../lib/axios'; // Adjust the path as necessary
 
-export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId }) {
+export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId, fetchData, currentPage, entriesPerPage, filters }) {
   const [dragActive, setDragActive] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,15 +49,11 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId 
   };
 
   const handleFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setSelectedImage(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    setSelectedFile(file.name);
   };
 
   const uploadImage = async () => {
-    if (!selectedImage) return;
+    if (!selectedFile) return;
 
     setUploading(true);
 
@@ -69,6 +65,7 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId 
       }
 
       const formData = new FormData();
+      formData.append('file', file);
 
       const response = await axiosInstance.post(`/transactions/company/${companyId}`, formData, {
         headers: {
@@ -84,13 +81,14 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId 
 
       if (response.status === 200) {
         onUploadComplete(response.data);
+        fetchData(currentPage, entriesPerPage, filters);
       }
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Error uploading CSV:", error);
     } finally {
       setUploading(false);
       setUploadProgress(0);
-      setSelectedImage(null);
+      setSelectedFile(null);
       onOpenChange(false);
     }
   };
@@ -106,7 +104,7 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId 
             className={cn(
               "relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
               dragActive ? "border-primary" : "border-muted-foreground/25",
-              selectedImage ? "pb-0" : "min-h-[200px]"
+              selectedFile  ? "pb-0" : "min-h-[200px]"
             )}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -120,25 +118,22 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId 
               onChange={handleChange}
               className="absolute inset-0 cursor-pointer opacity-0"
             />
-            {selectedImage ? (
+            {selectedFile  ? (
               <div className="relative aspect-square w-full max-w-[200px] overflow-hidden rounded-lg">
-                <img
-                  src={selectedImage}
-                  alt="Preview"
-                  className="object-cover"
-                />
+                <p>{selectedFile}</p>
                 <Button
                   size="icon"
                   variant="destructive"
-                  className="absolute right-2 top-2"
+                  className="absolute right-0 top-5"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSelectedImage(null);
+                    setSelectedFile(null);
                     if (inputRef.current) inputRef.current.value = '';
                   }}
                 >
                   <X className="h-4 w-4" />
                 </Button>
+                
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 text-center">
@@ -153,7 +148,7 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId 
             )}
           </div>
 
-          {selectedImage && !uploading && (
+          {selectedFile  && !uploading && (
             <Button className="w-full" onClick={uploadImage}>
               Upload CSV
             </Button>

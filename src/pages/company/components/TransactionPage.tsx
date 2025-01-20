@@ -100,15 +100,17 @@ export default function TransactionPage() {
           <Button variant="secondary" onClick={() => setDialogOpen(true)}>
             Add Transaction
           </Button>
-          <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
-            Upload CSV
-          </Button>
-          <ImageUploader
+            <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>Upload CSV</Button>
+            <ImageUploader 
             open={uploadDialogOpen}
             onOpenChange={setUploadDialogOpen}
-            onUploadComplete={() => {}}
-            companyId={id}
-          />
+            onUploadComplete={() => fetchData(currentPage, entriesPerPage, filters)}
+            companyId={id} 
+            fetchData={undefined} 
+            currentPage={undefined} 
+            entriesPerPage={undefined} 
+            filters={undefined}
+            />
           <Button variant="outline">Download CSV Example</Button>
           <Button variant="destructive">Export PDF</Button>
         </div>
