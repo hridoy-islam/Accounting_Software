@@ -60,7 +60,7 @@ export function TransactionFilters({
   const handleApplyFilters = () => {
        
     onApplyFilters({...filters, fromDate, toDate});
-    console.log("Inside Filter", filters);
+    
   };
 
  

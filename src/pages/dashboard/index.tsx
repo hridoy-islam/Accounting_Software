@@ -37,7 +37,7 @@ export function Dashboard() {
   const fetchUserData = async () => {
     try {
       const response = await axiosInstance.get(`/users`);
-      console.log(response.data.data.meta)
+    
       setUsers(response.data.data.meta);
     } catch (error) {
       console.error("Error fetching users:", error);

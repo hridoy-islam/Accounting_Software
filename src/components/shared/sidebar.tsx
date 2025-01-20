@@ -32,7 +32,7 @@ export default function Sidebar({ className }: SidebarProps) {
 
       setTeams(response.data.data);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      
     }
   };
 

@@ -175,7 +175,7 @@ export default function NotesPage() {
   };
 
   const handleShare = () => {
-    console.log(`Sharing note: ${selectedNote?.title} with:`, shareRecipients);
+    
     setIsShareDialogOpen(false);
     setShareRecipients([]);
   };
@@ -213,9 +213,7 @@ export default function NotesPage() {
 
   const handleNoteAction = (action: string) => {
     if (selectedNote) {
-      console.log(
-        `Performing action: ${action} on note: ${selectedNote.title}`
-      );
+     
       // Implement actual actions here
     }
   };

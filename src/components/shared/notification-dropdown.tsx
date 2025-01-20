@@ -41,7 +41,7 @@ export function NotificationDropdown() {
         ).length;
         setUnreadCount(unread);
       } catch (error) {
-        console.error('Error fetching notifications:', error);
+       
       }
     };
 
@@ -55,7 +55,7 @@ export function NotificationDropdown() {
 
       // Listen for real-time notifications
       socket.on('notification', (notification: Notification) => {
-        console.log('New notification received:', notification);
+        
         setNotifications((prev) => [notification, ...prev]);
         setUnreadCount((prevUnread) => prevUnread + 1);
       });
@@ -75,7 +75,7 @@ export function NotificationDropdown() {
       );
       setUnreadCount((prevUnread) => Math.max(0, prevUnread - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+   
     }
   };
 

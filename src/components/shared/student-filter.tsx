@@ -28,7 +28,7 @@ export default function StudentFilter({ onSubmit }){
         setTerms(termsResponse.data.data.result);
         setAcademicYear(academicYearResponse.data.data.result);
       } catch (error) {
-        console.error('Error fetching data:', error);
+       
       }
     };
     useEffect(() => {  

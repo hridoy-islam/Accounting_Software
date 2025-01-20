@@ -29,7 +29,7 @@ export default function CategoriesPage() {
       const response = updatedCategory._id
         ? await axiosInstance.patch(`/categories/${updatedCategory._id}`, updatedCategory)
         : await axiosInstance.post(`/categories`, updatedCategory)
-      console.log(response)
+  
       fetchData();
     } catch (error) {
       console.error('Error updating category:', error)

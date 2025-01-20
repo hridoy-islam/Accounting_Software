@@ -36,7 +36,7 @@ export function AcademicRecords({ student, onSave }) {
   }, [student.academicHistory, student.examHistory]);
 
   const handleAddAcademic = async (data) => {
-    console.log(data)
+    
     if (editingAcademic) {
       const updatedRecord = { ...data, id: editingAcademic.id };
       onSave({ academicHistory: [updatedRecord] });

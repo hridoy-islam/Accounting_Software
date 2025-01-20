@@ -61,7 +61,7 @@ export function WorkExperienceDialog({
     }
   }, [initialData, form]);
 
-  console.log(initialData?.currentlyWorking)
+  
 
   const handleSubmit = (values) => {
     const transformedData = {

@@ -61,7 +61,7 @@ export function PersonalDetailsForm({ student, onSave }) {
   }, [student, reset]);
 
   const onSubmit = (data) => {
-    console.log("on submit", data);
+  
     onSave(data);
   };
 

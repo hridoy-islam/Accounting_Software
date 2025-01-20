@@ -52,7 +52,6 @@ export default function NewPassword() {
       return;
     }
     const userData = JSON.parse(localStorage.getItem('tp_user_data'));
-    // console.log({token: userData.token, password: data.password, userId: userData._id });
     const result: any = await dispatch(
       changePassword({
         token: userData.token,

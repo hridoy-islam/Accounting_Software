@@ -84,7 +84,7 @@ export default function TransactionPage() {
   const handleApplyFilters = (filters) => {
     setAppliedFilters(filters);
     setCurrentPage(1); // Reset to first page when applying new filters
-    console.log('parent', filters);
+    
   };
 
   const onSubmit = async (payload) => {

@@ -84,7 +84,7 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId,
         fetchData(currentPage, entriesPerPage, filters);
       }
     } catch (error) {
-      console.error("Error uploading CSV:", error);
+  
     } finally {
       setUploading(false);
       setUploadProgress(0);
