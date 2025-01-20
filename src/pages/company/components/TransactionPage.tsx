@@ -42,7 +42,6 @@ export default function TransactionPage() {
             page,
             limit: entriesPerPage,
             searchTerm,
-            
           },
         }),
         axiosInstance.get('/categories?limit=all'),
@@ -84,10 +83,14 @@ export default function TransactionPage() {
           </Button>
             <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>Upload CSV</Button>
             <ImageUploader 
-              open={uploadDialogOpen} 
-              onOpenChange={setUploadDialogOpen} 
-              onUploadComplete={() => {}} 
-              companyId={id}
+            open={uploadDialogOpen}
+            onOpenChange={setUploadDialogOpen}
+            onUploadComplete={() => fetchData(currentPage, entriesPerPage, filters)}
+            companyId={id} 
+            fetchData={undefined} 
+            currentPage={undefined} 
+            entriesPerPage={undefined} 
+            filters={undefined}
             />
           <Button variant="outline">Download CSV Example</Button>
           <Button variant="destructive">Export PDF</Button>
