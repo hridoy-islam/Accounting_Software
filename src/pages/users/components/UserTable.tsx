@@ -195,6 +195,7 @@ export function UserTable() {
               <div>
                 <Label htmlFor="password">Password</Label>
                 <Input
+                type='password'
                   id="password"
                   {...register('password', {
                     required: !editingUser ? 'This field is required' : false
