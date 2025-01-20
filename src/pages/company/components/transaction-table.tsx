@@ -76,7 +76,7 @@ export function TransactionTable({
               <TableHead>Category</TableHead>
               <TableHead>Method</TableHead>
               <TableHead>Storage</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {/* <TableHead className="text-right">Actions</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -90,7 +90,7 @@ export function TransactionTable({
                 <TableCell>{transaction.transactionCategory.name}</TableCell>
                 <TableCell>{transaction.transactionMethod.name}</TableCell>
                 <TableCell>{transaction.storage.storageName}</TableCell>
-                <TableCell className="text-right">
+                {/* <TableCell className="text-right">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -98,7 +98,7 @@ export function TransactionTable({
                   >
                     <Pen className="h-4 w-4" />
                   </Button>
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>

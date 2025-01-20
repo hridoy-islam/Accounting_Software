@@ -1,29 +1,34 @@
-import { useEffect, useState } from "react"
-import { Search, Calendar } from 'lucide-react'
-import { format } from "date-fns"
+import { useEffect, useState } from "react";
+import { Search, Calendar } from 'lucide-react';
+import { format } from "date-fns";
+import axiosInstance from '../../../lib/axios';
 
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"
-import { CategorySelector } from "./category-selector"
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+
+import { Category } from "@/types";
+import { CategorySelector } from "./category-selector";
+import { Label } from "@/components/ui/label";
 
 export function TransactionFilters({
   categories,
   methods,
   storages,
   onFiltersChange,
+  onApplyFilters
 }) {
   const [filters, setFilters] = useState({
     search: "",
@@ -31,22 +36,40 @@ export function TransactionFilters({
     category: "",
     method: "",
     storage: "",
-  })
+    
+  });
 
-  const [date, setDate] = useState<{
-    from: Date | undefined
-    to: Date | undefined
-  }>({
-    from: undefined,
-    to: undefined,
-  })
+  // const [date, setDate] = useState<{ from: Date | null; to: Date | null }>({
+  //   from: null,
+  //   to: null,
+  // });
 
+  // const [date, setDate] = useState<{ from: string | undefined; to: string | undefined }>({
+  //   from: "2025-01-01", // Set default "from" date (YYYY-MM-DD)
+  //   to: format(new Date(), "yyyy-MM-dd"), // Set default "to" date (today)
+  // });
+
+  const [fromDate, setFromDate] = useState<string | undefined>(undefined);
+  const [toDate, setToDate] = useState<string | undefined>(undefined);
+
+
+
+
+  // Apply filters and trigger fetch
+  const handleApplyFilters = () => {
+       
+    onApplyFilters({...filters, fromDate, toDate});
+    console.log("Inside Filter", filters);
+  };
+
+ 
+
+  // Handle filter change and date range
   useEffect(() => {
     onFiltersChange({
       ...filters,
-      dateRange: date.from && date.to ? { from: date.from, to: date.to } : undefined,
-    })
-  }, [filters, date, onFiltersChange])
+    });
+  }, [filters, fromDate,toDate, onFiltersChange]);
 
   return (
     <div className="space-y-4">
@@ -79,7 +102,7 @@ export function TransactionFilters({
           </SelectTrigger>
           <SelectContent>
             {methods.map((method) => (
-              <SelectItem key={method} value={method}>
+              <SelectItem key={method._id} value={method._id}>
                 {method.name}
               </SelectItem>
             ))}
@@ -95,43 +118,41 @@ export function TransactionFilters({
           </SelectTrigger>
           <SelectContent>
             {storages.map((storage) => (
-              <SelectItem key={storage} value={storage}>
+              <SelectItem key={storage._id} value={storage._id}>
                 {storage.storageName}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="w-[300px] justify-start text-left font-normal">
-              <Calendar className="mr-2 h-4 w-4" />
-              {date.from ? (
-                date.to ? (
-                  <>
-                    {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
-                  </>
-                ) : (
-                  format(date.from, "LLL dd, y")
-                )
-              ) : (
-                <span>Pick a date range</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <CalendarComponent
-              initialFocus
-              mode="range"
-              defaultMonth={date.from}
-              selected={{ from: date.from, to: date.to }}
-              onSelect={setDate}
-              numberOfMonths={2}
+        {/* Date Range Picker */}
+        <div className="flex gap-4">
+          <div>
+            <Label>From Date</Label>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate( e.target.value)}
+              className="w-[250px] px-2 border rounded-md"
             />
-          </PopoverContent>
-        </Popover>
-        <Button variant="destructive">Filter</Button>
+          </div>
+
+          <div>
+            <Label>To Date</Label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate( e.target.value )}
+              className="w-[250px] px-2 border rounded-md"
+            />
+          </div>
+        </div>
+
+
+        <Button className="ml-auto" onClick={handleApplyFilters}>
+          Filter
+        </Button>
       </div>
     </div>
-  )
+  );
 }

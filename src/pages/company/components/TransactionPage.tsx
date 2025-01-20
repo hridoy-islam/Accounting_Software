@@ -1,54 +1,63 @@
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Transaction, TransactionFilters as Filters } from "@/types"
-import { TransactionFilters } from "./transaction-filter"
-import { TransactionTable } from "./transaction-table"
-import { TransactionDialog } from "./transaction-dialog"
-import axiosInstance from '@/lib/axios'
-import { useParams } from "react-router-dom"
-import { ImageUploader } from "@/components/shared/image-uploader"
-import { DataTablePagination } from "@/components/shared/data-table-pagination"
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Transaction, TransactionFilters as Filters } from '@/types';
+import { TransactionFilters } from './transaction-filter';
+import { TransactionTable } from './transaction-table';
+import { TransactionDialog } from './transaction-dialog';
+import axiosInstance from '@/lib/axios';
+import { useParams } from 'react-router-dom';
+import { ImageUploader } from '@/components/shared/image-uploader';
+import { DataTablePagination } from '@/components/shared/data-table-pagination';
 export default function TransactionPage() {
   const { id } = useParams();
-  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState([]);
   const [methods, setMethods] = useState([]);
   const [storages, setStorages] = useState([]);
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] =
+    useState<Transaction | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
 
-  const handleFiltersChange = (newFilters: Filters) => {
-    
-  }
+  const [filters, setFilters] = useState({
+    search: '',
+    type: '',
+    category: '',
+    method: '',
+    storage: ''
+  });
 
-  const handleEditTransaction = (transaction: Transaction) => {
-    setEditingTransaction(transaction)
-    setDialogOpen(true)
-  }
-  const [filters, setFilters] = useState({ searchTerm: ""});
+  // Applied filter values (only update these when Apply Filters is clicked)
+  const [appliedFilters, setAppliedFilters] = useState(filters);
 
-  const fetchData = async (page, entriesPerPage, filters) => {
+  const fetchData = async (page, entriesPerPage, appliedFilters) => {
     try {
-      const { searchTerm} = filters;
+      const { search, type, category, method, storage, fromDate, toDate } =
+        appliedFilters;
 
-      const [transactionsRes, categoriesRes, methodsRes, storagesRes] = await Promise.all([
-        axiosInstance.get(`/transactions?companyId=${id}`, {
-          params: {
-            page,
-            limit: entriesPerPage,
-            searchTerm,
-            
-          },
-        }),
-        axiosInstance.get('/categories?limit=all'),
-        axiosInstance.get('/methods?limit=all'),
-        axiosInstance.get(`/storages?companyId=${id}`),
-      ]);
+      const [transactionsRes, categoriesRes, methodsRes, storagesRes] =
+        await Promise.all([
+          axiosInstance.get(`/transactions?companyId=${id}`, {
+            params: {
+              page,
+              limit: entriesPerPage,
+              searchTerm: search || undefined,
+              transactionType: type || undefined,
+              transactionCategory: category || undefined,
+              transactionMethod: method || undefined,
+              storage: storage || undefined,
+              startDate: fromDate || undefined,
+              endDate: toDate || undefined
+            }
+          }),
+          axiosInstance.get('/categories?limit=all'),
+          axiosInstance.get('/methods?limit=all'),
+          axiosInstance.get(`/storages?companyId=${id}`)
+        ]);
 
       setTransactions(transactionsRes.data.data.result);
       setTotalPages(transactionsRes.data.data.meta.totalPage);
@@ -56,39 +65,50 @@ export default function TransactionPage() {
       setMethods(methodsRes.data.data.result);
       setStorages(storagesRes.data.data.result);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error('Error fetching data:', error);
     }
   };
-
   useEffect(() => {
-    fetchData(currentPage, entriesPerPage, filters); // Refresh data
-  }, [currentPage, entriesPerPage]);
+    fetchData(currentPage, entriesPerPage, appliedFilters);
+  }, [currentPage, entriesPerPage, appliedFilters]);
 
+  const handleEditTransaction = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setDialogOpen(true);
+  };
 
-  
-  const onSubmit= async(payload)=>{
+  const handleFiltersChange = (newFilters) => {
+    setFilters(newFilters);
+  };
+
+  const handleApplyFilters = (filters) => {
+    setAppliedFilters(filters);
+    setCurrentPage(1); // Reset to first page when applying new filters
+    console.log('parent', filters);
+  };
+
+  const onSubmit = async (payload) => {
     await axiosInstance.post('/transactions', payload);
     fetchData(currentPage, entriesPerPage, filters);
-  }
-  
+  };
+
   return (
-    <div className="p-6 space-y-6 rounded-md bg-white mt-6 shadow-lg">
+    <div className="mt-6 space-y-6 rounded-md bg-white p-6 shadow-lg">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Transactions</h1>
         <div className="space-x-2">
-          <Button 
-            variant="secondary" 
-            onClick={() => setDialogOpen(true)}
-          >
+          <Button variant="secondary" onClick={() => setDialogOpen(true)}>
             Add Transaction
           </Button>
-            <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>Upload CSV</Button>
-            <ImageUploader 
-              open={uploadDialogOpen} 
-              onOpenChange={setUploadDialogOpen} 
-              onUploadComplete={() => {}} 
-              companyId={id}
-            />
+          <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+            Upload CSV
+          </Button>
+          <ImageUploader
+            open={uploadDialogOpen}
+            onOpenChange={setUploadDialogOpen}
+            onUploadComplete={() => {}}
+            companyId={id}
+          />
           <Button variant="outline">Download CSV Example</Button>
           <Button variant="destructive">Export PDF</Button>
         </div>
@@ -99,7 +119,8 @@ export default function TransactionPage() {
         methods={methods}
         storages={storages}
         onFiltersChange={handleFiltersChange}
-      /> 
+        onApplyFilters={handleApplyFilters}
+      />
 
       <TransactionTable
         transactions={transactions}
@@ -115,17 +136,13 @@ export default function TransactionPage() {
         onSubmit={onSubmit}
       />
 
-      <DataTablePagination 
-       pageSize={entriesPerPage}
-       setPageSize={setEntriesPerPage}
-       currentPage={currentPage}
-       totalPages={totalPages}
-       onPageChange={setCurrentPage}
+      <DataTablePagination
+        pageSize={entriesPerPage}
+        setPageSize={setEntriesPerPage}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
       />
-
     </div>
-
-
-  )
+  );
 }
-
