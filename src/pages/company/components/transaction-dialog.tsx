@@ -325,7 +325,7 @@ export function TransactionDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit">Add Transaction</Button>
+              <Button variant="theme" type="submit">Add Transaction</Button>
             </div>
           </form>
         </Form>
