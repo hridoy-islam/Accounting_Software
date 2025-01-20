@@ -122,6 +122,7 @@ const StoragePage = () => {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Balance</TableHead>
+                <TableHead>Balance</TableHead>
                 <TableHead>Opening Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Audit Status</TableHead>
@@ -132,7 +133,7 @@ const StoragePage = () => {
               {storages.map((storage) => (
                 <TableRow key={storage._id}>
                   <TableCell>{storage.storageName}</TableCell>
-                  <TableCell><b>£ {storage.openingBalance}</b></TableCell>
+                  <TableCell className='font-semibold'>£{Number(storage.openingBalance.toFixed(2))}</TableCell>
                   <TableCell>{moment(storage.openingDate).format('DD-MM-YYYY')}</TableCell>
                   <TableCell>{storage.status ? 'Yes' : 'No'}</TableCell>
                   <TableCell>{storage.auditStatus ? 'Yes' : 'No'}</TableCell>

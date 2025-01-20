@@ -170,7 +170,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, X } from "lucide-react";
+import { FileText, ImageIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axiosInstance from '../../lib/axios'; // Adjust the path as necessary
 
@@ -309,7 +309,7 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId 
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 text-center">
-                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                <FileText className="h-8 w-8 text-muted-foreground" />
                 <div className="text-sm font-medium">
                   Drag & drop an CSV here, or click to select
                 </div>

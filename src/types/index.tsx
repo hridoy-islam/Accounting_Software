@@ -51,7 +51,7 @@ export interface StudentFormData {
 }
 
 export interface Transaction {
-  id: number
+  id: string
   tcid: string
   transactionDate: string
   invoiceNumber?: string
@@ -59,7 +59,7 @@ export interface Transaction {
   details?: string
   description?: string
   transactionAmount: number
-  transactionDoc?: string
+  transactionDoc?: File | null
   transactionCategory: string
   transactionMethod: string
   storage: string
@@ -191,21 +191,7 @@ export interface Category {
 
 
 
-export interface Transaction {
-  tcid: string
-  date: string
-  transactionDate: string
-  invoiceNumber: string
-  invoiceDate: string
-  details: string
-  description: string
-  type: 'inflow' | 'outflow'
-  amount: number
-  category: string
-  method: string
-  storage: string
-  transactionDoc?: File | null
-}
+
 
 export interface TransactionFilters {
   search: string

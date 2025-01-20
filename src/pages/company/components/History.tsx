@@ -115,7 +115,7 @@ export default function History({ companyData }) {
                                     </div>
                                     <span className="font-medium">{Item.storageName}</span>
                                 </div>
-                                <span className="font-bold">£{Item.openingBalance}</span>
+                                <span className="font-bold">£{Number(Item.openingBalance.toFixed(2))}</span>
                             </div>
                         ))}
                     </div>
