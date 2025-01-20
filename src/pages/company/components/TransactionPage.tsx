@@ -77,8 +77,8 @@ export default function TransactionPage() {
     setDialogOpen(true);
   };
 
-  const handleFiltersChange = (newFilters) => {
-    setFilters(newFilters);
+  const handleFiltersChange = (filters) => {
+    setFilters(filters);
   };
 
   const handleApplyFilters = (filters) => {
@@ -111,7 +111,9 @@ export default function TransactionPage() {
             entriesPerPage={undefined} 
             filters={undefined}
             />
-          <Button variant="outline">Download CSV Example</Button>
+          <a href="/sample_transactions.csv" download>
+      <Button variant="outline">Download CSV Example</Button>
+    </a>
           <Button variant="destructive">Export PDF</Button>
         </div>
       </div>

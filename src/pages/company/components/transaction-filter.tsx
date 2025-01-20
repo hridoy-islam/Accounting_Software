@@ -22,6 +22,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Category } from "@/types";
 import { CategorySelector } from "./category-selector";
 import { Label } from "@/components/ui/label";
+import moment from "moment";
 
 export function TransactionFilters({
   categories,
@@ -127,29 +128,29 @@ export function TransactionFilters({
 
         {/* Date Range Picker */}
         <div className="flex gap-4">
-          <div>
+          <div className="flex justify-center gap-2 items-center">
             <Label>From Date</Label>
             <input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate( e.target.value)}
-              className="w-[250px] px-2 border rounded-md"
+              className="w-[250px] py-[4px] px-2 border rounded-md border-gray-300"
             />
           </div>
 
-          <div>
+          <div className="flex justify-center gap-2 items-center">
             <Label>To Date</Label>
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate( e.target.value )}
-              className="w-[250px] px-2 border rounded-md"
+              className="w-[250px] px-2 py-[4px] border rounded-md border-gray-300"
             />
           </div>
         </div>
 
 
-        <Button className="ml-auto" onClick={handleApplyFilters}>
+        <Button variant='theme' className="ml-auto" onClick={handleApplyFilters}>
           Filter
         </Button>
       </div>
