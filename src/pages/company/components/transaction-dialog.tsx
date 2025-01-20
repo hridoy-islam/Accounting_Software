@@ -27,8 +27,6 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Transaction } from "@/types"
-import { Category } from "@/types"
 import { CategorySelector } from "./category-selector"
 import { Label } from "@/components/ui/label"
 import { Upload } from "lucide-react"
@@ -46,12 +44,6 @@ const formSchema = z.object({
     storage: z.string().min(1, "Storage is required"),
 })
 
-interface TransactionDialogProps {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    categories: Category[]
-    onSubmit: (data: Partial<Transaction>) => void
-}
 
 export function TransactionDialog({
     open,
@@ -60,7 +52,7 @@ export function TransactionDialog({
     methods,
     storages,
     onSubmit,
-}: TransactionDialogProps) {
+}) {
     const [file, setFile] = useState<File | null>(null)
 
     const form = useForm<z.infer<typeof formSchema>>({

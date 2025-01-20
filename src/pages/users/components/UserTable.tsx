@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pen, Plus} from 'lucide-react';
+import { Pen, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -56,7 +56,7 @@ export function UserTable() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<TUser | null>(null);
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
-   
+
 
   const { register, handleSubmit, reset } = useForm();
 
@@ -67,7 +67,7 @@ export function UserTable() {
   }, [editingUser, reset]);
 
 
- 
+
 
   const fetchData = async () => {
     try {
@@ -88,12 +88,19 @@ export function UserTable() {
 
   const onSubmit = async (data: any) => {
     if (editingUser) {
-      await axiosInstance.patch(`/users/${editingUser?._id}`, data);
+      const updateData = { ...data };
+
+      // Check if the password field is provided
+      if (!data.password) {
+        // If the password is not provided, delete it from the update data
+        delete updateData.password;
+      }
+      await axiosInstance.patch(`/users/${editingUser?._id}`, updateData);
       toast({ title: "Record Updated successfully", className: "bg-background border-none text-white", });
       fetchData();
       setEditingUser(null)
     } else {
-      const formattedData = {...data, createdBy: user._id}
+      const formattedData = { ...data, createdBy: user._id }
       await axiosInstance.post('/auth/signup', formattedData)
       fetchData();
     }
@@ -107,11 +114,11 @@ export function UserTable() {
 
   return (
     <div className="p-4">
-      
+
       <div className="flex items-center justify-between pb-12">
         <div className="flex flex-1 items-center justify-between space-x-4">
-        <h1 className="pb-6 text-2xl font-semibold">User Management</h1>
-         
+          <h1 className="pb-6 text-2xl font-semibold">User Management</h1>
+
           <Button
             variant='theme'
             onClick={() => {
@@ -152,7 +159,7 @@ export function UserTable() {
                   >
                     <Pen className="h-4 w-4" />
                   </Button>
-                  
+
                 </TableCell>
               </TableRow>
             ))}
@@ -186,8 +193,13 @@ export function UserTable() {
                 <Input id="phone" {...register('phone', { required: 'This field is required' })} />
               </div>
               <div>
-                <Label htmlFor="phone">Password</Label>
-                <Input id="phone" {...register('password', { required: 'This field is required' })} />
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  {...register('password', {
+                    required: !editingUser ? 'This field is required' : false
+                  })}
+                />
               </div>
 
             </div>
