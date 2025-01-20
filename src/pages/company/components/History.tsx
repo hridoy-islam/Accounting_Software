@@ -13,6 +13,7 @@ import { Item } from '@radix-ui/react-dropdown-menu';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import placeholder from "@/assets/imges/home/logos/placeholder.jpg"
+import { Landmark } from 'lucide-react';
 
 export default function History({ companyData }) {
     const { id } = useParams();
@@ -110,8 +111,8 @@ export default function History({ companyData }) {
                         {storages.map((Item, index) => (
                             <div key={index} className="flex items-center justify-between py-2">
                                 <div className="flex items-center space-x-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 font-bold text-white">
-                                        <img src={Item.logo || placeholder} alt="Storage Logo" className="h-10 w-10 rounded-full" />
+                                    <div className="flex h-10 w-10 items-center justify-center font-bold">
+                                        <Landmark className="h-5 w-5"/>
                                     </div>
                                     <span className="font-medium">{Item.storageName}</span>
                                 </div>

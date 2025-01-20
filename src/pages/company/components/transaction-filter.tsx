@@ -17,24 +17,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
-import { TransactionFilters } from "@/types"
-import { Category } from "@/types"
 import { CategorySelector } from "./category-selector"
-
-interface TransactionFiltersProps {
-  categories: Category[]
-  methods: string[]
-  storages: string[]
-  onFiltersChange: (filters: TransactionFilters) => void
-}
 
 export function TransactionFilters({
   categories,
   methods,
   storages,
   onFiltersChange,
-}: TransactionFiltersProps) {
-  const [filters, setFilters] = useState<TransactionFilters>({
+}) {
+  const [filters, setFilters] = useState({
     search: "",
     type: "inflow",
     category: "",
@@ -77,7 +68,6 @@ export function TransactionFilters({
           onSelect={(categoryId) => setFilters({ ...filters, category: categoryId })}
           onTypeChange={(type) => setFilters({ ...filters, type })}
           defaultType={filters.type}
-          className="min-w-[300px]"
         />
 
         <Select
@@ -140,15 +130,7 @@ export function TransactionFilters({
             />
           </PopoverContent>
         </Popover>
-      </div>
-
-      <div className="flex justify-between">
-        <div className="space-x-2">
-          <Button variant="outline">Today's Report</Button>
-          <Button variant="outline">Weekly Report</Button>
-          <Button variant="outline">Monthly Report</Button>
-        </div>
-        <Button variant="destructive">Generate Report</Button>
+        <Button variant="destructive">Filter</Button>
       </div>
     </div>
   )

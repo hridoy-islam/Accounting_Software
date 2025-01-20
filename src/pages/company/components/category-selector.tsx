@@ -10,20 +10,13 @@ import {
 } from "@/components/ui/select"
 import { Category } from "@/types"
 
-interface CategorySelectorProps {
-  categories: Category[]
-  onSelect: (categoryId: string) => void
-  onTypeChange?: (type: 'inflow' | 'outflow') => void
-  defaultType?: 'inflow' | 'outflow'
-  className?: string
-}
 
 export function CategorySelector({ 
   categories, 
   onSelect, 
   onTypeChange,
   defaultType = 'inflow',
-}: CategorySelectorProps) {
+}) {
   const [type, setType] = useState<'inflow' | 'outflow'>(defaultType)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
 
@@ -98,7 +91,7 @@ export function CategorySelector({
       </RadioGroup>
 
       <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-        <SelectTrigger className="w-[250px]">
+        <SelectTrigger className="w-[300px]">
           <SelectValue placeholder="Select a category" />
         </SelectTrigger>
         <SelectContent>

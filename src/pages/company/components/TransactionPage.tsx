@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-
-import { Transaction, TransactionFilters as Filters, methods, storages, demoTransactions } from "@/types"
-import { demoCategories } from "@/types"
+import { Transaction, TransactionFilters as Filters } from "@/types"
 import { TransactionFilters } from "./transaction-filter"
 import { TransactionTable } from "./transaction-table"
 import { TransactionDialog } from "./transaction-dialog"
@@ -26,18 +24,6 @@ export default function TransactionPage() {
 
   const handleFiltersChange = (newFilters: Filters) => {
     
-  }
-
-
-
-  const handleAddTransaction = (data: Partial<Transaction>) => {
-    const newTransaction: Transaction = {
-      tcid: `TC${Math.floor(Math.random() * 1000000)}`,
-      date: new Date().toISOString(),
-      ...data,
-    } as Transaction
-
-    setTransactions([...transactions, newTransaction])
   }
 
   const handleEditTransaction = (transaction: Transaction) => {
@@ -101,7 +87,7 @@ export default function TransactionPage() {
               open={uploadDialogOpen} 
               onOpenChange={setUploadDialogOpen} 
               onUploadComplete={() => {}} 
-              companyId={id} 
+              companyId={id}
             />
           <Button variant="outline">Download CSV Example</Button>
           <Button variant="destructive">Export PDF</Button>
