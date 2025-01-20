@@ -8,7 +8,8 @@ import { TransactionTable } from "./transaction-table"
 import { TransactionDialog } from "./transaction-dialog"
 import axiosInstance from '@/lib/axios'
 import { useParams } from "react-router-dom"
-
+import { ImageUploader } from "@/components/shared/image-uploader"
+import { DataTablePagination } from "@/components/shared/data-table-pagination"
 export default function TransactionPage() {
   const { id } = useParams();
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -17,17 +18,17 @@ export default function TransactionPage() {
   const [storages, setStorages] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
-  const [filters, setFilters] = useState<Filters>({
-    search: "",
-    type: "inflow",
-    category: "",
-    method: "",
-    storage: "",
-  })
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
 
   const handleFiltersChange = (newFilters: Filters) => {
     
   }
+
+
 
   const handleAddTransaction = (data: Partial<Transaction>) => {
     const newTransaction: Transaction = {
@@ -43,29 +44,47 @@ export default function TransactionPage() {
     setEditingTransaction(transaction)
     setDialogOpen(true)
   }
+  const [filters, setFilters] = useState({ searchTerm: ""});
+
+  const fetchData = async (page, entriesPerPage, filters) => {
+    try {
+      const { searchTerm} = filters;
+
+      const [transactionsRes, categoriesRes, methodsRes, storagesRes] = await Promise.all([
+        axiosInstance.get(`/transactions?companyId=${id}`, {
+          params: {
+            page,
+            limit: entriesPerPage,
+            searchTerm,
+            
+          },
+        }),
+        axiosInstance.get('/categories?limit=all'),
+        axiosInstance.get('/methods?limit=all'),
+        axiosInstance.get(`/storages?companyId=${id}`),
+      ]);
+
+      setTransactions(transactionsRes.data.data.result);
+      setTotalPages(transactionsRes.data.data.meta.totalPage);
+      setCategories(categoriesRes.data.data.result);
+      setMethods(methodsRes.data.data.result);
+      setStorages(storagesRes.data.data.result);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [transactionsRes, categoriesRes, methodsRes, storagesRes] = await Promise.all([
-          axiosInstance.get(`/transactions?companyId=${id}`),
-          axiosInstance.get('/categories?limit=all'),
-          axiosInstance.get('/methods?limit=all'),
-          axiosInstance.get(`/storages?companyId=${id}`),
-        ]);
+    fetchData(currentPage, entriesPerPage, filters); // Refresh data
+  }, [currentPage, entriesPerPage]);
 
-        setTransactions(transactionsRes.data.data.result);
-        setCategories(categoriesRes.data.data.result);
-        setMethods(methodsRes.data.data.result);
-        setStorages(storagesRes.data.data.result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
 
-    fetchData();
-  }, []);
-
+  
+  const onSubmit= async(payload)=>{
+    await axiosInstance.post('/transactions', payload);
+    fetchData(currentPage, entriesPerPage, filters);
+  }
+  
   return (
     <div className="p-6 space-y-6 rounded-md bg-white mt-6 shadow-lg">
       <div className="flex items-center justify-between">
@@ -77,7 +96,13 @@ export default function TransactionPage() {
           >
             Add Transaction
           </Button>
-          <Button variant="outline">Upload CSV</Button>
+            <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>Upload CSV</Button>
+            <ImageUploader 
+              open={uploadDialogOpen} 
+              onOpenChange={setUploadDialogOpen} 
+              onUploadComplete={() => {}} 
+              companyId={id} 
+            />
           <Button variant="outline">Download CSV Example</Button>
           <Button variant="destructive">Export PDF</Button>
         </div>
@@ -101,9 +126,20 @@ export default function TransactionPage() {
         categories={categories}
         methods={methods}
         storages={storages}
-        onSubmit={handleAddTransaction}
+        onSubmit={onSubmit}
       />
+
+      <DataTablePagination 
+       pageSize={entriesPerPage}
+       setPageSize={setEntriesPerPage}
+       currentPage={currentPage}
+       totalPages={totalPages}
+       onPageChange={setCurrentPage}
+      />
+
     </div>
+
+
   )
 }
 

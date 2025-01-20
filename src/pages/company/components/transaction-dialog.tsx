@@ -35,10 +35,10 @@ import { Upload } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 
 const formSchema = z.object({
-  transactionDate: z.date(),
-  invoiceNumber: z.string().min(1, 'Invoice number is required'),
-  invoiceDate: z.date(),
-  details: z.string().min(1, 'Details are required'),
+  transactionDate: z.string().min(1, 'Transaction date is required'),
+  invoiceNumber: z.string().optional(),
+  invoiceDate: z.string().optional(),
+  details: z.string().optional(),
   description: z.string().optional(),
   type: z.enum(['inflow', 'outflow']),
   amount: z.string().min(1, 'Amount is required'),
@@ -47,12 +47,7 @@ const formSchema = z.object({
   storage: z.string().min(1, 'Storage is required')
 });
 
-interface TransactionDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  categories: Category[];
-  onSubmit: (data: Partial<Transaction>) => void;
-}
+
 
 export function TransactionDialog({
   open,
@@ -61,7 +56,7 @@ export function TransactionDialog({
   methods,
   storages,
   onSubmit
-}: TransactionDialogProps) {
+}) {
   const [file, setFile] = useState<File | null>(null);
   const { id } = useParams();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -69,49 +64,59 @@ export function TransactionDialog({
     defaultValues: {
       type: 'inflow',
       details: '',
-      description: ''
+      description: '',
+      transactionDate: new Date().toISOString(),
+      invoiceDate: new Date().toISOString(),
+      invoiceNumber: '',
+      amount: '',
+      category: '',
+      method: '',
+      storage: ''
     }
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
     try {
-      const formData = new FormData();
-      formData.append('transactionDate', values.transactionDate.toISOString());
-      formData.append('invoiceNumber', values.invoiceNumber);
-      formData.append('invoiceDate', values.invoiceDate.toISOString());
-      formData.append('details', values.details);
-      formData.append('description', values.description || '');
-      formData.append('transactionType', values.type);
-      formData.append('transactionAmount', values.amount);
-      formData.append('transactionCategory', values.category);
-      formData.append('transactionMethod', values.method);
-      formData.append('storage', values.storage);
-      formData.append('companyId', id);
-
+      // If there's a file, upload it first and get the URL
+      let fileUrl = '';
       if (file) {
-        formData.append('transactionDoc', file);
+        const fileUploadResponse = await axiosInstance.post('/upload', file, {
+          headers: {
+            'Content-Type': file.type,
+          },
+        });
+        fileUrl = fileUploadResponse.data.url; 
       }
-
-      await axiosInstance.post('/transactions', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      onSubmit({
-        ...values,
-        amount: parseFloat(values.amount),
-        transactionDoc: file
-      });
-
+  
+    
+      const payload = {
+        transactionDate: values.transactionDate,
+        invoiceNumber: values.invoiceNumber||"",
+        invoiceDate: values.invoiceDate || '',
+        details: values.details||"",
+        description: values.description || '',
+        transactionType: values.type,
+        transactionAmount: parseFloat(values.amount), // Ensure numeric format
+        transactionCategory: values.category,
+        transactionMethod: values.method,
+        storage: values.storage,
+        companyId: id,
+        transactionDoc: fileUrl,
+      };
+  
+   
+  
+      onSubmit(payload);
       form.reset();
       setFile(null);
       onOpenChange(false);
+
+     
     } catch (error) {
       console.error('Error submitting transaction:', error);
     }
   };
+  
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -123,30 +128,11 @@ export function TransactionDialog({
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
-            encType="multipart/form-data"
           >
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Transaction Date</Label>
-                <FormField
-                  control={form.control}
-                  name="transactionDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Transaction Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          value={field.value?.toISOString().split('T')[0] || ''}
-                          onChange={(e) =>
-                            field.onChange(new Date(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <Input type="date" />
               </div>
               <FormField
                 control={form.control}
@@ -166,25 +152,7 @@ export function TransactionDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Invoice Date</Label>
-                <FormField
-                  control={form.control}
-                  name="invoiceDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Invoice Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          value={field.value?.toISOString().split('T')[0] || ''}
-                          onChange={(e) =>
-                            field.onChange(new Date(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <Input type="date" />
               </div>
               <FormField
                 control={form.control}
@@ -323,7 +291,7 @@ export function TransactionDialog({
             </div>
 
             {/* Transaction Document Upload */}
-            <FormItem>
+            {/* <FormItem>
               <FormLabel>Transaction Document</FormLabel>
               <FormControl>
                 <div className="flex items-center gap-2">
@@ -347,7 +315,7 @@ export function TransactionDialog({
                 </div>
               </FormControl>
               <FormMessage />
-            </FormItem>
+            </FormItem> */}
 
             <div className="flex justify-end space-x-2">
               <Button
