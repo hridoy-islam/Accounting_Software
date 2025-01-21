@@ -122,7 +122,6 @@ const StoragePage = () => {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Balance</TableHead>
-                <TableHead>Balance</TableHead>
                 <TableHead>Opening Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Audit Status</TableHead>

@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/table"
 
 import { Transaction } from "@/types"
-import { useParams } from "react-router-dom"
 import moment from "moment"
+import { Badge } from "@/components/ui/badge"
 
 interface TransactionTableProps {
   transactions: Transaction[]
@@ -22,39 +22,6 @@ export function TransactionTable({
   transactions,
   onEdit,
 }: TransactionTableProps) {
-  const [page, setPage] = useState(1)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
-  const [categories, setCategories] = useState([]);
-  const [methods, setMethods] = useState([]);
-  const [storages, setStorages] = useState([]);
-  const {id} = useParams();
-
-  const totalPages = Math.ceil(transactions.length / rowsPerPage)
-  const start = (page - 1) * rowsPerPage
-  const end = start + rowsPerPage
-  const currentTransactions = transactions.slice(start, end)
-
-   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [categoriesRes, methodsRes, storagesRes] = await Promise.all([
-          axiosInstance.get('/categories?limit=all'),
-          axiosInstance.get('/methods?limit=all'),
-          axiosInstance.get(`/storages?companyId=${id}`),
-        ]);
-
-        setCategories(categoriesRes.data.data.result || []);
-        setMethods(methodsRes.data.data.result || []);
-        setStorages(storagesRes.data.data.result || []);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, [id]);
-
-  
   return (
     <div className="space-y-4">
       <div className="">
@@ -72,12 +39,12 @@ export function TransactionTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {currentTransactions.map((transaction) => (
+            {transactions.map((transaction) => (
         
               <TableRow key={transaction.tcid}>
                 <TableCell>{transaction.tcid}</TableCell>
                 <TableCell>{moment(transaction.transactionDate).format('YYYY-MM-DD')}</TableCell>
-                <TableCell>{transaction.transactionType}</TableCell>
+                <TableCell><Badge className={transaction.transactionType === 'inflow' ? `bg-green-300`: 'bg-red-300'}>{transaction.transactionType.toUpperCase()}</Badge></TableCell>
                 <TableCell className="font-semibold">£{Number(transaction.transactionAmount.toFixed(2))}</TableCell>
                 <TableCell>{transaction.transactionCategory.name}</TableCell>
                 <TableCell>{transaction.transactionMethod.name}</TableCell>

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axiosInstance from '../../lib/axios'; // Adjust the path as necessary
+import { toast } from "../ui/use-toast";
 
 export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId, fetchData, currentPage, entriesPerPage, filters }) {
   const [dragActive, setDragActive] = useState(false);
@@ -75,16 +76,21 @@ export function ImageUploader({ open, onOpenChange, onUploadComplete, companyId,
           const percentCompleted = Math.round(
             (progressEvent.loaded * 100) / progressEvent.total
           );
-          setUploadProgress(percentCompleted);
+          setUploadProgress(Math.min(percentCompleted, 99));
         },
       });
 
       if (response.status === 200) {
+        setUploadProgress(100); // Set to 100% upon successful response
         onUploadComplete(response.data);
+        toast({
+          title: 'CSV Uploaded Successfully',
+          description: 'Thank You'
+        });
         fetchData(currentPage, entriesPerPage, filters);
       }
     } catch (error) {
-  
+      
     } finally {
       setUploading(false);
       setUploadProgress(0);

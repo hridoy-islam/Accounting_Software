@@ -22,6 +22,7 @@ export default function History({ companyData }) {
     const [showInflow, setShowInflow] = useState(true);
     const [showOutflow, setShowOutflow] = useState(true);
     const [transactions, setTransactions] = useState<any>([])
+    const [monthlyData, setMonthlyData] = useState<any>([]);
 
     const fetchData = async () => {
         try {
@@ -29,10 +30,10 @@ export default function History({ companyData }) {
             const response = await axiosInstance.get(`/storages?companyId=${id}`);
             setStorages(response.data.data.result);
              // Fetch transactions with dynamic companyID
-             const transactionsResponse = await axiosInstance.get(`/transactions?companyId=${id}`);
+             const transactionsResponse = await axiosInstance.get(`/transactions?companyId=${id}&limit=all`);
              
             setTransactions(transactionsResponse.data.data.result)
-            
+            aggregateMonthlyData(transactionsResponse.data.data.result);
         } catch (error) {
             console.error('Error fetching institutions:', error);
         } finally {
@@ -45,14 +46,33 @@ export default function History({ companyData }) {
     }, []);
     const totalOpeningBalance = storages.reduce((sum, Item) => sum + Number(Item.openingBalance), 0);
 
+    const aggregateMonthlyData = (transactions) => {
+        const data = {};
 
-    function handleInflowChange(checked: boolean): void {
-        setShowInflow(checked);
-    }
+        transactions.forEach(transaction => {
+            const date = new Date(transaction.transactionDate);
+            const monthYear = `${date.toLocaleString('default', { month: 'short' })}-${date.getFullYear()}`;
 
-    function handleOutflowChange(checked: boolean): void {
-        setShowOutflow(checked);
-    }
+            if (!data[monthYear]) {
+                data[monthYear] = { inflow: 0, outflow: 0 };
+            }
+            if (transaction.transactionType === 'inflow') {
+                data[monthYear].inflow += transaction.transactionAmount;
+            } else if (transaction.transactionType === 'outflow') {
+                data[monthYear].outflow += transaction.transactionAmount;
+            }
+        });
+
+        // Convert to array and sort by date
+        const sortedData = Object.entries(data)
+            .sort((a, b) => new Date(`01-${a[0]}`) - new Date(`01-${b[0]}`))
+            .map(([monthYear, values]) => ({
+                monthYear,
+                ...values,
+            }));
+
+        setMonthlyData(sortedData);
+    };
 
     return (
         <div className=" py-6">
@@ -66,38 +86,23 @@ export default function History({ companyData }) {
                     </div>
 
                     <Table>
-
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className=' font-bold'>Date</TableHead>
-                                {showInflow && (
-                                    <TableHead className=' font-bold'>Inflow</TableHead>
-                                )}
-                                {showOutflow && (
-                                    <TableHead className=' font-bold' >Outflow</TableHead>
-                                )}
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="font-bold">Month</TableHead>
+                            <TableHead className="font-bold">Inflow</TableHead>
+                            <TableHead className="font-bold">Outflow</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {monthlyData.map((data, index) => (
+                            <TableRow key={index}>
+                                <TableCell className="font-bold">{data.monthYear}</TableCell>
+                                <TableCell className="font-bold">£{data.inflow.toFixed(2)}</TableCell>
+                                <TableCell className="font-bold">£{data.outflow.toFixed(2)}</TableCell>
                             </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {transactions.map((transaction, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>
-                                        {new Date(transaction.transactionDate).toLocaleDateString()}
-                                    </TableCell>
-                                    {showInflow && (
-                                        <TableCell >
-                                            {transaction.transactionType ==='inflow'?(transaction.transactionAmount):'0'}
-                                        </TableCell>
-                                    )}
-                                    {showOutflow && (
-                                        <TableCell >
-                                            {transaction.transactionType ==='outflow'?(transaction.transactionAmount):'0'}
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                        ))}
+                    </TableBody>
+                </Table>
                 </div>
 
 

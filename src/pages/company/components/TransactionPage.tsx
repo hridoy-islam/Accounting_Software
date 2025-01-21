@@ -21,7 +21,7 @@ export default function TransactionPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [entriesPerPage, setEntriesPerPage] = useState(100);
 
   const [filters, setFilters] = useState({
     search: '',
@@ -84,7 +84,7 @@ export default function TransactionPage() {
   const handleApplyFilters = (filters) => {
     setAppliedFilters(filters);
     setCurrentPage(1); // Reset to first page when applying new filters
-    
+
   };
 
   const onSubmit = async (payload) => {
@@ -100,20 +100,20 @@ export default function TransactionPage() {
           <Button variant="secondary" onClick={() => setDialogOpen(true)}>
             Add Transaction
           </Button>
-            <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>Upload CSV</Button>
-            <ImageUploader 
+          <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>Upload CSV</Button>
+          <ImageUploader
             open={uploadDialogOpen}
             onOpenChange={setUploadDialogOpen}
             onUploadComplete={() => fetchData(currentPage, entriesPerPage, filters)}
-            companyId={id} 
-            fetchData={undefined} 
-            currentPage={undefined} 
-            entriesPerPage={undefined} 
+            companyId={id}
+            fetchData={undefined}
+            currentPage={undefined}
+            entriesPerPage={undefined}
             filters={undefined}
-            />
+          />
           <a href="/sample_transactions.csv" download>
-      <Button variant="outline">Download CSV Example</Button>
-    </a>
+            <Button variant="outline">Download CSV Example</Button>
+          </a>
           <Button variant="destructive">Export PDF</Button>
         </div>
       </div>

@@ -15,9 +15,9 @@ export function CategorySelector({
   categories, 
   onSelect, 
   onTypeChange,
-  defaultType = 'inflow',
+  defaultType = '',
 }) {
-  const [type, setType] = useState<'inflow' | 'outflow'>(defaultType)
+  const [type, setType] = useState<'inflow' | 'outflow' | ''>(defaultType)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export function CategorySelector({
   return (
     <div className="flex gap-4 items-center">
       <RadioGroup 
-        defaultValue="inflow" 
+        value={type}
         onValueChange={handleTypeChange as (value: string) => void}
         className="flex gap-2"
       >

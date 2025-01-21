@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Calendar } from 'lucide-react';
-import { format } from "date-fns";
-import axiosInstance from '../../../lib/axios';
+import { Search } from 'lucide-react';
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,17 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-
-import { Category } from "@/types";
 import { CategorySelector } from "./category-selector";
 import { Label } from "@/components/ui/label";
-import moment from "moment";
 
 export function TransactionFilters({
   categories,
@@ -33,37 +22,20 @@ export function TransactionFilters({
 }) {
   const [filters, setFilters] = useState({
     search: "",
-    type: "inflow",
+    type: "",
     category: "",
     method: "",
     storage: "",
     
   });
 
-  // const [date, setDate] = useState<{ from: Date | null; to: Date | null }>({
-  //   from: null,
-  //   to: null,
-  // });
-
-  // const [date, setDate] = useState<{ from: string | undefined; to: string | undefined }>({
-  //   from: "2025-01-01", // Set default "from" date (YYYY-MM-DD)
-  //   to: format(new Date(), "yyyy-MM-dd"), // Set default "to" date (today)
-  // });
-
   const [fromDate, setFromDate] = useState<string | undefined>(undefined);
   const [toDate, setToDate] = useState<string | undefined>(undefined);
 
-
-
-
   // Apply filters and trigger fetch
-  const handleApplyFilters = () => {
-       
+  const handleApplyFilters = () => {       
     onApplyFilters({...filters, fromDate, toDate});
-    
-  };
-
- 
+  }; 
 
   // Handle filter change and date range
   useEffect(() => {
