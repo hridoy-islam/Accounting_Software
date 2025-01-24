@@ -10,7 +10,7 @@ export default function CategoriesPage() {
   const fetchData = async () => {
     try {
       if (initialLoading) setInitialLoading(true);
-      const response = await axiosInstance.get(`/categories?limit=all`);
+      const response = await axiosInstance.get(`/categories?limit=1000`);
       setCategories(response.data.data.result);
     } catch (error) {
       console.error('Error fetching institutions:', error);
