@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react"
-import { CategoryTable } from "./components/category-table"
-import { Category } from "./components/category"
-import axiosInstance from '@/lib/axios'
-import { toast } from "@/components/ui/use-toast"
+import { useEffect, useState } from 'react';
+import { CategoryTable } from './components/category-table';
+import { Category } from './components/category';
+import axiosInstance from '@/lib/axios';
+import { toast } from '@/components/ui/use-toast';
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<any>([])
+  const [categories, setCategories] = useState<any>([]);
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
   const fetchData = async () => {
     try {
       if (initialLoading) setInitialLoading(true);
-      const response = await axiosInstance.get(`/categories`);
+      const response = await axiosInstance.get(`/categories?limit=all`);
       setCategories(response.data.data.result);
     } catch (error) {
       console.error('Error fetching institutions:', error);
@@ -23,35 +23,37 @@ export default function CategoriesPage() {
     fetchData();
   }, []);
 
-
   const handleUpdateCategory = async (updatedCategory: Category) => {
     try {
       const response = updatedCategory._id
-        ? await axiosInstance.patch(`/categories/${updatedCategory._id}`, updatedCategory)
-        : await axiosInstance.post(`/categories`, updatedCategory)
-  
+        ? await axiosInstance.patch(
+            `/categories/${updatedCategory._id}`,
+            updatedCategory
+          )
+        : await axiosInstance.post(`/categories`, updatedCategory);
+
       fetchData();
     } catch (error) {
-      console.error('Error updating category:', error)
+      console.error('Error updating category:', error);
     }
-  }
+  };
 
   const handleDeleteCategory = async (id: string) => {
     try {
-      await axiosInstance.delete(`/categories/${id}`)
+      await axiosInstance.delete(`/categories/${id}`);
       fetchData();
       toast({
         title: 'Category Deleted successfully',
         className: 'bg-background border-none text-white'
       });
     } catch (error) {
-      console.error('Error deleting category:', error)
+      console.error('Error deleting category:', error);
     }
-  }
+  };
 
   return (
     <div className="p-1">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <CategoryTable
           type="inflow"
           categories={categories}
@@ -66,6 +68,5 @@ export default function CategoriesPage() {
         />
       </div>
     </div>
-  )
+  );
 }
-
