@@ -61,7 +61,7 @@ export function CategorySelector({
 
   const renderCategoryOptions = (categories: Category[], level: number = 0): JSX.Element[] => {
     return categories.flatMap(category => [
-      <SelectItem key={category._id} value={category._id} className='hover:bg-black hover:text-white'>
+      <SelectItem key={category._id} value={category._id}>
         {'\u00A0'.repeat(level * 2)}
         {level > 0 ? '└─ ' : ''}
         {category.name}
@@ -94,7 +94,7 @@ export function CategorySelector({
         <SelectTrigger className="w-[300px]">
           <SelectValue placeholder="Select a category" />
         </SelectTrigger>
-        <SelectContent >
+        <SelectContent>
           {renderCategoryOptions(hierarchicalCategories)}
         </SelectContent>
       </Select>

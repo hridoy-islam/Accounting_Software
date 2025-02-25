@@ -12,16 +12,16 @@ import AdminLayout from '@/components/layout/admin-layout';
 import { Company } from '@/pages/company/index';
 import { Dashboard } from '@/pages/dashboard/index';
 import { Method } from '@/pages/method';
-import CompanyDetails from '@/pages/company/companyDetails';
 import QRPage from '@/pages/auth/qr';
 import UserPage from '@/pages/users';
 import CategoriesPage from '@/pages/category';
-import ReportPage from '@/pages/company/companyDetails/reportPage';
-import TransactionPage from '@/pages/company/companyDetails/transactionPage';
 import ProfilePage from '@/pages/profile';
 import ResetPassword from '@/pages/resetPassword';
-import StoragePage from '@/pages/company/companyDetails/storagePage';
-import CompanyUser from '@/pages/company/companyDetails/companyUser';
+
+import TransactionHistory from '@/pages/transactionHistory';
+import StoragePage from '@/pages/storage';
+import TransactionPage from '@/pages/transaction';
+import ReportPage from '@/pages/report';
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
 // ----------------------------------------------------------------------
@@ -49,19 +49,31 @@ export default function AppRouter() {
           element: <Company />
         },
         {
-          path: 'companies/:id',
-          element: <CompanyDetails />
+          path: 'company/:id',
+          element: <TransactionHistory />
         },
         {
-          path: 'categories',
+          path: 'company/:id/categories',
           element: <CategoriesPage />
         },
         {
-          path: 'methods',
+          path: 'company/:id/storages',
+          element: < StoragePage/>
+        },
+        {
+          path: 'company/:id/methods',
           element: <Method />
         },
         {
-          path: 'users',
+          path: 'company/:id/transactions',
+          element: <TransactionPage />
+        },
+        {
+          path: 'company/:id/report',
+          element: <ReportPage />
+        },
+        {
+          path: 'company/:id/users',
           element: <UserPage />
         },
 

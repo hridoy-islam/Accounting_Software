@@ -25,7 +25,6 @@ import * as z from 'zod';
 import google from "../../../../assets/imges/home/logos/google.png"
 import facebook from "../../../../assets/imges/home/logos/facebook.png"
 
-
 const formSchema = z.object({
   email: z.string().email({ message: 'Enter a valid email address' }),
   password: z.string()
@@ -35,7 +34,7 @@ type UserFormValue = z.infer<typeof formSchema>;
 
 export default function UserAuthForm() {
   const router = useRouter();
-  const { loading, error } = useSelector((state: any) => state.auth);
+  const {user, loading, error } = useSelector((state: any) => state.auth);
   const dispatch = useDispatch<AppDispatch>();
   const defaultValues = {
     email: '',
@@ -47,11 +46,24 @@ export default function UserAuthForm() {
   });
 
   const onSubmit = async (data: UserFormValue) => {
-    const result: any = await dispatch(loginUser(data));
-    if (result?.payload?.success) {
-      router.push('/admin');
+    await dispatch(loginUser(data));
+
+    // Check the user's role and redirect accordingly
+    if (user) {
+      if (user.role === 'company') {
+        console.log('Redirecting to company dashboard');
+        router.push(`/admin/company/${user._id}`);
+      } else if (user.role === 'user') {
+        console.log('User company ID:', user.companyId);
+        router.push(`/admin/company/${user.companyId}`);
+      } else {
+        router.push('/admin');
+      }
     }
   };
+
+
+
 
   useEffect(() => {
     // Reset the error when the component mounts

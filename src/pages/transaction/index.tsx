@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Transaction, TransactionFilters as Filters } from '@/types';
-import { TransactionFilters } from '../../transaction/components/transaction-filter';
-import { TransactionTable } from '../../transaction/components/transaction-table';
-import { TransactionDialog } from '../../transaction/components/transaction-dialog';
+import { TransactionFilters } from './components/transaction-filter';
+import { TransactionTable } from './components/transaction-table';
+import { TransactionDialog } from './components/transaction-dialog';
 import axiosInstance from '@/lib/axios';
 import { useParams } from 'react-router-dom';
 import { ImageUploader } from '@/components/shared/image-uploader';
 import { DataTablePagination } from '@/components/shared/data-table-pagination';
+import { Navigation } from '@/components/shared/companyNav';
+
 export default function TransactionPage() {
   const { id } = useParams();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -54,9 +56,9 @@ export default function TransactionPage() {
               endDate: toDate || undefined
             }
           }),
-          axiosInstance.get('/categories?limit=all'),
-          axiosInstance.get('/methods?limit=all'),
-          axiosInstance.get(`/storages?companyId=${id}`)
+          axiosInstance.get(`/categories/company/${id}?limit=all`),
+          axiosInstance.get(`/methods/company/${id}?limit=all`),
+          axiosInstance.get(`/storages/company/${id}?limit=all`)
         ]);
 
       setTransactions(transactionsRes.data.data.result);
@@ -72,6 +74,8 @@ export default function TransactionPage() {
     fetchData(currentPage, entriesPerPage, appliedFilters);
   }, [currentPage, entriesPerPage, appliedFilters]);
 
+
+
   const handleEditTransaction = (transaction: Transaction) => {
     setEditingTransaction(transaction);
     setDialogOpen(true);
@@ -84,7 +88,6 @@ export default function TransactionPage() {
   const handleApplyFilters = (filters) => {
     setAppliedFilters(filters);
     setCurrentPage(1); // Reset to first page when applying new filters
-
   };
 
   const onSubmit = async (payload) => {
@@ -92,61 +95,74 @@ export default function TransactionPage() {
     fetchData(currentPage, entriesPerPage, filters);
   };
 
+
+  useEffect(()=>{
+    fetchData
+  })
+
   return (
-    <div className="mt-6 space-y-6 rounded-md bg-white p-6 shadow-lg">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Transactions</h1>
-        <div className="space-x-2">
-          <Button variant="secondary" onClick={() => setDialogOpen(true)}>
-            Add Transaction
-          </Button>
-          <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>Upload CSV</Button>
-          <ImageUploader
-            open={uploadDialogOpen}
-            onOpenChange={setUploadDialogOpen}
-            onUploadComplete={() => fetchData(currentPage, entriesPerPage, filters)}
-            companyId={id}
-            fetchData={undefined}
-            currentPage={undefined}
-            entriesPerPage={undefined}
-            filters={undefined}
-          />
-          <a href="/sample_transactions.csv" download>
-            <Button variant="outline">Download CSV Example</Button>
-          </a>
-          <Button variant="destructive">Export PDF</Button>
+    <div>
+      <Navigation />
+
+      <div className="mt-4 space-y-6 rounded-md bg-white p-6 shadow-lg">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Transactions</h1>
+          <div className="space-x-2">
+            <Button variant="secondary" onClick={() => setDialogOpen(true)}>
+              Add Transaction
+            </Button>
+            <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+              Upload CSV
+            </Button>
+            <ImageUploader
+              open={uploadDialogOpen}
+              onOpenChange={setUploadDialogOpen}
+              onUploadComplete={() =>
+                fetchData(currentPage, entriesPerPage, filters)
+              }
+              companyId={id}
+              fetchData={undefined}
+              currentPage={undefined}
+              entriesPerPage={undefined}
+              filters={undefined}
+            />
+            <a href="/sample_transactions.csv" download>
+              <Button variant="outline">Download CSV Example</Button>
+            </a>
+            <Button variant="destructive">Export PDF</Button>
+          </div>
         </div>
+
+        <TransactionFilters
+          categories={categories}
+          methods={methods}
+          storages={storages}
+          onFiltersChange={handleFiltersChange}
+          onApplyFilters={handleApplyFilters}
+        />
+
+        <TransactionTable
+          transactions={transactions}
+          onEdit={handleEditTransaction}
+        />
+
+        <TransactionDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          categories={categories}
+          methods={methods}
+          storages={storages}
+          onSubmit={onSubmit}
+        />
+
+        <DataTablePagination
+          pageSize={entriesPerPage}
+          setPageSize={setEntriesPerPage}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
-
-      <TransactionFilters
-        categories={categories}
-        methods={methods}
-        storages={storages}
-        onFiltersChange={handleFiltersChange}
-        onApplyFilters={handleApplyFilters}
-      />
-
-      <TransactionTable
-        transactions={transactions}
-        onEdit={handleEditTransaction}
-      />
-
-      <TransactionDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        categories={categories}
-        methods={methods}
-        storages={storages}
-        onSubmit={onSubmit}
-      />
-
-      <DataTablePagination
-        pageSize={entriesPerPage}
-        setPageSize={setEntriesPerPage}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
     </div>
   );
 }

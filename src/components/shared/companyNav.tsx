@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Users, Settings, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, Menu, X, Database, RectangleEllipsis, ClipboardMinus } from 'lucide-react';
 import { UserNav } from './user-nav';
 import { useSelector } from 'react-redux';
 
-export function TopNavigation() {
-  const user = useSelector((state) => state.auth.user); // Get user from Redux state
+export function Navigation() {
+  const user = useSelector((state:any) => state.auth.user); // Get user from Redux state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
-
+  const { id } = useParams();
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   useEffect(() => {
@@ -23,26 +23,51 @@ export function TopNavigation() {
   }, [sidebarOpen]);
 
   const navItems = [
-    { to: '/admin', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, label: 'Dashboard', roles: ['admin', 'user'] },
-    { to: 'companies', icon: <Users className="mr-2 h-4 w-4" />, label: 'Company', roles: ['admin', 'user'] },
-    { to: 'users', icon: <Users className="mr-2 h-4 w-4" />, label: 'All Users', roles: ['admin'] },
-    { to: 'Categories', icon: <Users className="mr-2 h-4 w-4" />, label: 'Category', roles: ['admin', 'user'] },
-    { to: 'methods', icon: <Settings className="mr-2 h-4 w-4" />, label: 'Method', roles: ['admin', 'user'] },
+
+    {
+      to: `/admin/company/${id}`,
+      icon: <LayoutDashboard className="mr-2 h-4 w-4" />,
+      label: 'Dashboard',
+      roles: ['admin', 'user', 'company']
+    },
+    {
+      to: `/admin/company/${id}/transactions`,
+      icon: <Database className="mr-2 h-4 w-4" />,
+      label: 'Transactions',
+      roles: ['admin', 'user', 'company']
+    },
+    {
+      to: `/admin/company/${id}/users`,
+      icon: <Users className="mr-2 h-4 w-4" />,
+      label: 'Create Users',
+      roles: ['admin', 'company']
+    },
+    {
+      to: `/admin/company/${id}/categories`,
+      icon: <RectangleEllipsis className="mr-2 h-4 w-4" />,
+      label: 'Category',
+      roles: ['admin', 'user']
+    },
+    {
+      to: `/admin/company/${id}/storages`,
+      icon: <ClipboardMinus className="mr-2 h-4 w-4" />,
+      label: 'Storage',
+      roles: ['admin',  'company']
+    },
+    {
+      to: `/admin/company/${id}/methods`,
+      icon: <Settings className="mr-2 h-4 w-4" />,
+      label: 'Method',
+      roles: ['admin', 'user','company']
+    }
   ];
 
   const filteredNavItems = navItems.filter(item => item.roles.includes(user?.role ?? ''));
 
   return (
     <div className="flex flex-col">
-      <header className="bg-[#a78bfa] shadow-sm">
-        <div className="flex justify-between px-4 py-2">
-          <button className="rounded-md p-2 text-gray-600 md:hidden" onClick={toggleSidebar}>
-            {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-          <span className="text-xl font-semibold text-white">Admin Dashboard</span>
-          <UserNav />
-        </div>
-        <div className="hidden justify-start px-4 bg-white py-2 md:flex">
+      
+        <div className="hidden justify-start px-4 bg-white py-2 md:flex rounded-lg shadow-md">
           <nav className="flex items-center space-x-2">
             {filteredNavItems.map(({ to, icon, label }) => (
               <Button
@@ -58,7 +83,7 @@ export function TopNavigation() {
             ))}
           </nav>
         </div>
-      </header>
+     
       <div className="flex flex-1 overflow-hidden">
         {sidebarOpen && (
           <div

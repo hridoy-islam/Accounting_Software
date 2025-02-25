@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CategorySelector } from "./category-selector";
 import { Label } from "@/components/ui/label";
+import { CategorySelector } from "./category-selector";
 
 export function TransactionFilters({
   categories,
@@ -43,6 +43,7 @@ export function TransactionFilters({
       ...filters,
     });
   }, [filters, fromDate,toDate, onFiltersChange]);
+ 
 
   return (
     <div className="space-y-4">
@@ -65,6 +66,22 @@ export function TransactionFilters({
           onTypeChange={(type) => setFilters({ ...filters, type })}
           defaultType={filters.type}
         />
+
+        {/* <Select
+          value={filters.category}
+          onValueChange={(value) => setFilters({ ...filters, category: value })}
+        >
+          <SelectTrigger className="w-[250px]">
+            <SelectValue placeholder="Select Method" />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((cat) => (
+              <SelectItem key={cat._id} value={cat._id}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select> */}
 
         <Select
           value={filters.method}
@@ -122,7 +139,7 @@ export function TransactionFilters({
         </div>
 
 
-        <Button variant='theme' className="ml-auto" onClick={handleApplyFilters}>
+        <Button  className="ml-auto bg-black hover:bg-black/80 text-white" onClick={handleApplyFilters}>
           Filter
         </Button>
       </div>

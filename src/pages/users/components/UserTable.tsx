@@ -18,9 +18,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
-import axiosInstance from '@/lib/axios'
+import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
 import { useSelector } from 'react-redux';
+import {
+  ClipboardMinus,
+  Database,
+  Landmark,
+  LayoutDashboard,
+  RectangleEllipsis,
+  Settings,
+  Users
+} from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import { Navigation } from '@/components/shared/companyNav';
 
 export interface TCompany {
   id: string;
@@ -56,8 +67,7 @@ export function UserTable() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<TUser | null>(null);
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
-
-
+  const {id} = useParams();
   const { register, handleSubmit, reset } = useForm();
 
   useEffect(() => {
@@ -66,25 +76,21 @@ export function UserTable() {
     }
   }, [editingUser, reset]);
 
-
-
-
   const fetchData = async () => {
     try {
       if (initialLoading) setInitialLoading(true);
-      const response = await axiosInstance.get(`/users?createdBy=${user._id}`);
+      const response = await axiosInstance.get(`/users/company/${id}`);
       setUsers(response.data.data.result);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error('Error fetching users:', error);
     } finally {
       setInitialLoading(false); // Disable initial loading after the first fetch
     }
   };
 
   useEffect(() => {
-    fetchData()
+    fetchData();
   }, []);
-
 
   const onSubmit = async (data: any) => {
     if (editingUser) {
@@ -96,12 +102,15 @@ export function UserTable() {
         delete updateData.password;
       }
       await axiosInstance.patch(`/users/${editingUser?._id}`, updateData);
-      toast({ title: "Record Updated successfully", className: "bg-background border-none text-white", });
+      toast({
+        title: 'Record Updated successfully',
+        className: 'bg-background border-none text-white'
+      });
       fetchData();
-      setEditingUser(null)
+      setEditingUser(null);
     } else {
-      const formattedData = { ...data, createdBy: user._id }
-      await axiosInstance.post('/auth/signup', formattedData)
+      const formattedData = { ...data, createdBy: user._id, companyId:id, role:"user" };
+      await axiosInstance.post('/auth/signup', formattedData);
       fetchData();
     }
 
@@ -110,17 +119,20 @@ export function UserTable() {
     setEditingUser(null);
   };
 
-
-
+  
   return (
-    <div className="p-4">
+    <div className=" flex flex-col gap-4">
+      <Navigation />
+      
+<div className='bg-white  p-4 shadow-lg rounded-lg'>
+
 
       <div className="flex items-center justify-between pb-12">
         <div className="flex flex-1 items-center justify-between space-x-4">
           <h1 className="pb-6 text-2xl font-semibold">User Management</h1>
 
           <Button
-            variant='theme'
+            variant="theme"
             onClick={() => {
               setEditingUser(null);
               setDialogOpen(true);
@@ -159,7 +171,6 @@ export function UserTable() {
                   >
                     <Pen className="h-4 w-4" />
                   </Button>
-
                 </TableCell>
               </TableRow>
             ))}
@@ -182,32 +193,43 @@ export function UserTable() {
             <div className="grid grid-cols-1 gap-4 ">
               <div>
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" {...register('name', { required: 'This field is required' })} />
+                <Input
+                  id="name"
+                  {...register('name', { required: 'This field is required' })}
+                />
               </div>
               <div>
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" {...register('email', { required: 'This field is required' })} />
+                <Input
+                  id="email"
+                  {...register('email', { required: 'This field is required' })}
+                />
               </div>
               <div>
                 <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" {...register('phone', { required: 'This field is required' })} />
+                <Input
+                  id="phone"
+                  {...register('phone', { required: 'This field is required' })}
+                />
               </div>
               <div>
                 <Label htmlFor="password">Password</Label>
                 <Input
-                type='password'
+                  type="password"
                   id="password"
                   {...register('password', {
                     required: !editingUser ? 'This field is required' : false
                   })}
                 />
               </div>
-
             </div>
-            <Button type="submit" variant='theme' className="w-full">Save</Button>
+            <Button type="submit" variant="theme" className="w-full">
+              Save
+            </Button>
           </form>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }

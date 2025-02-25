@@ -11,7 +11,7 @@ export default function SignUpPage() {
         <div className="flex w-full max-w-md flex-col items-center space-y-8 py-6">
           <div className=" top-16 flex items-center justify-between gap-2 text-[#a78bfa]">
             <Layers className="h-10 w-10" />
-            <span className="text-3xl font-semibold">LOGO</span>
+            <span className="text-3xl font-semibold">Accounting Software</span>
           </div>
 
           {/* navlink */}

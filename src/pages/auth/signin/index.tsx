@@ -10,8 +10,15 @@ export default function SignInPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate('/admin'); // Adjust the path as needed
+    if (!user) return; // Ensure user is not null before accessing properties
+  
+    if (user.role === "admin") {
+      navigate('/admin'); 
+    } else if (user.role === "company") {
+      navigate(`/admin/company/${user._id}`);
+    }
+     else if (user.role === "user") {
+      navigate(`/admin/company/${user.companyId}`);
     }
   }, [user, navigate]);
 
@@ -24,7 +31,7 @@ export default function SignInPage() {
           {/* Logo */}
           <div className="flex top-16 items-center gap-2 text-[#a78bfa] justify-between">
             <Layers className="h-10 w-10" />
-            <span className="text-3xl font-semibold">LOGO</span>
+            <span className="text-3xl font-semibold">Accounting Software</span>
           </div>
           <div className="mb-10 text-center">
             <h2 className="text-3xl font-bold pb-2">Welcome Back</h2>

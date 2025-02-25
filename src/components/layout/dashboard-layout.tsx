@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Sidebar from '../shared/sidebar';
+import Sidebar from '../shared/navbar';
 import Header from '../shared/header';
 import MobileSidebar from '../shared/mobile-sidebar';
 import { MenuIcon } from 'lucide-react';
@@ -7,6 +7,7 @@ import {UserNav} from '../shared/user-nav';
 import { Toaster } from '@/components/ui/sonner';
 import AutoLogout from '../shared/auto-logout';
 import { NotificationDropdown } from '../shared/notification-dropdown';
+import Navbar from '../shared/navbar';
 
 export default function DashboardLayout({
   children
@@ -18,11 +19,11 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
       <AutoLogout inactivityLimit={30 * 60 * 1000} />
-      <MobileSidebar
+      {/* <MobileSidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
-      />
-      <Sidebar />
+      /> */}
+      <Navbar />
       <div className="flex w-0 flex-1 flex-col overflow-hidden">
         <div className="relative z-10 flex h-20 flex-shrink-0 md:hidden">
           <button
@@ -36,7 +37,7 @@ export default function DashboardLayout({
         </div>
 
         <div className="ml-auto flex items-center space-x-4">
-          <NotificationDropdown />
+          {/* <NotificationDropdown /> */}
           <UserNav />
         </div>
 

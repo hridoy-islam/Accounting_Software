@@ -10,7 +10,7 @@ export default function UserPage() {
   //   setRefreshKey((prev) => prev + 1); // Update the key to trigger re-fetch
   // };
   return (
-    <div className="space-y-4 rounded-lg bg-white shadow-md">
+    <div className=" rounded-lg  ">
       
       {/* <Breadcrumbs
         items={[

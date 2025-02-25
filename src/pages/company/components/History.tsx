@@ -9,18 +9,14 @@ import {
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '@/lib/axios'
-import { Item } from '@radix-ui/react-dropdown-menu';
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import placeholder from "@/assets/imges/home/logos/placeholder.jpg"
+
 import { Landmark } from 'lucide-react';
 
 export default function History({ companyData }) {
     const { id } = useParams();
     const [storages, setStorages] = useState<any>([]);
     const [initialLoading, setInitialLoading] = useState(true);
-    const [showInflow, setShowInflow] = useState(true);
-    const [showOutflow, setShowOutflow] = useState(true);
+
     const [transactions, setTransactions] = useState<any>([])
     const [monthlyData, setMonthlyData] = useState<any>([]);
 

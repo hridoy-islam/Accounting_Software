@@ -102,7 +102,7 @@ export function CategoryTable({ type, categories, onUpdate, onDelete }: Category
     const hierarchicalCategories = buildHierarchy(filteredCategories)
 
     return (
-        <Card>
+        <Card className="p-4">
             <CardHeader className="flex flex-row items-center justify-between mx-4 mb-2">
                 <CardTitle>
                     {type === 'inflow' ? 'Inflow Categories' : 'Outflow Categories'}

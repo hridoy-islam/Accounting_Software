@@ -39,15 +39,15 @@ const CompanyDashboard = () => {
   return (
 
     <Tabs defaultValue="history" className="px-2 mt-1">
-      <TabsList>
+      {/* <TabsList>
         <TabsTrigger value="history" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white text-xl bg-gray-200 mr-1 py-3">Transaction History</TabsTrigger>
         <TabsTrigger value="transaction" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white text-xl bg-gray-200 mr-1 py-3">Transactions</TabsTrigger>
         <TabsTrigger value="storage" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white text-xl bg-gray-200 mr-1 py-3">Storage</TabsTrigger>
-        {/* Only show the "Assigned User" tab for admins */}
+      
         {user?.role === 'admin' && (
           <TabsTrigger value="user" className="data-[state=active]:bg-[#A78BFA] data-[state=active]:text-white text-xl bg-gray-200 mr-1 py-3">Assigned User</TabsTrigger>
         )}
-      </TabsList>
+      </TabsList> */}
       <TabsContent value="history">
         <History companyData={companyData} />
       </TabsContent>

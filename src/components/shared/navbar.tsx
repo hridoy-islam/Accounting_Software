@@ -13,7 +13,7 @@ type SidebarProps = {
   className?: string;
 };
 
-export default function Sidebar({ className }: SidebarProps) {
+export default function Navbar({ className }: SidebarProps) {
   const { isMinimized, toggle } = useSidebar();
   const [status, setStatus] = useState(false);
   const [team, setTeams] = useState([]);
@@ -63,7 +63,7 @@ export default function Sidebar({ className }: SidebarProps) {
           isMinimized ? 'justify-center ' : 'justify-between'
         )}
       >
-        {!isMinimized && <h1 className="text-2xl font-bold">Task Planner</h1>}
+        {!isMinimized && <h1 className="text-2xl font-bold">Accounting Software</h1>}
         <ChevronsLeft
           className={cn(
             'size-8 cursor-pointer rounded-full border bg-background text-foreground',

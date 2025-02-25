@@ -46,21 +46,21 @@ export function UserNav() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuGroup>
+          {/* <DropdownMenuGroup>
             <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />
               <Link to="profile">Profile</Link>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             {/* <DropdownMenuItem>
               <UserPlus className="mr-2 h-4 w-4" />
               <span>Add Account</span>
             </DropdownMenuItem> */}
-            <DropdownMenuItem>
+            {/* <DropdownMenuItem>
               <KeyRound className="mr-2 h-4 w-4" />
               <Link to="reset">Reset Password</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator /> */}
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>

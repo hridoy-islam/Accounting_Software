@@ -3,15 +3,19 @@ import { CategoryTable } from './components/category-table';
 import { Category } from './components/category';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
+import { Navigation } from '@/components/shared/companyNav';
+import { useParams } from 'react-router-dom';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<any>([]);
+  const {id} = useParams()
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
   const fetchData = async () => {
     try {
       if (initialLoading) setInitialLoading(true);
-      const response = await axiosInstance.get(`/categories?limit=1000`);
+      const response = await axiosInstance.get(`/categories/company/${id}?limit=1000`);
       setCategories(response.data.data.result);
+      console.log(categories)
     } catch (error) {
       console.error('Error fetching institutions:', error);
     } finally {
@@ -25,18 +29,19 @@ export default function CategoriesPage() {
 
   const handleUpdateCategory = async (updatedCategory: Category) => {
     try {
+      const payload = { ...updatedCategory, companyId: id }; // Ensure companyId is added
+      console.log("Submitting Payload:", payload); // Debugging step
+  
       const response = updatedCategory._id
-        ? await axiosInstance.patch(
-            `/categories/${updatedCategory._id}`,
-            updatedCategory
-          )
-        : await axiosInstance.post(`/categories`, updatedCategory);
-
+        ? await axiosInstance.patch(`/categories/${updatedCategory._id}`, payload)
+        : await axiosInstance.post(`/categories`, payload);
+  
       fetchData();
     } catch (error) {
-      console.error('Error updating category:', error);
+      console.error("Error updating category:", error);
     }
   };
+  
 
   const handleDeleteCategory = async (id: string) => {
     try {
@@ -52,7 +57,9 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="p-1">
+    <div className="flex flex-col gap-4">
+            <Navigation />
+      
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <CategoryTable
           type="inflow"

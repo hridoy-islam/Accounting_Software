@@ -29,7 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Transaction } from '@/types';
 import { Category } from '@/types';
-import { CategorySelector } from './category-selector';
+import { CategorySelector } from '../../company/components/category-selector';
 import { Label } from '@/components/ui/label';
 import { Upload } from 'lucide-react';
 import { useParams } from 'react-router-dom';
@@ -251,7 +251,7 @@ export function TransactionDialog({
                       </FormControl>
                       <SelectContent>
                         {methods.map((method) => (
-                          <SelectItem key={method._id} value={method._id}>
+                          <SelectItem key={method._id} value={method._id} className='hover:bg-black hover:text-white'>
                             {method.name}
                           </SelectItem>
                         ))}
@@ -278,7 +278,7 @@ export function TransactionDialog({
                       </FormControl>
                       <SelectContent>
                         {storages.map((storage) => (
-                          <SelectItem key={storage._id} value={storage._id}>
+                          <SelectItem key={storage._id} value={storage._id} className='hover:bg-black hover:text-white'>
                             {storage.storageName}
                           </SelectItem>
                         ))}
