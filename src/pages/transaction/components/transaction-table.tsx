@@ -26,25 +26,25 @@ export function TransactionTable({
       <div className="">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>TCID</TableHead>
-              <TableHead>Transaction Date</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead>Storage</TableHead>
+            <TableRow >
+              <TableHead className="text-right">TCID</TableHead>
+              <TableHead className="text-right">Transaction Date</TableHead>
+              <TableHead className="text-right">Type</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="text-right">Category</TableHead>
+              <TableHead className="text-right">Method</TableHead>
+              <TableHead className="text-right">Storage</TableHead>
               {/* <TableHead className="text-right">Actions</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
             {transactions.map((transaction) => (
         
-              <TableRow key={transaction.tcid}>
+              <TableRow key={transaction.tcid} className="text-right">
                 <TableCell>{transaction.tcid}</TableCell>
                 <TableCell>{moment(transaction.transactionDate).format('YYYY-MM-DD')}</TableCell>
                 <TableCell><Badge className={transaction.transactionType === 'inflow' ? `bg-green-300`: 'bg-red-300'}>{transaction.transactionType.toUpperCase()}</Badge></TableCell>
-                <TableCell className="font-semibold">£{Number(transaction.transactionAmount.toFixed(2))}</TableCell>
+                <TableCell className="font-semibold">£{(transaction.transactionAmount.toFixed(2))}</TableCell>
                 <TableCell>{transaction.transactionCategory.name}</TableCell>
                 <TableCell>{transaction.transactionMethod.name}</TableCell>
                 <TableCell>{transaction.storage.storageName}</TableCell>

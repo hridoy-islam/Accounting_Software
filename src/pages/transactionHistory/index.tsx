@@ -139,9 +139,7 @@ export default function TransactionHistory() {
             <h2 className="mb-2 text-xl font-semibold">Balance</h2>
             <p className="text-2xl font-bold">
               £
-              {totalOpeningBalance.toLocaleString('en-UK', {
-                minimumFractionDigits: 2
-              })}
+              {totalOpeningBalance.toFixed(2)}
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow-md">
@@ -158,7 +156,7 @@ export default function TransactionHistory() {
                   <span className="font-medium">{Item.storageName}</span>
                 </div>
                 <span className="font-bold">
-                  £{Number(Item.openingBalance.toFixed(2))}
+                  £{(Item.openingBalance.toFixed(2))}
                 </span>
               </div>
             ))}

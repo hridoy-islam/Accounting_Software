@@ -140,9 +140,9 @@ import { Navigation } from '@/components/shared/companyNav';
               </TableHeader>
               <TableBody>
                 {storages.map((storage) => (
-                  <TableRow key={storage._id}>
+                  <TableRow key={storage._id} >
                     <TableCell>{storage.storageName}</TableCell>
-                    <TableCell className='font-semibold'>£{Number(storage.openingBalance.toFixed(2))}</TableCell>
+                    <TableCell className='font-semibold'>£{(storage.openingBalance.toFixed(2))}</TableCell>
                     <TableCell>{moment(storage.openingDate).format('DD-MM-YYYY')}</TableCell>
                     <TableCell>{storage.status ? 'Yes' : 'No'}</TableCell>
                     <TableCell>{storage.auditStatus ? 'Yes' : 'No'}</TableCell>

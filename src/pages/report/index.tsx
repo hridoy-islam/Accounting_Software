@@ -174,15 +174,15 @@ export default function ReportPage() {
             <TableHeader>
               <TableRow className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80 ">
                 <TableHead className="w-[250px] ">Category Name</TableHead>
-                <TableHead className="w-[150px]  text-center">
+                <TableHead className="w-[150px]  text-right">
                   Transaction Count
                 </TableHead>
                 {paymentMethods.map((method) => (
-                  <TableHead key={method} className="   text-center">
+                  <TableHead key={method} className="   text-right">
                     {method}
                   </TableHead>
                 ))}
-                <TableHead className="w-[150px]   text-center">Sub Total</TableHead>
+                <TableHead className="w-[150px]   text-right">Sub Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -209,16 +209,16 @@ export default function ReportPage() {
                         {category.categoryName}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-right">
                       {category.transactions.length}
                     </TableCell>
                     {paymentMethods.map((method) => (
-                      <TableCell key={method} className="text-center">
-                        €{category.methodTotals[method].toLocaleString()}
+                      <TableCell key={method} className="text-right">
+                        £{category.methodTotals[method].toFixed(2).toLocaleString()}
                       </TableCell>
                     ))}
-                    <TableCell className="text-center font-bold">
-                      €{category.total.toLocaleString()}
+                    <TableCell className="text-right font-bold">
+                    £{category.total.toFixed(2).toLocaleString()}
                     </TableCell>
                   </TableRow>
                   {expandedCategory === category.categoryName && (
@@ -227,19 +227,19 @@ export default function ReportPage() {
                         <Table>
                           <TableHeader>
                             <TableRow className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80">
-                              <TableHead className="w-[200px]   text-center">
+                              <TableHead className="w-[200px]   text-right">
                                 Date
                               </TableHead>
-                              <TableHead className="w-[150px]   text-center">
+                              <TableHead className="w-[150px]   text-right">
                                 Transaction ID
                               </TableHead>
-                              <TableHead className="w-[150px]   text-center">
+                              <TableHead className="w-[150px]   text-right">
                                 Invoice No
                               </TableHead>
-                              <TableHead className="w-[150px]   text-center">
+                              <TableHead className="w-[150px]   text-right">
                                 Details
                               </TableHead>
-                              <TableHead className="w-[150px]   text-center">
+                              <TableHead className="w-[150px]   text-right">
                                 Amount
                               </TableHead>
                             </TableRow>
@@ -247,23 +247,23 @@ export default function ReportPage() {
                           <TableBody>
                             {category.transactions.map((transaction) => (
                               <TableRow key={transaction._id} className='bg-gray-200'>
-                                <TableCell className="text-center">
+                                <TableCell className="text-right">
                                   {new Date(
                                     transaction.transactionDate
                                   ).toLocaleDateString()}
                                 </TableCell>
-                                <TableCell className="text-center">
+                                <TableCell className="text-right">
                                   {transaction.tcid}
                                 </TableCell>
-                                <TableCell className="text-center">
+                                <TableCell className="text-right">
                                   {transaction.invoiceNumber}
                                 </TableCell>
-                                <TableCell className="text-center">
+                                <TableCell className="text-right">
                                   {transaction.details}
                                 </TableCell>
-                                <TableCell className="text-center">
-                                  €
-                                  {transaction.transactionAmount.toLocaleString()}
+                                <TableCell className="text-right">
+                                £
+                                  {transaction.transactionAmount.toFixed(2).toLocaleString()}
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -276,21 +276,21 @@ export default function ReportPage() {
               ))}
               <TableRow className="  font-bold">
                 <TableCell>Total</TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-right">
                   {data.reduce((acc, cat) => acc + cat.transactions.length, 0)}
                 </TableCell>
                 {paymentMethods.map((method) => (
-                  <TableCell key={method} className="text-center">
-                    €
+                  <TableCell key={method} className="text-right">
+                    £
                     {data
-                      .reduce((acc, cat) => acc + cat.methodTotals[method], 0)
-                      .toLocaleString()}
+                      .reduce((acc, cat) => acc + cat.methodTotals[method], 0).toFixed(2)
+                      .toLocaleString()}  
                   </TableCell>
                 ))}
-                <TableCell className="text-center">
-                  €
+                <TableCell className="text-right">
+                £
                   {data
-                    .reduce((acc, cat) => acc + cat.total, 0)
+                    .reduce((acc, cat) => acc + cat.total, 0).toFixed(2)
                     .toLocaleString()}
                 </TableCell>
               </TableRow>
