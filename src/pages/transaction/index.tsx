@@ -72,7 +72,7 @@ export default function TransactionPage() {
   };
   useEffect(() => {
     fetchData(currentPage, entriesPerPage, appliedFilters);
-  }, [currentPage, entriesPerPage, appliedFilters]);
+  }, [currentPage, entriesPerPage, appliedFilters,transactions]);
 
 
 
@@ -96,9 +96,6 @@ export default function TransactionPage() {
   };
 
 
-  useEffect(()=>{
-    fetchData
-  })
 
   return (
     <div>
