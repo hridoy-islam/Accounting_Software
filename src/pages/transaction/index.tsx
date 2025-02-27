@@ -126,7 +126,7 @@ export default function TransactionPage() {
             <a href="/sample_transactions.csv" download>
               <Button variant="outline">Download CSV Example</Button>
             </a>
-            <Button variant="destructive">Export PDF</Button>
+            {/* <Button variant="destructive">Export PDF</Button> */}
           </div>
         </div>
 

@@ -311,24 +311,24 @@ export default function ReportPage() {
           <h1 className="text-3xl font-bold">Transaction Report</h1>
         </div>
         <div className="flex flex-col sm:gap-16 sm:flex-row sm:items-end sm:justify-start">
-          <div className="flex flex-col sm:gap-16 sm:flex-row">
-            <div className="flex flex-col gap-2">
+          <div className="flex flex-col sm:gap-8 sm:flex-row">
+            <div className="flex flex-row  items-center justify-center gap-2">
               <label className="text-sm font-medium">From Date</label>
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="rounded-lg border p-1 shadow-sm"
+                className="w-[250px] py-[4px] px-2 border rounded-md border-gray-300"
               />
             </div>
   
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-row items-center justify-center gap-2">
               <label className="text-sm font-medium">To Date</label>
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="rounded-lg border p-1 shadow-sm"
+                className="w-[250px] py-[4px] px-2 border rounded-md border-gray-300"
               />
             </div>
           </div>
