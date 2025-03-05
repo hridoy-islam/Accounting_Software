@@ -22,6 +22,7 @@ import TransactionHistory from '@/pages/transactionHistory';
 import StoragePage from '@/pages/storage';
 import TransactionPage from '@/pages/transaction';
 import ReportPage from '@/pages/report';
+import CsvUploadPage from '@/pages/csv';
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
 // ----------------------------------------------------------------------
@@ -71,6 +72,10 @@ export default function AppRouter() {
         {
           path: 'company/:id/report',
           element: <ReportPage />
+        },
+        {
+          path: 'company/:id/csv',
+          element: <CsvUploadPage />
         },
         {
           path: 'company/:id/users',

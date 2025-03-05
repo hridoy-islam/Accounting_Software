@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Users, Settings, Menu, X, Database, RectangleEllipsis, ClipboardMinus, File, ArrowLeftRight } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, Menu, X, Database, RectangleEllipsis, ClipboardMinus, File, ArrowLeftRight, FileSpreadsheet } from 'lucide-react';
 import { UserNav } from './user-nav';
 import { useSelector } from 'react-redux';
 
@@ -37,11 +37,18 @@ export function Navigation() {
       roles: ['admin', 'user', 'company']
     },
     {
+      to: `/admin/company/${id}/csv`,
+      icon: <FileSpreadsheet className="mr-2 h-4 w-4" />,
+      label: 'CSV Upload',
+      roles: ['admin', 'user','company']
+    },
+    {
       to: `/admin/company/${id}/report`,
       icon: <File className="mr-2 h-4 w-4" />,
       label: 'Report',
       roles: ['admin', 'user', 'company']
     },
+    
     {
       to: `/admin/company/${id}/users`,
       icon: <Users className="mr-2 h-4 w-4" />,

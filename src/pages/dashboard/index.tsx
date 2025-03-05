@@ -21,7 +21,7 @@ import { useForm } from 'react-hook-form';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
 import { useSelector } from 'react-redux';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import company from '@/assets/imges/home/company.png';
 
 export interface TCompany {
@@ -58,7 +58,6 @@ export function Dashboard() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<TUser | null>(null);
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
-  const { companyId } = useParams();
   const { register, handleSubmit, reset } = useForm();
 
   useEffect(() => {
