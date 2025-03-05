@@ -59,21 +59,27 @@ export default function CsvUploadPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null); // State to store the selected file
 
+  const fetchData = async () => {
+    try {
+      const [categoriesRes, methodsRes, storagesRes] = await Promise.all([
+        axiosInstance.get(`/categories/company/${id}?limit=all`),
+        axiosInstance.get(`/methods/company/${id}?limit=all`),
+        axiosInstance.get(`/storages/company/${id}?limit=all`),
+      ]);
+      setCategories(categoriesRes.data.data.result);
+      setMethods(methodsRes.data.data.result);
+      setStorages(storagesRes.data.data.result);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [categoriesRes, methodsRes, storagesRes] = await Promise.all([
-          axiosInstance.get(`/categories/company/${id}?limit=all`),
-          axiosInstance.get(`/methods/company/${id}?limit=all`),
-          axiosInstance.get(`/storages/company/${id}?limit=all`),
-        ]);
-        setCategories(categoriesRes.data.data.result);
-        setMethods(methodsRes.data.data.result);
-        setStorages(storagesRes.data.data.result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+    const storedTransactions = localStorage.getItem("transactions");
+    if (storedTransactions) {
+      setTransactions(JSON.parse(storedTransactions));
+    }
 
     fetchData();
   }, [id]);
@@ -87,14 +93,19 @@ export default function CsvUploadPage() {
   };
 
   // Handle CSV file parsing when the button is clicked
+
   const handleUploadClick = () => {
     if (!selectedFile) {
       alert("Please select a file first.");
       return;
     }
-
+  
     setIsLoading(true);
-
+  
+    // Clear existing transactions in the state and localStorage before uploading a new file
+    setTransactions([]);
+    localStorage.removeItem("transactions");
+  
     Papa.parse<CSVRow>(selectedFile, {
       header: true,
       skipEmptyLines: true,
@@ -103,23 +114,25 @@ export default function CsvUploadPage() {
           .filter((row) => row.Date?.trim() && (row["Paid In"] || row["Paid Out"]))
           .map((row, index) => {
             let parsedDate: Date | null = null;
-
+  
             try {
               parsedDate = parse(row.Date.trim(), "dd-MMM-yy", new Date());
             } catch (error) {
               console.error("Error parsing date:", row.Date, error);
             }
-
+  
             const formattedDate = parsedDate ? format(parsedDate, "yyyy-MM-dd") : row.Date.trim();
             const paidIn = row["Paid In"] ? parseFloat(row["Paid In"].replace(/[^0-9.-]+/g, "")) : 0;
             const paidOut = row["Paid Out"] ? parseFloat(row["Paid Out"].replace(/[^0-9.-]+/g, "")) : 0;
             const amount = paidIn || paidOut;
-
+  
+            const transactionType = paidIn > 0 ? "inflow" : paidOut > 0 ? "outflow" : "";
+  
             return {
               id: `temp-${index}`, // Temporary ID for rendering
               transactionDate: formattedDate,
               transactionAmount: amount,
-              transactionType: row.Type?.trim() || (amount > 0 ? "inflow" : "outflow"),
+              transactionType: transactionType,
               description: row.Description?.trim() || "",
               invoiceNumber: "",
               invoiceDate: "",
@@ -129,8 +142,11 @@ export default function CsvUploadPage() {
               storage: "",
             };
           });
-
-        setTransactions((prev) => [...prev, ...parsedTransactions]);
+  
+        // Save new transactions to localStorage
+        localStorage.setItem("transactions", JSON.stringify(parsedTransactions));
+  
+        setTransactions(parsedTransactions); // Update state with new transactions
         setIsLoading(false);
       },
       error: (error) => {
@@ -139,7 +155,8 @@ export default function CsvUploadPage() {
       },
     });
   };
-
+  
+  
   // Handle transaction submission
   const handleSubmitTransactions = async (transactions) => {
     try {
@@ -196,7 +213,7 @@ export default function CsvUploadPage() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            Upload a CSV file with columns: Date, Type, Description, Paid Out, Paid In, Balance
+            Upload a CSV file with columns: Date, Description, Paid Out, Paid In
           </p>
         </div>
 
