@@ -90,8 +90,8 @@ export default function TransactionHistory() {
           {/* Header with flex container for alignment */}
           <div className="mb-8 flex items-center justify-between">
             <h1 className="text-2xl font-semibold">
-              {companyData?.name} <br />{' '}
-              <span className="text-lg font-semibold">Recent Transactions</span>
+              {/* {companyData?.name} <br />{' '} */}
+              <span className="text-2xl font-semibold">Recent Transactions</span>
             </h1>
           </div>
 
