@@ -17,14 +17,14 @@ import {
   import { Input } from '@/components/ui/input';
   import { Label } from '@/components/ui/label';
   import { useEffect, useState } from 'react';
-  import { Link, useParams } from 'react-router-dom';
+  import { useParams } from 'react-router-dom';
   import { useForm } from 'react-hook-form';
   import axiosInstance from '@/lib/axios';
   import moment from 'moment';
   import { Pen } from 'lucide-react';
-  import { ClipboardMinus, Database, Landmark, LayoutDashboard, RectangleEllipsis, Settings, Users } from 'lucide-react';
+
 import { useSelector } from 'react-redux';
-import { Navigation } from '@/components/shared/companyNav';
+
 
   
   const StoragePage = () => {
@@ -33,7 +33,7 @@ import { Navigation } from '@/components/shared/companyNav';
     const [storageToEdit, setStorageToEdit] = useState<any>(null);
     const { id } = useParams();
     const [initialLoading, setInitialLoading] = useState(true);
-    const user = useSelector((state: any) => state.auth.user); 
+
   
     const { register, handleSubmit, setValue, reset } = useForm({
       defaultValues: {
@@ -108,7 +108,7 @@ import { Navigation } from '@/components/shared/companyNav';
   
     return (
       <div className="  flex flex-col gap-4">
-        <Navigation />
+       
             
         <div className="rounded-md bg-white p-4 shadow-lg">
           <h1 className="mb-8 text-2xl font-semibold">Storages</h1>

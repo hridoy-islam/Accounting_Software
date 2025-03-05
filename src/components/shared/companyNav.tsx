@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { LayoutDashboard, Users, Settings, Menu, X, Database, RectangleEllipsis, ClipboardMinus, File, ArrowLeftRight, FileSpreadsheet } from 'lucide-react';
 import { UserNav } from './user-nav';
 import { useSelector } from 'react-redux';
+import axiosInstance from '@/lib/axios';
 
 export function Navigation() {
   const user = useSelector((state:any) => state.auth.user); // Get user from Redux state
@@ -11,6 +12,7 @@ export function Navigation() {
   const sidebarRef = useRef(null);
   const { id } = useParams();
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const [companyName, setCompanyName] = useState(null);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -21,6 +23,21 @@ export function Navigation() {
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [sidebarOpen]);
+
+
+  useEffect(() => {
+
+    const fetchCompanyData = async () => {
+      try {
+        const company = await axiosInstance.get(`/users/${id}`);
+        setCompanyName(company.data.data);
+      } catch (error) {
+        console.error('Error fetching company data:', error);
+      }
+    };
+
+    fetchCompanyData();
+  }, [id]);
 
   const navItems = [
 
@@ -80,7 +97,10 @@ export function Navigation() {
   return (
     <div className="flex flex-col">
       
-        <div className="hidden justify-start px-4 bg-white py-2 md:flex rounded-lg shadow-md">
+        <div className="hidden justify-between px-4 bg-white py-2 md:flex items-center rounded-lg shadow-md">
+          <div className='font-semibold'>
+            {companyName?.name} 
+          </div>
           <nav className="flex items-center space-x-2">
             {filteredNavItems.map(({ to, icon, label }) => (
               <Button

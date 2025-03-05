@@ -6,8 +6,7 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
-  FormMessage,
+  FormMessage
 } from '@/components/ui/form';
 import {
   Table,
@@ -15,7 +14,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
   SelectContent,
-  SelectItem,
+  SelectItem
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
@@ -32,7 +31,7 @@ import { Check } from 'lucide-react';
 // Define the Zod schema
 const transactionSchema = z.object({
   transactionType: z.enum(['inflow', 'outflow'], {
-    required_error: 'Transaction type is required.',
+    required_error: 'Transaction type is required.'
   }),
   transactionDate: z
     .string()
@@ -50,9 +49,9 @@ const transactionSchema = z.object({
     z.number().min(1, 'Transaction amount is required.')
   ),
   transactionDoc: z.string().optional(),
-  transactionCategory: z.string().min(1, 'Transaction category is required.'),
-  transactionMethod: z.string().min(1, 'Transaction method is required.'),
-  storage: z.string().min(1, 'Storage is required.'),
+  transactionCategory: z.string().min(1, 'Category is required.'),
+  transactionMethod: z.string().min(1, 'Method is required.'),
+  storage: z.string().min(1, 'Storage is required.')
 });
 
 const TransactionTableForm = ({
@@ -61,19 +60,19 @@ const TransactionTableForm = ({
   storages,
   transactions,
   onSubmit,
-  setTransactions,
+  setTransactions
 }) => {
   // Initialize the form with Zod validation
   const form = useForm({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      transactions: transactions.map(transaction => ({
+      transactions: transactions.map((transaction) => ({
         ...transaction,
         transactionCategory: '', // Reset category
         transactionMethod: '', // Reset method
-        storage: '', // Reset storage
-      })),
-    },
+        storage: '' // Reset storage
+      }))
+    }
   });
 
   const handleRowSubmit = async (index) => {
@@ -83,7 +82,13 @@ const TransactionTableForm = ({
     const validationResult = transactionSchema.safeParse(transaction);
 
     if (!validationResult.success) {
-      console.error('Validation error:', validationResult.error.errors);
+      console.error('Validation error:', validationResult.error);
+      validationResult.error.errors.forEach((err) => {
+        form.setError(`transactions.${index}.${err.path[0]}`, {
+          type: 'manual',
+          message: err.message
+        });
+      });
       return;
     }
 
@@ -100,8 +105,8 @@ const TransactionTableForm = ({
           ...t,
           transactionCategory: '', // Explicitly reset category
           transactionMethod: '', // Explicitly reset method
-          storage: '', 
-        })),
+          storage: ''
+        }))
       });
     } catch (error) {
       console.error('Submission error:', error);
@@ -111,7 +116,11 @@ const TransactionTableForm = ({
   return (
     <Form {...form}>
       <form className="space-y-4">
+        <div className="flex flex-row justify-end  font-medium text-gray-700">
+          {form.watch('transactions')?.length || 0} Rows Found
+        </div>
         {/* Table container */}
+
         <div className="w-full overflow-hidden">
           <Table className="w-full">
             <TableHeader>
@@ -145,7 +154,7 @@ const TransactionTableForm = ({
                               className="w-full rounded-md border border-gray-300 bg-transparent py-1.5"
                             />
                           </FormControl>
-                          <FormMessage className="text-red-500 text-xs" />
+                          <FormMessage className="text-xs text-red-500" />
                         </FormItem>
                       )}
                     />
@@ -164,7 +173,7 @@ const TransactionTableForm = ({
                               className="w-full"
                             />
                           </FormControl>
-                          <FormMessage className="text-red-500 text-xs" />
+                          <FormMessage className="text-xs text-red-500" />
                         </FormItem>
                       )}
                     />
@@ -182,7 +191,7 @@ const TransactionTableForm = ({
                               className="w-full rounded-md border border-gray-300 bg-transparent py-1.5"
                             />
                           </FormControl>
-                          <FormMessage className="text-red-500 text-xs" />
+                          <FormMessage className="text-xs text-red-500" />
                         </FormItem>
                       )}
                     />
@@ -200,7 +209,7 @@ const TransactionTableForm = ({
                               className="min-h-[60px] w-full"
                             />
                           </FormControl>
-                          <FormMessage className="text-red-500 text-xs" />
+                          <FormMessage className="text-xs text-red-500" />
                         </FormItem>
                       )}
                     />
@@ -218,7 +227,7 @@ const TransactionTableForm = ({
                               className="min-h-[60px] w-full"
                             />
                           </FormControl>
-                          <FormMessage className="text-red-500 text-xs" />
+                          <FormMessage className="text-xs text-red-500" />
                         </FormItem>
                       )}
                     />
@@ -255,7 +264,7 @@ const TransactionTableForm = ({
                                 ))}
                             </SelectContent>
                           </Select>
-                          <FormMessage className="text-red-500 text-xs" />
+                          <FormMessage className="text-xs text-red-500" />
                         </FormItem>
                       )}
                     />
@@ -283,7 +292,7 @@ const TransactionTableForm = ({
                               ))}
                             </SelectContent>
                           </Select>
-                          <FormMessage className="text-red-500 text-xs" />
+                          <FormMessage className="text-xs text-red-500" />
                         </FormItem>
                       )}
                     />
@@ -314,7 +323,7 @@ const TransactionTableForm = ({
                               ))}
                             </SelectContent>
                           </Select>
-                          <FormMessage className="text-red-500 text-xs" />
+                          <FormMessage className="text-xs text-red-500" />
                         </FormItem>
                       )}
                     />
@@ -332,7 +341,7 @@ const TransactionTableForm = ({
                               className="w-full font-medium"
                             />
                           </FormControl>
-                          <FormMessage className="text-red-500 text-xs" />
+                          <FormMessage className="text-xs text-red-500" />
                         </FormItem>
                       )}
                     />

@@ -7,30 +7,15 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import {  useParams } from 'react-router-dom';
 import axiosInstance from '@/lib/axios';
-import { Item } from '@radix-ui/react-dropdown-menu';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import placeholder from '@/assets/imges/home/logos/placeholder.jpg';
-import { ClipboardMinus, Database, Landmark, LayoutDashboard, RectangleEllipsis, Settings, Users } from 'lucide-react';
-import { useSelector } from 'react-redux';
-import { Navigation, TopNavigation } from '@/components/shared/companyNav';
+
+import {  Landmark } from 'lucide-react';
 
 export default function TransactionHistory() {
   const { id } = useParams();
-  const user = useSelector((state: any) => state.auth.user); // Get user from Redux state
   const [storages, setStorages] = useState<any>([]);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [showInflow, setShowInflow] = useState(true);
-  const [showOutflow, setShowOutflow] = useState(true);
   const [transactions, setTransactions] = useState<any>([]);
   const [monthlyData, setMonthlyData] = useState<any>([]);
   const [companyData, setCompanyData] = useState<any>();
@@ -97,7 +82,7 @@ export default function TransactionHistory() {
 
   return (
     <div className="  flex flex-col gap-4">
-      <Navigation />
+     
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main Table Section */}

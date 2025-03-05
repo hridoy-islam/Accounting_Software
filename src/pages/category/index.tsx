@@ -3,7 +3,7 @@ import { CategoryTable } from './components/category-table';
 import { Category } from './components/category';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
-import { Navigation } from '@/components/shared/companyNav';
+
 import { useParams } from 'react-router-dom';
 
 export default function CategoriesPage() {
@@ -58,7 +58,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-            <Navigation />
+         
       
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <CategoryTable

@@ -6,17 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axiosInstance from '@/lib/axios';
 import { useParams } from "react-router-dom";
-import { Navigation } from "@/components/shared/companyNav";
-import { useForm } from 'react-hook-form';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+
+
 import TransactionTableForm from "./components/TransactionTableForm";
+import { toast } from "@/components/ui/use-toast";
 
 // Define types
 interface Transaction {
@@ -64,6 +57,7 @@ export default function CsvUploadPage() {
   const [methods, setMethods] = useState<Method[]>([]);
   const [storages, setStorages] = useState<Storage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // State to store the selected file
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,14 +78,24 @@ export default function CsvUploadPage() {
     fetchData();
   }, [id]);
 
-  // Handle CSV file upload
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle file selection
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (file) {
+      setSelectedFile(file); // Store the selected file in state
+    }
+  };
+
+  // Handle CSV file parsing when the button is clicked
+  const handleUploadClick = () => {
+    if (!selectedFile) {
+      alert("Please select a file first.");
+      return;
+    }
 
     setIsLoading(true);
 
-    Papa.parse<CSVRow>(file, {
+    Papa.parse<CSVRow>(selectedFile, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
@@ -112,7 +116,7 @@ export default function CsvUploadPage() {
             const amount = paidIn || paidOut;
 
             return {
-           
+              id: `temp-${index}`, // Temporary ID for rendering
               transactionDate: formattedDate,
               transactionAmount: amount,
               transactionType: row.Type?.trim() || (amount > 0 ? "inflow" : "outflow"),
@@ -134,8 +138,6 @@ export default function CsvUploadPage() {
         setIsLoading(false);
       },
     });
-
-    event.target.value = "";
   };
 
   // Handle transaction submission
@@ -151,26 +153,45 @@ export default function CsvUploadPage() {
       const response = await axiosInstance.post("/transactions", payload );
 
       if (response.status === 200) {
-        console.log("Transactions submitted successfully");
+        toast({
+          title: 'Transaction Successfully Submitted',
+          
+        });
       } else {
-        console.error("Failed to submit transactions");
+        toast({
+          title: 'Failed to submit transactions',
+          
+        });
+      
       }
     } catch (error) {
-      console.error("Error submitting transactions:", error);
+      toast({
+        title: 'Failed to submit transactions',
+        
+      });
     }
   };
 
   return (
     <div>
-      <Navigation />
+
       <div className="mt-4 space-y-6 rounded-md bg-white p-6 shadow-lg">
         <h1 className="text-2xl font-bold mb-6">CSV Transaction Upload</h1>
 
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-4">Upload Transaction CSV</h2>
           <div className="flex items-center gap-4">
-            <Input type="file" accept=".csv" onChange={handleFileUpload} className="max-w-md" />
-            <Button disabled={isLoading}>
+            <Input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange} 
+              className="max-w-md"
+            />
+            <Button
+              onClick={handleUploadClick} 
+              disabled={isLoading || !selectedFile} 
+              variant="theme"
+            >
               {isLoading ? "Processing..." : "Upload CSV"}
             </Button>
           </div>
@@ -193,4 +214,3 @@ export default function CsvUploadPage() {
     </div>
   );
 }
-

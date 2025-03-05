@@ -23,6 +23,7 @@ import StoragePage from '@/pages/storage';
 import TransactionPage from '@/pages/transaction';
 import ReportPage from '@/pages/report';
 import CsvUploadPage from '@/pages/csv';
+import CompanyLayout from '@/components/layout/company-layout';
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
 // ----------------------------------------------------------------------
@@ -51,35 +52,35 @@ export default function AppRouter() {
         },
         {
           path: 'company/:id',
-          element: <TransactionHistory />
+          element: <CompanyLayout><TransactionHistory /></CompanyLayout>,
         },
         {
           path: 'company/:id/categories',
-          element: <CategoriesPage />
+          element: <CompanyLayout><CategoriesPage /></CompanyLayout>,
         },
         {
           path: 'company/:id/storages',
-          element: < StoragePage/>
+          element: <CompanyLayout><StoragePage /></CompanyLayout>,
         },
         {
           path: 'company/:id/methods',
-          element: <Method />
+          element: <CompanyLayout><Method /></CompanyLayout>,
         },
         {
           path: 'company/:id/transactions',
-          element: <TransactionPage />
+          element: <CompanyLayout><TransactionPage /></CompanyLayout>,
         },
         {
           path: 'company/:id/report',
-          element: <ReportPage />
+          element: <CompanyLayout><ReportPage /></CompanyLayout>,
         },
         {
           path: 'company/:id/csv',
-          element: <CsvUploadPage />
+          element: <CompanyLayout><CsvUploadPage /></CompanyLayout>,
         },
         {
           path: 'company/:id/users',
-          element: <UserPage />
+          element: <CompanyLayout><UserPage /></CompanyLayout>,
         },
 
         {

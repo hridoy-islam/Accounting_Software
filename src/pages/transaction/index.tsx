@@ -8,7 +8,6 @@ import axiosInstance from '@/lib/axios';
 import { useParams } from 'react-router-dom';
 import { ImageUploader } from '@/components/shared/image-uploader';
 import { DataTablePagination } from '@/components/shared/data-table-pagination';
-import { Navigation } from '@/components/shared/companyNav';
 
 export default function TransactionPage() {
   const { id } = useParams();
@@ -99,7 +98,7 @@ export default function TransactionPage() {
 
   return (
     <div>
-      <Navigation />
+  
 
       <div className="mt-4 space-y-6 rounded-md bg-white p-6 shadow-lg">
         <div className="flex items-center justify-between">

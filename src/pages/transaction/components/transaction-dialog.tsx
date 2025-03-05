@@ -27,11 +27,9 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Transaction } from '@/types';
-import { Category } from '@/types';
 import { CategorySelector } from '../../company/components/category-selector';
 import { Label } from '@/components/ui/label';
-import { Upload } from 'lucide-react';
+
 import { useParams } from 'react-router-dom';
 
 const formSchema = z.object({

@@ -21,17 +21,8 @@ import { useForm } from 'react-hook-form';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
 import { useSelector } from 'react-redux';
-import {
-  ClipboardMinus,
-  Database,
-  Landmark,
-  LayoutDashboard,
-  RectangleEllipsis,
-  Settings,
-  Users
-} from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
-import { Navigation } from '@/components/shared/companyNav';
+
+import { useParams } from 'react-router-dom';
 
 export interface TCompany {
   id: string;
@@ -122,7 +113,7 @@ export function UserTable() {
   
   return (
     <div className=" flex flex-col gap-4">
-      <Navigation />
+      
       
 <div className='bg-white  p-4 shadow-lg rounded-lg'>
 

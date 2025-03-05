@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
 import { useForm } from 'react-hook-form';
-import { Navigation } from '@/components/shared/companyNav';
+
 import { useParams } from 'react-router-dom';
 
 interface Method {
@@ -88,7 +88,7 @@ export function Method() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Navigation />
+  
 
       <div className="space-y-4 rounded-lg bg-white shadow-md">
         <div className="p-4 ">

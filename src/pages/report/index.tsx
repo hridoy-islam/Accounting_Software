@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom'; // or 'next/navigation' if using Next.js
+import { useParams } from 'react-router-dom'; 
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { Navigation } from '@/components/shared/companyNav';
+
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -240,6 +240,9 @@ export default function ReportPage() {
                                 Details
                               </TableHead>
                               <TableHead className="w-[150px]   text-right">
+                                Transaction Method
+                              </TableHead>
+                              <TableHead className="w-[150px]   text-right">
                                 Amount
                               </TableHead>
                             </TableRow>
@@ -260,6 +263,9 @@ export default function ReportPage() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                   {transaction.details}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {transaction.transactionMethod.name}
                                 </TableCell>
                                 <TableCell className="text-right">
                                 £
@@ -303,7 +309,7 @@ export default function ReportPage() {
 
   return (
     <div className="flex flex-col gap-4">
-    <Navigation />
+    
   
     <div className="rounded-md bg-white p-4 shadow-md">
       <div className="flex flex-col gap-4">
