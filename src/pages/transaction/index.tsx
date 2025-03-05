@@ -104,10 +104,10 @@ export default function TransactionPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Transactions</h1>
           <div className="space-x-2">
-            <Button variant="secondary" onClick={() => setDialogOpen(true)}>
+            <Button variant="theme" onClick={() => setDialogOpen(true)}>
               Add Transaction
             </Button>
-            <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+            {/* <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
               Upload CSV
             </Button>
             <ImageUploader
@@ -121,10 +121,10 @@ export default function TransactionPage() {
               currentPage={undefined}
               entriesPerPage={undefined}
               filters={undefined}
-            />
-            <a href="/sample_transactions.csv" download>
+            /> */}
+            {/* <a href="/sample_transactions.csv" download>
               <Button variant="outline">Download CSV Example</Button>
-            </a>
+            </a> */}
             {/* <Button variant="destructive">Export PDF</Button> */}
           </div>
         </div>

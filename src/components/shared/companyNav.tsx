@@ -97,7 +97,7 @@ export function Navigation() {
   return (
     <div className="flex flex-col">
       
-        <div className="hidden justify-between px-4 bg-white py-2 md:flex items-center rounded-lg shadow-md">
+        <div className="hidden justify-between px-6 bg-white py-2 md:flex items-center rounded-lg shadow-md">
           <div className='font-semibold'>
             {companyName?.name} 
           </div>
