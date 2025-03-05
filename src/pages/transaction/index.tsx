@@ -100,7 +100,7 @@ export default function TransactionPage() {
     <div>
   
 
-      <div className="mt-4 space-y-6 rounded-md bg-white p-6 shadow-lg">
+      <div className=" rounded-md bg-white p-4 shadow-lg">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Transactions</h1>
           <div className="space-x-2">

@@ -175,7 +175,7 @@ export default function CsvUploadPage() {
   return (
     <div>
 
-      <div className="mt-4 space-y-6 rounded-md bg-white p-6 shadow-lg">
+      <div className="  rounded-md bg-white p-4 shadow-lg">
         <h1 className="text-2xl font-bold mb-6">CSV Transaction Upload</h1>
 
         <div className="mb-8">
