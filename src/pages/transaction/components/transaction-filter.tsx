@@ -46,9 +46,9 @@ export function TransactionFilters({
  
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-4">
-        <div className="flex-1 min-w-[250px]">
+    <div className="space-y-4 pb-4 ">
+      <div className="flex  flex-row gap-4">
+        <div className=" min-w-[100px]">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -87,7 +87,7 @@ export function TransactionFilters({
           value={filters.method}
           onValueChange={(value) => setFilters({ ...filters, method: value })}
         >
-          <SelectTrigger className="w-[250px]">
+          <SelectTrigger className="w-[145px]">
             <SelectValue placeholder="Select Method" />
           </SelectTrigger>
           <SelectContent>
@@ -103,7 +103,7 @@ export function TransactionFilters({
           value={filters.storage}
           onValueChange={(value) => setFilters({ ...filters, storage: value })}
         >
-          <SelectTrigger className="w-[250px]">
+          <SelectTrigger className="w-[145px]">
             <SelectValue placeholder="Select Storage" />
           </SelectTrigger>
           <SelectContent>
@@ -116,14 +116,14 @@ export function TransactionFilters({
         </Select>
 
         {/* Date Range Picker */}
-        <div className="flex gap-4">
+        <div className="flex gap-2">
           <div className="flex justify-center gap-2 items-center">
             <Label>From Date</Label>
             <input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate( e.target.value)}
-              className="w-[250px] py-[4px] px-2 border rounded-md border-gray-300"
+              className="w-[140px] py-[4px] px-1 border rounded-md border-gray-300"
             />
           </div>
 
@@ -133,14 +133,14 @@ export function TransactionFilters({
               type="date"
               value={toDate}
               onChange={(e) => setToDate( e.target.value )}
-              className="w-[250px] px-2 py-[4px] border rounded-md border-gray-300"
+              className="w-[140px] px-1 py-[4px] border rounded-md border-gray-300"
             />
           </div>
         </div>
 
 
-        <Button  className="ml-auto bg-black hover:bg-black/80 text-white" onClick={handleApplyFilters}>
-          Filter
+        <Button  className=" bg-black hover:bg-black/80 text-white" onClick={handleApplyFilters}>
+          Search
         </Button>
       </div>
     </div>

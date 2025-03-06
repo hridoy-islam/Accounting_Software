@@ -1,24 +1,27 @@
 import { useState, useEffect } from "react"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Category } from "@/types"
+import { Label } from "@/components/ui/label"
 
-
-export function CategorySelector({ 
-  categories, 
-  onSelect, 
+export function CategorySelector({
+  categories,
+  onSelect,
   onTypeChange,
   defaultType = '',
+  value
+}: {
+  categories: Category[];
+  onSelect: (categoryId: string) => void;
+  onTypeChange: (type: 'inflow' | 'outflow') => void;
+  defaultType?: 'inflow' | 'outflow';
+  value: string;
 }) {
   const [type, setType] = useState<'inflow' | 'outflow' | ''>(defaultType)
-  const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [selectedCategory, setSelectedCategory] = useState<string>(value)
+
+  useEffect(() => {
+    setSelectedCategory(value)
+  }, [value])
 
   useEffect(() => {
     setSelectedCategory('')
@@ -26,13 +29,14 @@ export function CategorySelector({
 
   const handleTypeChange = (value: 'inflow' | 'outflow') => {
     setType(value)
-    onTypeChange?.(value)
+    onTypeChange(value)
   }
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value)
     onSelect(value)
   }
+
   const buildHierarchy = (categories: Category[]): Category[] => {
     const categoryMap = new Map<string, Category>()
     const roots: Category[] = []
@@ -61,7 +65,7 @@ export function CategorySelector({
 
   const renderCategoryOptions = (categories: Category[], level: number = 0): JSX.Element[] => {
     return categories.flatMap(category => [
-      <SelectItem key={category._id} value={category._id}>
+      <SelectItem key={category._id} value={category._id} className='hover:bg-black hover:text-white'>
         {'\u00A0'.repeat(level * 2)}
         {level > 0 ? '└─ ' : ''}
         {category.name}
@@ -75,23 +79,8 @@ export function CategorySelector({
 
   return (
     <div className="flex gap-4 items-center">
-      <RadioGroup 
-        value={type}
-        onValueChange={handleTypeChange as (value: string) => void}
-        className="flex gap-2"
-      >
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="inflow" id="inflow" />
-          <Label htmlFor="inflow">Inflow</Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="outflow" id="outflow" />
-          <Label htmlFor="outflow">Outflow</Label>
-        </div>
-      </RadioGroup>
-
       <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-        <SelectTrigger className="min-w-[150px]">
+        <SelectTrigger className="min-w-[50px]">
           <SelectValue placeholder="Select a category" />
         </SelectTrigger>
         <SelectContent>
@@ -101,4 +90,3 @@ export function CategorySelector({
     </div>
   )
 }
-

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Users, Settings, Menu, X, Database, RectangleEllipsis, ClipboardMinus, File, ArrowLeftRight, FileSpreadsheet } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, Menu, X, Database, RectangleEllipsis, ClipboardMinus, File, ArrowLeftRight, FileSpreadsheet, Archive } from 'lucide-react';
 import { UserNav } from './user-nav';
 import { useSelector } from 'react-redux';
 import axiosInstance from '@/lib/axios';
@@ -88,6 +88,12 @@ export function Navigation() {
       to: `/admin/company/${id}/methods`,
       icon: <Settings className="mr-2 h-4 w-4" />,
       label: 'Method',
+      roles: ['admin', 'user','company']
+    },
+    {
+      to: `/admin/company/${id}/archive`,
+      icon: <Archive className="mr-2 h-4 w-4" />,
+      label: 'Archive',
       roles: ['admin', 'user','company']
     }
   ];

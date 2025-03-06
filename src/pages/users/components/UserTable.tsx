@@ -58,7 +58,7 @@ export function UserTable() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<TUser | null>(null);
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
-  const {id} = useParams();
+  const { id } = useParams();
   const { register, handleSubmit, reset } = useForm();
 
   useEffect(() => {
@@ -100,7 +100,12 @@ export function UserTable() {
       fetchData();
       setEditingUser(null);
     } else {
-      const formattedData = { ...data, createdBy: user._id, companyId:id, role:"user" };
+      const formattedData = {
+        ...data,
+        createdBy: user._id,
+        companyId: id,
+        role: data.role || 'user'
+      };
       await axiosInstance.post('/auth/signup', formattedData);
       fetchData();
     }
@@ -110,117 +115,138 @@ export function UserTable() {
     setEditingUser(null);
   };
 
-  
   return (
     <div className=" flex flex-col gap-4">
-      
-      
-<div className='bg-white  p-4 shadow-lg rounded-lg'>
+      <div className="rounded-lg  bg-white p-4 shadow-lg">
+        <div className="flex items-center justify-between pb-12">
+          <div className="flex flex-1 items-center justify-between space-x-4">
+            <h1 className="pb-6 text-2xl font-semibold">User Management</h1>
 
-
-      <div className="flex items-center justify-between pb-12">
-        <div className="flex flex-1 items-center justify-between space-x-4">
-          <h1 className="pb-6 text-2xl font-semibold">User Management</h1>
-
-          <Button
-            variant="theme"
-            onClick={() => {
-              setEditingUser(null);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New User
-          </Button>
-        </div>
-      </div>
-      <div className="rounded-md   ">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.phone}</TableCell>
-
-                <TableCell className="space-x-4 ">
-                  <Button
-                    variant="theme"
-                    size="icon"
-                    onClick={() => {
-                      setEditingUser(user);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    <Pen className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Dialog
-        open={dialogOpen}
-        onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) setEditingUser(null);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingUser ? 'Edit User' : 'New User'}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 ">
-              <div>
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  {...register('name', { required: 'This field is required' })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  {...register('email', { required: 'This field is required' })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  {...register('phone', { required: 'This field is required' })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  type="password"
-                  id="password"
-                  {...register('password', {
-                    required: !editingUser ? 'This field is required' : false
-                  })}
-                />
-              </div>
-            </div>
-            <Button type="submit" variant="theme" className="w-full">
-              Save
+            <Button
+              variant="theme"
+              onClick={() => {
+                setEditingUser(null);
+                setDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              New User
             </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+          </div>
+        </div>
+        <div className="rounded-md   ">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.phone}</TableCell>
+                  <TableCell>{user.role}</TableCell>
+
+                  <TableCell className="space-x-4 ">
+                    <Button
+                      variant="theme"
+                      size="icon"
+                      onClick={() => {
+                        setEditingUser(user);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      <Pen className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <Dialog
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) setEditingUser(null);
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingUser ? 'Edit User' : 'New User'}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 ">
+                <div>
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    {...register('name', {
+                      required: 'This field is required'
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    {...register('email', {
+                      required: 'This field is required'
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    {...register('phone', {
+                      required: 'This field is required'
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="role">Role</Label>
+                  <select
+                    id="role"
+                    {...register('role', {
+                      required: 'This field is required'
+                    })}
+                    className="w-full rounded-lg border p-2"
+                  >
+                    <option value="">Select Role</option>
+                    <option value="administrator">Administrator</option>
+                    <option value="manager">Manager</option>
+                    <option value="user">User</option>
+                    <option value="audit">Audit</option>
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    type="password"
+                    id="password"
+                    {...register('password', {
+                      required: !editingUser ? 'This field is required' : false
+                    })}
+                  />
+                </div>
+              </div>
+              <Button type="submit" variant="theme" className="w-full">
+                Save
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

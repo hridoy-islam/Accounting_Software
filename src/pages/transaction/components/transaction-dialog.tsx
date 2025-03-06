@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import * as z from 'zod';
 import axiosInstance from '@/lib/axios';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -16,20 +16,19 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
 } from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { CategorySelector } from '../../company/components/category-selector';
 import { Label } from '@/components/ui/label';
-
 import { useParams } from 'react-router-dom';
 
 const formSchema = z.object({
@@ -42,10 +41,8 @@ const formSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
   category: z.string().min(1, 'Category is required'),
   method: z.string().min(1, 'Method is required'),
-  storage: z.string().min(1, 'Storage is required')
+  storage: z.string().min(1, 'Storage is required'),
 });
-
-
 
 export function TransactionDialog({
   open,
@@ -53,85 +50,84 @@ export function TransactionDialog({
   categories,
   methods,
   storages,
-  onSubmit
+  onSubmit,
+  editingTransaction,
 }) {
   const [file, setFile] = useState<File | null>(null);
   const { id } = useParams();
+
+  console.log("edit",editingTransaction)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: 'inflow',
       details: '',
       description: '',
-      transactionDate: new Date().toISOString(),
-      invoiceDate: new Date().toISOString(),
+      transactionDate: new Date().toISOString().split('T')[0], // Default to today's date
+      invoiceDate: '',
       invoiceNumber: '',
       amount: '',
       category: '',
       method: '',
-      storage: ''
-    }
+      storage: '',
+      ...editingTransaction, 
+    },
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // If there's a file, upload it first and get the URL
       let fileUrl = '';
       if (file) {
-        const fileUploadResponse = await axiosInstance.post('/upload', file, {
+        const formData = new FormData();
+        formData.append('file', file);
+        const fileUploadResponse = await axiosInstance.post('/upload', formData, {
           headers: {
-            'Content-Type': file.type,
+            'Content-Type': 'multipart/form-data',
           },
         });
-        fileUrl = fileUploadResponse.data.url; 
+        fileUrl = fileUploadResponse.data.url;
       }
-  
-    
+
       const payload = {
-        transactionDate: values.transactionDate,
-        invoiceNumber: values.invoiceNumber||"",
-        invoiceDate: values.invoiceDate || '',
-        details: values.details||"",
-        description: values.description || '',
-        transactionType: values.type,
-        transactionAmount: parseFloat(values.amount), // Ensure numeric format
-        transactionCategory: values.category,
-        transactionMethod: values.method,
-        storage: values.storage,
+        ...values,
+        transactionAmount: parseFloat(values.amount),
         companyId: id,
         transactionDoc: fileUrl,
       };
-  
-   
-  
+
       onSubmit(payload);
       form.reset();
       setFile(null);
       onOpenChange(false);
-
-     
     } catch (error) {
       console.error('Error submitting transaction:', error);
     }
   };
-  
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px]">
         <DialogHeader>
-          <DialogTitle>Add New Transaction</DialogTitle>
+          <DialogTitle>
+            {editingTransaction ? 'Edit Transaction' : 'Add New Transaction'}
+          </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Transaction Date</Label>
-                <Input type="date" />
-              </div>
+              <FormField
+                control={form.control}
+                name="transactionDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Transaction Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="invoiceNumber"
@@ -148,10 +144,19 @@ export function TransactionDialog({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Invoice Date</Label>
-                <Input type="date" />
-              </div>
+              <FormField
+                control={form.control}
+                name="invoiceDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Invoice Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="type"
@@ -185,10 +190,7 @@ export function TransactionDialog({
                   <FormItem>
                     <FormLabel>Details</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Enter transaction details"
-                        {...field}
-                      />
+                      <Input placeholder="Enter transaction details" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -201,11 +203,7 @@ export function TransactionDialog({
                   <FormItem>
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Enter amount"
-                        {...field}
-                      />
+                      <Input type="number" placeholder="Enter amount" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -238,10 +236,7 @@ export function TransactionDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Method</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select method" />
@@ -249,7 +244,7 @@ export function TransactionDialog({
                       </FormControl>
                       <SelectContent>
                         {methods.map((method) => (
-                          <SelectItem key={method._id} value={method._id} className='hover:bg-black hover:text-white'>
+                          <SelectItem key={method._id} value={method._id}>
                             {method.name}
                           </SelectItem>
                         ))}
@@ -265,10 +260,7 @@ export function TransactionDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Storage</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select storage" />
@@ -276,7 +268,7 @@ export function TransactionDialog({
                       </FormControl>
                       <SelectContent>
                         {storages.map((storage) => (
-                          <SelectItem key={storage._id} value={storage._id} className='hover:bg-black hover:text-white'>
+                          <SelectItem key={storage._id} value={storage._id}>
                             {storage.storageName}
                           </SelectItem>
                         ))}
@@ -288,33 +280,6 @@ export function TransactionDialog({
               />
             </div>
 
-            {/* Transaction Document Upload */}
-            {/* <FormItem>
-              <FormLabel>Transaction Document</FormLabel>
-              <FormControl>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="file"
-                    onChange={(e) => setFile(e.target.files?.[0] || null)}
-                    className="hidden"
-                    id="transactionDoc"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() =>
-                      document.getElementById('transactionDoc')?.click()
-                    }
-                    className="w-full"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    {file ? file.name : 'Upload Document'}
-                  </Button>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem> */}
-
             <div className="flex justify-end space-x-2">
               <Button
                 type="button"
@@ -323,7 +288,9 @@ export function TransactionDialog({
               >
                 Cancel
               </Button>
-              <Button variant="theme" type="submit">Add Transaction</Button>
+              <Button variant="theme" type="submit">
+                {editingTransaction ? 'Save Changes' : 'Add Transaction'}
+              </Button>
             </div>
           </form>
         </Form>

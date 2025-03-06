@@ -1,15 +1,15 @@
-import type React from "react";
-import { format, parse } from "date-fns";
-import { useState, useEffect } from "react";
-import Papa from "papaparse";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import type React from 'react';
+import { format, parse } from 'date-fns';
+import { useState, useEffect } from 'react';
+import Papa from 'papaparse';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import axiosInstance from '@/lib/axios';
-import { useParams } from "react-router-dom";
+import { useParams } from 'react-router-dom';
 
-
-import TransactionTableForm from "./components/TransactionTableForm";
-import { toast } from "@/components/ui/use-toast";
+import TransactionTableForm from './components/TransactionTableForm';
+import { toast } from '@/components/ui/use-toast';
+import { Cross, X } from 'lucide-react';
 
 // Define types
 interface Transaction {
@@ -30,8 +30,8 @@ interface CSVRow {
   Date: string;
   Type: string;
   Description: string;
-  "Paid Out": string;
-  "Paid In": string;
+  'Paid Out': string;
+  'Paid In': string;
   Balance: string;
 }
 
@@ -58,25 +58,32 @@ export default function CsvUploadPage() {
   const [storages, setStorages] = useState<Storage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null); // State to store the selected file
+  const [isUploading, setIsUploading] = useState(false);
+  const [hide, setHide] = useState(false);
 
   const fetchData = async () => {
     try {
       const [categoriesRes, methodsRes, storagesRes] = await Promise.all([
         axiosInstance.get(`/categories/company/${id}?limit=all`),
         axiosInstance.get(`/methods/company/${id}?limit=all`),
-        axiosInstance.get(`/storages/company/${id}?limit=all`),
+        axiosInstance.get(`/storages/company/${id}?limit=all`)
       ]);
       setCategories(categoriesRes.data.data.result);
       setMethods(methodsRes.data.data.result);
       setStorages(storagesRes.data.data.result);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error('Error fetching data:', error);
     }
   };
 
+  useEffect(() => {
+    if (transactions.length > 0) {
+      localStorage.setItem(`uploadedFileName-${id}`, JSON.stringify(transactions));
+    }
+  }, [transactions]);
 
   useEffect(() => {
-    const storedTransactions = localStorage.getItem("transactions");
+    const storedTransactions = localStorage.getItem(`transactions-${id}`);
     if (storedTransactions) {
       setTransactions(JSON.parse(storedTransactions));
     }
@@ -89,134 +96,191 @@ export default function CsvUploadPage() {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file); // Store the selected file in state
+      localStorage.setItem(`uploadedFileName-${id}`, file.name);
     }
   };
 
   // Handle CSV file parsing when the button is clicked
-
   const handleUploadClick = () => {
     if (!selectedFile) {
-      alert("Please select a file first.");
+      alert('Please select a file first.');
       return;
     }
-  
+    setIsUploading(true);
     setIsLoading(true);
-  
+
     // Clear existing transactions in the state and localStorage before uploading a new file
     setTransactions([]);
-    localStorage.removeItem("transactions");
-  
+    localStorage.removeItem(`transactions-${id}`);
+
     Papa.parse<CSVRow>(selectedFile, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
         const parsedTransactions: Transaction[] = results.data
-          .filter((row) => row.Date?.trim() && (row["Paid In"] || row["Paid Out"]))
+          .filter(
+            (row) => row.Date?.trim() && (row['Paid In'] || row['Paid Out'])
+          )
           .map((row, index) => {
             let parsedDate: Date | null = null;
-  
+
             try {
-              parsedDate = parse(row.Date.trim(), "dd-MMM-yy", new Date());
+              parsedDate = parse(row.Date.trim(), 'dd-MMM-yy', new Date());
             } catch (error) {
-              console.error("Error parsing date:", row.Date, error);
+              console.error('Error parsing date:', row.Date, error);
             }
-  
-            const formattedDate = parsedDate ? format(parsedDate, "yyyy-MM-dd") : row.Date.trim();
-            const paidIn = row["Paid In"] ? parseFloat(row["Paid In"].replace(/[^0-9.-]+/g, "")) : 0;
-            const paidOut = row["Paid Out"] ? parseFloat(row["Paid Out"].replace(/[^0-9.-]+/g, "")) : 0;
+
+            const formattedDate = parsedDate
+              ? format(parsedDate, 'yyyy-MM-dd')
+              : row.Date.trim();
+            const paidIn = row['Paid In']
+              ? parseFloat(row['Paid In'].replace(/[^0-9.-]+/g, ''))
+              : 0;
+            const paidOut = row['Paid Out']
+              ? parseFloat(row['Paid Out'].replace(/[^0-9.-]+/g, ''))
+              : 0;
             const amount = paidIn || paidOut;
-  
-            const transactionType = paidIn > 0 ? "inflow" : paidOut > 0 ? "outflow" : "";
-  
+
+            const transactionType =
+              paidIn > 0 ? 'inflow' : paidOut > 0 ? 'outflow' : '';
+
             return {
-              id: `temp-${index}`, // Temporary ID for rendering
+              // id: `${index}`, // Temporary ID for rendering
               transactionDate: formattedDate,
               transactionAmount: amount,
               transactionType: transactionType,
-              description: row.Description?.trim() || "",
-              invoiceNumber: "",
-              invoiceDate: "",
-              details: "",
-              transactionCategory: "",
-              transactionMethod: "",
-              storage: "",
+              description: row.Description?.trim() || '',
+              invoiceNumber: '',
+              invoiceDate: '',
+              details: '',
+              transactionCategory: '',
+              transactionMethod: '',
+              storage: ''
             };
           });
-  
-        // Save new transactions to localStorage
-        localStorage.setItem("transactions", JSON.stringify(parsedTransactions));
-  
+
         setTransactions(parsedTransactions); // Update state with new transactions
+        // Save new transactions to localStorage
+        localStorage.setItem(
+          `transactions-${id}`,
+          JSON.stringify(parsedTransactions)
+        );
+        setHide(true);
         setIsLoading(false);
+        setIsUploading(false);
+        // Clear the file input value
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
       },
       error: (error) => {
-        console.error("Error parsing CSV:", error);
+        console.error('Error parsing CSV:', error);
         setIsLoading(false);
-      },
+      }
     });
   };
-  
-  
-  // Handle transaction submission
-  const handleSubmitTransactions = async (transactions) => {
-    try {
-      console.log("transactions:", transactions);  // Add this line to inspect the value of transactions
 
+  // Handle transaction submission
+  const handleSubmitTransactions = async (transaction) => {
+    try {
       const payload = {
-        ...transactions,
-        companyId: id,
+        ...transaction,
+        companyId: id
       };
 
-      const response = await axiosInstance.post("/transactions", payload );
+      const response = await axiosInstance.post('/transactions', payload);
 
       if (response.status === 200) {
         toast({
-          title: 'Transaction Successfully Submitted',
-          
+          title: 'Transaction Successfully Submitted'
         });
+
+        // Remove the submitted transaction from state
+        // setTransactions((prevTransactions) =>
+        //   prevTransactions.filter((t) => t._id !== transaction._id)
+
+        // );
+
+        // Remove from localStorage if no transactions are left
+        if (transactions.length === 1) {
+          localStorage.removeItem(`transactions-${id}`);
+        
+        } 
+        // else {
+        //   console.log("jkgghjsd")
+        //   localStorage.setItem(
+        //     'transactions',
+        //     JSON.stringify(transactions.filter((t) => t._id !== transaction.id))
+        //   );
+        // }
       } else {
         toast({
-          title: 'Failed to submit transactions',
-          
+          title: 'Failed to submit transactions'
         });
-      
       }
     } catch (error) {
       toast({
-        title: 'Failed to submit transactions',
-        
+        title: 'Failed to submit transactions'
       });
     }
   };
 
+  const handleRemoveFile = () => {
+    localStorage.removeItem(`uploadedFileName-${id}`);
+    localStorage.removeItem(`transactions-${id}`);
+    setSelectedFile(null);
+    setTransactions([]);
+  };
+
   return (
-    <div>
+    <div className="bg-white shadow-lg">
+      <div className="rounded-md p-4">
+        <h1 className="mb-6 text-2xl font-bold">CSV Transaction Upload</h1>
 
-      <div className="  rounded-md bg-white p-4 shadow-lg">
-        <h1 className="text-2xl font-bold mb-6">CSV Transaction Upload</h1>
+        <div className="mb-2">
+        {(!hide && transactions.length === 0) && (
+          <div>
+            <h2 className="mb-4 text-lg font-semibold">Upload Transaction CSV</h2>
+            <div className="flex items-center gap-4">
+              <Input
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                className="max-w-md"
+              />
+              <Button
+                onClick={handleUploadClick}
+                variant="theme"
+              >
+                {isLoading ? 'Processing...' : 'Upload CSV'}
+              </Button>
+            </div>
 
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Upload Transaction CSV</h2>
-          <div className="flex items-center gap-4">
-            <Input
-              type="file"
-              accept=".csv"
-              onChange={handleFileChange} 
-              className="max-w-md"
-            />
-            <Button
-              onClick={handleUploadClick} 
-              disabled={isLoading || !selectedFile} 
-              variant="theme"
-            >
-              {isLoading ? "Processing..." : "Upload CSV"}
-            </Button>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Upload a CSV file with columns: Date, Description, Paid Out, Paid In
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Upload a CSV file with columns: Date, Description, Paid Out, Paid In
-          </p>
-        </div>
+        )}
+          
+          {/* {!!localStorage.getItem(`uploadedFileName-${id}`) && (
+            <div className="ga-2 flex flex-row items-center justify-start">
+              <div>
+                <p className="text-gray-800">
+                  Uploaded file:{' '}
+                  <span className="font-semibold">
+                    {selectedFile?.name ||
+                      localStorage.getItem(`uploadedFileName-${id}`)}
+                  </span>
+                </p>
+              </div>
 
+              <div onClick={handleRemoveFile} className='cursor-pointer'>
+                <X className='w-4 h-4 text-red-800' strokeWidth={4}/>
+              </div>
+            </div>
+          )} */}
+        </div>
+      </div>
+      <div className="p-1">
         {transactions.length > 0 && (
           <TransactionTableForm
             categories={categories}

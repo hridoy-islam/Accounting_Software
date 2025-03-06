@@ -24,6 +24,7 @@ import TransactionPage from '@/pages/transaction';
 import ReportPage from '@/pages/report';
 import CsvUploadPage from '@/pages/csv';
 import CompanyLayout from '@/components/layout/company-layout';
+import ArchivePage from '@/pages/archive';
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
 // ----------------------------------------------------------------------
@@ -81,6 +82,10 @@ export default function AppRouter() {
         {
           path: 'company/:id/users',
           element: <CompanyLayout><UserPage /></CompanyLayout>,
+        },
+        {
+          path: 'company/:id/archive',
+          element: <CompanyLayout><ArchivePage /></CompanyLayout>,
         },
 
         {

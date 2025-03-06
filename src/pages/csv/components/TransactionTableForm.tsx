@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
+import { CategorySelector } from '@/pages/csv/components/category-selector';
 
 // Define the Zod schema
 const transactionSchema = z.object({
@@ -63,7 +64,7 @@ const TransactionTableForm = ({
   setTransactions
 }) => {
   // Initialize the form with Zod validation
-  const form = useForm({
+    const form = useForm({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       transactions: transactions.map((transaction) => ({
@@ -112,36 +113,34 @@ const TransactionTableForm = ({
       console.error('Submission error:', error);
     }
   };
-
   return (
     <Form {...form}>
       <form className="space-y-4">
-        <div className="flex flex-row justify-end  font-medium text-gray-700">
+        <div className="flex flex-row justify-end font-medium text-gray-700">
           {form.watch('transactions')?.length || 0} Rows Found
         </div>
         {/* Table container */}
-
         <div className="w-full overflow-hidden">
           <Table className="w-full">
             <TableHeader>
               <TableRow className="bg-gray-100">
-                <TableHead className="min-w-[100px]">Date</TableHead>
-                <TableHead className="min-w-[100px]">Invoice</TableHead>
-                <TableHead className="min-w-[100px]">Inv. Date</TableHead>
-                <TableHead className="min-w-[100px]">Details</TableHead>
-                <TableHead className="min-w-[100px]">Description</TableHead>
-                <TableHead className="min-w-[100px]">Category</TableHead>
-                <TableHead className="min-w-[100px]">Method</TableHead>
-                <TableHead className="min-w-[100px]">Storage</TableHead>
+                <TableHead className="min-w-[50px]">Date</TableHead>
+                <TableHead className="min-w-[50px]">Invoice</TableHead>
+                <TableHead className="min-w-[50px]">Inv. Date</TableHead>
+                <TableHead className="min-w-[50px]">Details</TableHead>
+                <TableHead className="min-w-[50px]">Description</TableHead>
+                <TableHead className="min-w-[50px]">Category</TableHead>
+                <TableHead className="min-w-[50px]">Method</TableHead>
+                <TableHead className="min-w-[50px]">Storage</TableHead>
                 <TableHead className="min-w-[50px]">Amount</TableHead>
-                <TableHead className="min-w-[80px]">Type</TableHead>
-                <TableHead className="min-w-[80px]">Action</TableHead>
+                <TableHead className="min-w-[50px]">Type</TableHead>
+                <TableHead className="min-w-[50px]">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {form.watch('transactions')?.map((transaction, index) => (
                 <TableRow key={transaction.id}>
-                  <TableCell className="min-w-[100px]">
+                  <TableCell className="max-w-[130px]">
                     <FormField
                       control={form.control}
                       name={`transactions.${index}.transactionDate`}
@@ -159,7 +158,7 @@ const TransactionTableForm = ({
                       )}
                     />
                   </TableCell>
-                  <TableCell className="min-w-[100px]">
+                  <TableCell className="max-w-[100px]">
                     <FormField
                       control={form.control}
                       name={`transactions.${index}.invoiceNumber`}
@@ -178,7 +177,7 @@ const TransactionTableForm = ({
                       )}
                     />
                   </TableCell>
-                  <TableCell className="min-w-[100px]">
+                  <TableCell className="max-w-[130px]">
                     <FormField
                       control={form.control}
                       name={`transactions.${index}.invoiceDate`}
@@ -196,7 +195,7 @@ const TransactionTableForm = ({
                       )}
                     />
                   </TableCell>
-                  <TableCell className="min-w-[100px]">
+                  <TableCell className="min-w-[50px]">
                     <FormField
                       control={form.control}
                       name={`transactions.${index}.details`}
@@ -214,7 +213,7 @@ const TransactionTableForm = ({
                       )}
                     />
                   </TableCell>
-                  <TableCell className="min-w-[100px]">
+                  <TableCell className="min-w-[50px]">
                     <FormField
                       control={form.control}
                       name={`transactions.${index}.description`}
@@ -232,44 +231,41 @@ const TransactionTableForm = ({
                       )}
                     />
                   </TableCell>
-                  <TableCell className="min-w-[100px]">
+                  <TableCell className="min-w-[50px]">
                     <FormField
                       control={form.control}
                       name={`transactions.${index}.transactionCategory`}
                       render={({ field }) => (
                         <FormItem>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {categories
-                                .filter((category) =>
-                                  transaction.transactionType === 'inflow'
-                                    ? category.type === 'inflow'
-                                    : category.type === 'outflow'
+                          <FormControl>
+                            <CategorySelector
+                              categories={categories}
+                              onSelect={(categoryId) =>
+                                form.setValue(
+                                  `transactions.${index}.transactionCategory`,
+                                  categoryId
                                 )
-                                .map((category) => (
-                                  <SelectItem
-                                    key={category._id}
-                                    value={category._id}
-                                  >
-                                    {category.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
+                              }
+                              onTypeChange={(type) => {
+                                form.setValue(
+                                  `transactions.${index}.transactionType`,
+                                  type
+                                );
+                                form.setValue(
+                                  `transactions.${index}.transactionCategory`,
+                                  ''
+                                ); // Reset category
+                              }}
+                              defaultType={transaction.transactionType}
+                              value={field.value} // Pass current value to component
+                            />
+                          </FormControl>
                           <FormMessage className="text-xs text-red-500" />
                         </FormItem>
                       )}
                     />
                   </TableCell>
-                  <TableCell className="min-w-[100px]">
+                  <TableCell className="min-w-[50px]">
                     <FormField
                       control={form.control}
                       name={`transactions.${index}.transactionMethod`}
@@ -297,7 +293,7 @@ const TransactionTableForm = ({
                       )}
                     />
                   </TableCell>
-                  <TableCell className="min-w-[100px]">
+                  <TableCell className="min-w-[50px]">
                     <FormField
                       control={form.control}
                       name={`transactions.${index}.storage`}
@@ -346,7 +342,7 @@ const TransactionTableForm = ({
                       )}
                     />
                   </TableCell>
-                  <TableCell className="min-w-[80px]">
+                  <TableCell className="min-w-[50px]">
                     <span
                       className={`rounded-full px-2 py-1 text-xs font-medium ${
                         transaction.transactionType === 'inflow'
@@ -357,7 +353,7 @@ const TransactionTableForm = ({
                       {transaction.transactionType}
                     </span>
                   </TableCell>
-                  <TableCell className="min-w-[80px]">
+                  <TableCell className="min-w-[50px]">
                     <Button
                       size="icon"
                       variant="theme"

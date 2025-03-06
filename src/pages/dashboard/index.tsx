@@ -125,7 +125,7 @@ export function Dashboard() {
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
-            New User
+           Create Company
           </Button>
         </div>
       </div>
