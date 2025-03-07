@@ -75,18 +75,27 @@ export default function CsvUploadPage() {
       console.error('Error fetching data:', error);
     }
   };
-
-  useEffect(() => {
-    if (transactions.length > 0) {
-      localStorage.setItem(`uploadedFileName-${id}`, JSON.stringify(transactions));
-    }
-  }, [transactions]);
-
   useEffect(() => {
     const storedTransactions = localStorage.getItem(`transactions-${id}`);
     if (storedTransactions) {
-      setTransactions(JSON.parse(storedTransactions));
+      const parsedTransactions = JSON.parse(storedTransactions);
+      if (parsedTransactions.length > 0) {
+        setTransactions(parsedTransactions);
+      }
     }
+  }, [id]);
+
+  useEffect(() => {
+    if (transactions.length === 0) {
+      localStorage.removeItem(`transactions-${id}`);
+    } else {
+      localStorage.setItem(`transactions-${id}`, JSON.stringify(transactions));
+    }
+  }, [transactions, id]);
+
+
+  useEffect(() => {
+   
 
     fetchData();
   }, [id]);
@@ -145,7 +154,7 @@ export default function CsvUploadPage() {
               paidIn > 0 ? 'inflow' : paidOut > 0 ? 'outflow' : '';
 
             return {
-              // id: `${index}`, // Temporary ID for rendering
+              id: `${index}`, // Temporary ID for rendering
               transactionDate: formattedDate,
               transactionAmount: amount,
               transactionType: transactionType,
@@ -179,50 +188,52 @@ export default function CsvUploadPage() {
     });
   };
 
+  useEffect(() => {
+    const storedTransactions = localStorage.getItem(`transactions-${id}`);
+    if (storedTransactions) {
+      setTransactions(JSON.parse(storedTransactions));
+    }
+    fetchData();
+  }, [id]);
+
   // Handle transaction submission
   const handleSubmitTransactions = async (transaction) => {
     try {
       const payload = {
         ...transaction,
-        companyId: id
+        companyId: id,
       };
 
       const response = await axiosInstance.post('/transactions', payload);
 
       if (response.status === 200) {
         toast({
-          title: 'Transaction Successfully Submitted'
+          title: 'Transaction Successfully Submitted',
         });
 
-        // Remove the submitted transaction from state
-        // setTransactions((prevTransactions) =>
-        //   prevTransactions.filter((t) => t._id !== transaction._id)
+        const updatedTransactions = transactions.filter(
+          (t) => t.id !== transaction.id
+        );
+        setTransactions(updatedTransactions);
 
-        // );
-
-        // Remove from localStorage if no transactions are left
-        if (transactions.length === 1) {
-          localStorage.removeItem(`transactions-${id}`);
-        
-        } 
-        // else {
-        //   console.log("jkgghjsd")
-        //   localStorage.setItem(
-        //     'transactions',
-        //     JSON.stringify(transactions.filter((t) => t._id !== transaction.id))
-        //   );
-        // }
+        localStorage.setItem(
+          `transactions-${id}`,
+          JSON.stringify(updatedTransactions)
+        );
       } else {
         toast({
-          title: 'Failed to submit transactions'
+          title: 'Failed to submit transaction',
         });
       }
     } catch (error) {
       toast({
-        title: 'Failed to submit transactions'
+        title: 'Failed to submit transaction',
       });
     }
   };
+
+  
+  
 
   const handleRemoveFile = () => {
     localStorage.removeItem(`uploadedFileName-${id}`);
