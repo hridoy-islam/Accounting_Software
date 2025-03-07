@@ -60,7 +60,28 @@ export default function CsvUploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null); // State to store the selected file
   const [isUploading, setIsUploading] = useState(false);
   const [hide, setHide] = useState(false);
+  const [companyThemeColor, setCompanyThemeColor] = useState<string>('');
 
+  useEffect(() => {
+      const fetchCompanyData = async () => {
+  
+        try {
+          const response = await axiosInstance.get(`/users/${id}`);
+          setCompanyThemeColor(response.data.data.themeColor); // Fetch and set the company theme color
+          
+        } catch (error) {
+          console.error('Error fetching company data:', error);
+        }
+      };
+      fetchCompanyData();
+    }, [id]);
+  
+    useEffect(() => {
+      const themeColor = companyThemeColor || '#a78bfa'; // Default color (adjust as needed)
+      document.documentElement.style.setProperty('--theme', themeColor);
+    }, [companyThemeColor]);
+    
+  
   const fetchData = async () => {
     try {
       const [categoriesRes, methodsRes, storagesRes] = await Promise.all([

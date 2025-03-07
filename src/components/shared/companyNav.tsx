@@ -13,6 +13,8 @@ export function Navigation() {
   const { id } = useParams();
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const [companyName, setCompanyName] = useState(null);
+  const [companyThemeColor, setCompanyThemeColor] = useState<string>('');
+
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -31,6 +33,7 @@ export function Navigation() {
       try {
         const company = await axiosInstance.get(`/users/${id}`);
         setCompanyName(company.data.data);
+        setCompanyThemeColor(company.data.data.themeColor);
       } catch (error) {
         console.error('Error fetching company data:', error);
       }
@@ -100,6 +103,13 @@ export function Navigation() {
 
   const filteredNavItems = navItems.filter(item => item.roles.includes(user?.role ?? ''));
 
+  useEffect(() => {
+    const themeColor = companyThemeColor || '#a78bfa'; // Default color (adjust as needed)
+    document.documentElement.style.setProperty('--theme', themeColor);
+  }, [companyThemeColor]);
+  
+
+
   return (
     <div className="flex flex-col">
       
@@ -113,7 +123,7 @@ export function Navigation() {
                 key={to}
                 asChild
                 variant="ghost"
-                className="flex items-center justify-center py-2 hover:bg-[#a78bfa] md:justify-start md:py-3"
+                className="flex items-center justify-center py-2 hover:bg-theme md:justify-start md:py-3"
               >
                 <Link to={to}>
                   {icon} {label}

@@ -81,6 +81,29 @@ export default function ReportPage() {
   const [companyDetail, setCompanyDetail] = useState('');
   const [isReportGenerated, setIsReportGenerated] = useState(false);
 
+ const [companyThemeColor, setCompanyThemeColor] = useState<string>('');
+
+  useEffect(() => {
+      const fetchCompanyData = async () => {
+  
+        try {
+          const response = await axiosInstance.get(`/users/${id}`);
+          setCompanyThemeColor(response.data.data.themeColor); // Fetch and set the company theme color
+          
+        } catch (error) {
+          console.error('Error fetching company data:', error);
+        }
+      };
+      fetchCompanyData();
+    }, [id]);
+  
+    useEffect(() => {
+      const themeColor = companyThemeColor || '#a78bfa'; // Default color (adjust as needed)
+      document.documentElement.style.setProperty('--theme', themeColor);
+    }, [companyThemeColor]);
+    
+  
+
   const generatePDF = () => {
     const doc = new jsPDF();
 
@@ -233,7 +256,7 @@ export default function ReportPage() {
 
       autoTable(doc, {
         startY: yPos,
-        head: [['Category', 'Count', ...paymentMethods, 'Total']],
+        head: [['Category', 'Transaction', ...paymentMethods, 'Total']],
         body: outflowTableData,
         ...tableConfig
       });
@@ -389,7 +412,7 @@ export default function ReportPage() {
         <div className="border">
           <Table>
             <TableHeader>
-              <TableRow className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80 ">
+              <TableRow className="bg-theme text-white hover:bg-theme/80 ">
                 <TableHead className="w-[250px] ">Category Name</TableHead>
                 <TableHead className="w-[150px] text-right">
                   Transaction Count
@@ -450,7 +473,7 @@ export default function ReportPage() {
                       <TableCell colSpan={paymentMethods.length + 3}>
                         <Table>
                           <TableHeader>
-                            <TableRow className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80">
+                            <TableRow className="bg-theme text-white hover:bg-theme/80">
                               <TableHead className="w-[200px] text-right">
                                 Date
                               </TableHead>
@@ -583,12 +606,12 @@ export default function ReportPage() {
                 />
               </div>
             </div>
-            <Button className="btn-theme mt-4" onClick={fetchData}>
+            <Button variant="theme" className="mt-4" onClick={fetchData}>
               Generate Report
             </Button>
 
             {isReportGenerated && (
-              <Button className="btn-theme mt-4" onClick={generatePDF}>
+              <Button variant="theme" className=" mt-4" onClick={generatePDF}>
                 Download PDF Report
               </Button>
             )}

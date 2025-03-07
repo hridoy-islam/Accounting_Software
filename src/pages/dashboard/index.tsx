@@ -23,6 +23,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import company from '@/assets/imges/home/company.png';
+import { Switch } from '@/components/ui/switch';
 
 export interface TCompany {
   id: string;
@@ -84,7 +85,31 @@ export function Dashboard() {
     fetchData();
   }, []);
 
+  const toggleIsDeleted = async (userId: string, currentStatus: boolean) => {
+    try {
+      const res = await axiosInstance.patch(`/users/${userId}`, {
+        isDeleted: !currentStatus
+      });
+      if (res.data.success) {
+        fetchData();
+        toast({
+          title: 'Updated Successfully'
+        });
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast({
+        title: 'Error updating Company',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const onSubmit = async (data: any) => {
+    if (data.color) {
+      data.color = data.color.toLowerCase();
+    }
+
     if (editingUser) {
       const updateData = { ...data };
 
@@ -125,7 +150,7 @@ export function Dashboard() {
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
-           Create Company
+            Create Company
           </Button>
         </div>
       </div>
@@ -133,19 +158,20 @@ export function Dashboard() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Image</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead>View</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="text-right">Image</TableHead>
+              <TableHead className="text-right">Name</TableHead>
+              <TableHead className="text-right">Email</TableHead>
+              <TableHead className="text-right">Phone</TableHead>
+              <TableHead className="text-right">Address</TableHead>
+              <TableHead className="text-right">View</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>
+                <TableCell className="flex flex-row justify-end">
                   <img
                     src={user.image || company}
                     alt="User"
@@ -153,11 +179,11 @@ export function Dashboard() {
                   />
                 </TableCell>
 
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.phone}</TableCell>
-                <TableCell>{user.address}</TableCell>
-                <TableCell>
+                <TableCell className="text-right">{user.name}</TableCell>
+                <TableCell className="text-right">{user.email}</TableCell>
+                <TableCell className="text-right">{user.phone}</TableCell>
+                <TableCell className="text-right">{user.address}</TableCell>
+                <TableCell className="text-right">
                   <Link to={`company/${user._id}`}>
                     <Button variant="theme" className="w-full">
                       View
@@ -165,7 +191,7 @@ export function Dashboard() {
                   </Link>
                 </TableCell>
 
-                <TableCell className="space-x-4 ">
+                <TableCell className="space-x-4 text-right">
                   <Button
                     variant="theme"
                     size="icon"
@@ -176,6 +202,19 @@ export function Dashboard() {
                   >
                     <Pen className="h-4 w-4" />
                   </Button>
+                </TableCell>
+                <TableCell className="space-x-4 text-right">
+                  <Switch
+                    checked={user?.isDeleted}
+                    onCheckedChange={() =>
+                      toggleIsDeleted(user?._id, user?.isDeleted)
+                    }
+                  />
+                  <span
+                    className={`ml-1 font-semibold ${user.isDeleted ? 'text-red-500' : 'text-green-500'}`}
+                  >
+                    {user.isDeleted ? 'Inactive' : 'Active'}
+                  </span>
                 </TableCell>
               </TableRow>
             ))}
@@ -223,19 +262,35 @@ export function Dashboard() {
                 <Label htmlFor="address">Address</Label>
                 <Input
                   id="address"
-                  {...register('address', { required: 'This field is required' })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  type="password"
-                  id="password"
-                  {...register('password', {
-                    required: !editingUser ? 'This field is required' : false
+                  {...register('address', {
+                    required: 'This field is required'
                   })}
                 />
               </div>
+
+              <div>
+                <Label htmlFor="color">Company Color (Optional)</Label>
+                <Input
+                  type="color"
+                  id="color"
+                  {...register('themeColor', {
+                    setValueAs: (value) => value.toLowerCase() // Ensure lowercase
+                  })}
+                  className="w-16"
+                />
+              </div>
+              {!editingUser && (
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    type="password"
+                    id="password"
+                    {...register('password', {
+                      required: !editingUser ? 'This field is required' : false
+                    })}
+                  />
+                </div>
+              )}
             </div>
             <Button type="submit" variant="theme" className="w-full">
               Save

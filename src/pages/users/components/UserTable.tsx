@@ -240,6 +240,7 @@ export function UserTable() {
                     <option value="audit">Audit</option>
                   </select>
                 </div>
+                {!editingUser &&(
                 <div>
                   <Label htmlFor="password">Password</Label>
                   <Input
@@ -249,7 +250,7 @@ export function UserTable() {
                       required: !editingUser ? 'This field is required' : false
                     })}
                   />
-                </div>
+                </div>)}
               </div>
               <Button type="submit" variant="theme" className="w-full">
                 Save
