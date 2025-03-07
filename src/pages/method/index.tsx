@@ -122,7 +122,7 @@ export function Method() {
                     <TableCell className="space-x-4 text-center ">
                       <Button
                         variant="ghost"
-                        className="border-none bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
+                        className="border-none bg-theme text-white hover:bg-[#a78bfa]/80"
                         size="icon"
                         onClick={() => editData(method)}
                       >

@@ -149,7 +149,7 @@ import { useSelector } from 'react-redux';
                     <TableCell className="space-x-4">
                       <Button
                         variant="ghost"
-                        className="bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80"
+                        className="bg-theme text-white hover:bg-theme/80"
                         size="icon"
                         onClick={() => handleEdit(storage)}
                       >
