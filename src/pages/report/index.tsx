@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import axiosInstance from '@/lib/axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import moment from 'moment';
 
 type Transaction = {
   _id: string;
@@ -77,173 +78,190 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
   const [hasFetched, setHasFetched] = useState(false); // Track fetch attempt
-  const [companyName, setCompanyName] = useState('');
+  const [companyDetail, setCompanyDetail] = useState('');
+  const [isReportGenerated, setIsReportGenerated] = useState(false);
 
   const generatePDF = () => {
     const doc = new jsPDF();
-    let yPos = 10;
 
-    // Add title
-    doc.setFontSize(18);
-    doc.text('Transaction Report', 10, yPos);
-    yPos += 10;
+    let yPos = 20;
 
-    // Add company name
-    doc.setFontSize(16);
-    doc.text(`Company: ${companyName}`, 10, yPos);
-    yPos += 10;
+    // Company Header (Left Side)
+    doc.setFont('times', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(0, 0, 0);
+    doc.text(companyDetail?.name.toUpperCase(), 20, yPos);
 
-    // Add date range
-    doc.setFontSize(12);
-    doc.text(`From: ${fromDate} To: ${toDate}`, 10, yPos);
-    yPos += 15;
+    // Company Details (Right Side)
+    const companyDetails = [
+      `Address: ${companyDetail?.address}`,
 
-    // Add inflow data
-    if (inflowData.length > 0) {
-      doc.setFontSize(14);
-      doc.text('Inflow Transactions', 10, yPos);
-      yPos += 10;
+      `Phone: ${companyDetail?.phone}`,
+      `Email: ${companyDetail?.email}`
+    ];
 
-      const inflowColumns = [
-        { header: 'Category', dataKey: 'categoryName' },
-        { header: 'Transaction ', dataKey: 'transactionCount' },
-        ...paymentMethods.map((method) => ({
-          header: method,
-          dataKey: method
-        })),
-        { header: 'Sub Total', dataKey: 'total' }
-      ];
+    // for address use companyDetail?.address, for phone use companyDetail.phone and for email use companyDetail.email
 
-      const inflowRows = inflowData.map((category) => ({
-        categoryName: category.categoryName,
-        transactionCount: category.transactions.length,
-        ...Object.fromEntries(
-          paymentMethods.map((method) => [
-            method,
-            `£${(category.methodTotals[method] || 0).toFixed(2)}`
-          ])
-        ),
-        total: `£${category.total.toFixed(2)}`
-      }));
-
-      autoTable(doc, {
-        startY: yPos,
-        head: [inflowColumns.map((col) => col.header)],
-        body: inflowRows.map((row) =>
-          inflowColumns.map(
-            (col) => row[col.dataKey as keyof typeof row] || '£0.00'
-          )
-        ),
-        theme: 'grid',
-        headStyles: {
-          fillColor: [167, 139, 250],
-          textColor: [255, 255, 255],
-          halign: 'center' // Center header text
-        },
-        bodyStyles: {
-          halign: 'center' // Center body text
-        },
-        didDrawPage: (data) => {
-          yPos = data.cursor.y + 20;
-        }
-      });
-    }
-
-    // Add outflow data
-    if (outflowData.length > 0) {
-      doc.setFontSize(14);
-      doc.text('Outflow Transactions', 10, yPos);
-      yPos += 10;
-
-      const outflowColumns = [
-        { header: 'Category', dataKey: 'categoryName' },
-        { header: 'Transaction', dataKey: 'transactionCount' },
-        ...paymentMethods.map((method) => ({
-          header: method,
-          dataKey: method
-        })),
-        { header: 'Sub Total', dataKey: 'total' }
-      ];
-
-      const outflowRows = outflowData.map((category) => ({
-        categoryName: category.categoryName,
-        transactionCount: category.transactions.length,
-        ...Object.fromEntries(
-          paymentMethods.map((method) => [
-            method,
-            `£${(category.methodTotals[method] || 0).toFixed(2)}`
-          ])
-        ),
-        total: `£${category.total.toFixed(2)}`
-      }));
-
-      autoTable(doc, {
-        startY: yPos,
-        head: [outflowColumns.map((col) => col.header)],
-        body: outflowRows.map((row) =>
-          outflowColumns.map(
-            (col) => row[col.dataKey as keyof typeof row] || '£0.00'
-          )
-        ),
-        theme: 'grid',
-        headStyles: {
-          fillColor: [167, 139, 250],
-          textColor: [255, 255, 255],
-          halign: 'center' // Center header text
-        },
-        bodyStyles: {
-          halign: 'center' // Center body text
-        }
-      });
-    }
-
-    // Add summary
-    const totalInflow = inflowData.reduce((acc, cat) => acc + cat.total, 0);
-    const totalOutflow = outflowData.reduce((acc, cat) => acc + cat.total, 0);
-    const balance = totalInflow - totalOutflow;
-
-    // Check if we need a new page for the summary
-    if (
-      doc.internal.getCurrentPageInfo().pageNumber > 1 &&
-      doc.autoTable.previous.finalY > 220
-    ) {
-      doc.addPage();
-      yPos = 20;
-    } else {
-      yPos = doc.autoTable?.previous?.finalY
-        ? doc.autoTable.previous.finalY + 20
-        : 200;
-    }
-
-    doc.setFontSize(14);
-    doc.text('Summary', 10, yPos);
-    yPos += 10;
-
-    autoTable(doc, {
-      startY: yPos,
-      head: [['Description', 'Amount']],
-      body: [
-        ['Total Inflow', `£${totalInflow.toFixed(2)}`],
-        ['Total Outflow', `£${totalOutflow.toFixed(2)}`],
-        ['Balance', `£${balance.toFixed(2)}`]
-      ],
-      theme: 'grid',
-      headStyles: {
-        fillColor: [167, 139, 250],
-        textColor: [255, 255, 255],
-        halign: 'center' // Center header text
-      },
-      bodyStyles: {
-        halign: 'center' // Center body text
-      },
-      columnStyles: {
-        0: { fontStyle: 'bold' },
-        1: { halign: 'center' }
-      }
+    doc.setFontSize(10);
+    let detailY = 20;
+    companyDetails.forEach((text) => {
+      doc.text(text, doc.internal.pageSize.width - 70, detailY);
+      detailY += 5;
     });
 
+    // Statement Details
+    yPos += 30;
+    doc.setFont('times', 'normal'); // Ensure Times font is used
+    doc.setFontSize(10);
+
+    // Concatenate both texts into a single line
+    const statementText = `STATEMENT OF ACCOUNT FOR THE PERIOD: ${fromDate} to ${toDate}`;
+
+    doc.text(statementText, 20, yPos);
+
+    // Add line separator
+    yPos += 10;
+    doc.setDrawColor(0, 0, 0);
+    doc.line(20, yPos, 190, yPos);
+
+    // Table Styling
+    const tableConfig = {
+      font: 'times', // Set Times font
+      theme: 'grid',
+      styles: {
+        fontSize: 9,
+        font: 'times', // Apply Times font
+        cellPadding: 2,
+        lineWidth: 0.2, // Border thickness
+        lineColor: [0, 0, 0] // Black border
+      },
+      headStyles: {
+        font: 'times', // Apply Times font to header
+        fillColor: [255, 255, 255], // White header background
+        textColor: 0, // Black text
+        fontStyle: 'bold',
+        lineWidth: 0.2, // Border thickness for header
+        lineColor: [0, 0, 0], // Black border
+        halign: 'right' // Right align header text
+      },
+      columnStyles: {
+        0: { halign: 'right' }, // Right align "Category"
+        1: { halign: 'right' }, // Right align "Count"
+        ...Object.fromEntries(
+          paymentMethods.map((_, index) => [index + 2, { halign: 'right' }])
+        ), // Right align all payment method columns
+        [paymentMethods.length + 2]: { halign: 'right', fontStyle: 'bold' } // Right align "Total" column and make it bold
+      },
+      footStyles: {
+        font: 'times', // Ensure Times font in footer
+        fontStyle: 'bold',
+        fillColor: [255, 255, 255],
+        textColor: 0,
+        halign: 'right' // Right align footer text
+      }
+    };
+
+    // Inflow Transactions Table
+    if (inflowData.length > 0) {
+      yPos += 15;
+      doc.setFontSize(12);
+      doc.text('INFLOW TRANSACTIONS', 20, yPos);
+      yPos += 10;
+
+      const inflowTableData = inflowData.map((category) => [
+        category.categoryName,
+        category.transactions.length.toString(),
+        ...paymentMethods.map(
+          (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
+        ),
+        `£${category.total.toFixed(2)}`
+      ]);
+
+      // Add total row
+      inflowTableData.push([
+        'Total',
+        inflowData
+          .reduce((acc, cat) => acc + cat.transactions.length, 0)
+          .toString(),
+        ...paymentMethods.map(
+          (method) =>
+            `£${inflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
+        ),
+        `£${inflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Category', 'Count', ...paymentMethods, 'Total']],
+        body: inflowTableData,
+        ...tableConfig
+      });
+
+      yPos = doc.autoTable.previous.finalY + 20;
+    }
+
+    // Outflow Transactions Table
+    if (outflowData.length > 0) {
+      if (yPos > 200) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.setFontSize(12);
+      doc.text('OUTFLOW TRANSACTIONS', 20, yPos);
+      yPos += 10;
+
+      const outflowTableData = outflowData.map((category) => [
+        category.categoryName,
+        category.transactions.length.toString(),
+        ...paymentMethods.map(
+          (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
+        ),
+        `£${category.total.toFixed(2)}`
+      ]);
+
+      outflowTableData.push([
+        'Total',
+        outflowData
+          .reduce((acc, cat) => acc + cat.transactions.length, 0)
+          .toString(),
+        ...paymentMethods.map(
+          (method) =>
+            `£${outflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
+        ),
+        `£${outflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Category', 'Count', ...paymentMethods, 'Total']],
+        body: outflowTableData,
+        ...tableConfig
+      });
+
+      yPos = doc.autoTable.previous.finalY + 20;
+    }
+
+    // Footer with Page Numbers and Timestamp
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(
+        `Page ${i} of ${pageCount}`,
+        doc.internal.pageSize.width - 30,
+        doc.internal.pageSize.height - 10
+      );
+      doc.text(
+        `Generated on: ${moment().format('YYYY-MM-DD hh:mm:ss A')}`,
+        20,
+        doc.internal.pageSize.height - 10
+      );
+    }
+
     // Save the PDF
-    doc.save('transaction_report.pdf');
+    doc.save(
+      `${companyDetail?.name.toLowerCase()}_statement_${fromDate}_${toDate}.pdf`
+    );
   };
 
   // Fetch payment methods when the component mounts
@@ -268,8 +286,8 @@ export default function ReportPage() {
   const CompanyDetails = async () => {
     try {
       const response = await axiosInstance.get(`/users/${id}`);
-      const companyName = response.data.data.name;
-      setCompanyName(companyName); // Assuming the company name is in 'data.name'
+      const companyData = response.data.data;
+      setCompanyDetail(companyData); // Assuming the company name is in 'data.name'
     } catch (error) {
       console.error('Error fetching company details:', error);
     }
@@ -278,13 +296,6 @@ export default function ReportPage() {
   useEffect(() => {
     CompanyDetails();
   }, []);
-
-  // Fetch transaction data when the date range changes
-  // useEffect(() => {
-  //   if (fromDate && toDate) {
-  //     fetchData();
-  //   }
-  // }, [fromDate, toDate]);
 
   const transformData = (
     transactions: Transaction[],
@@ -321,6 +332,16 @@ export default function ReportPage() {
   };
 
   const fetchData = async () => {
+    if (!fromDate || !toDate) {
+      alert('Please select both "From Date" and "To Date".');
+      return;
+    }
+
+    if (new Date(fromDate) > new Date(toDate)) {
+      alert('"From Date" cannot be later than "To Date".');
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/report/company/${id}`, {
@@ -345,12 +366,15 @@ export default function ReportPage() {
       setInflowData(inflowData);
       setOutflowData(outflowData);
       setHasFetched(true);
+      setIsReportGenerated(true);
     } catch (error) {
       console.error('Error fetching data:', error);
+      alert('An error occurred while fetching data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
   const renderTransactionTable = (
     type: 'inflow' | 'outflow',
     data: CategorySummary[]
@@ -375,7 +399,9 @@ export default function ReportPage() {
                     {method}
                   </TableHead>
                 ))}
-                <TableHead className="w-[150px] text-right">Sub Total</TableHead>
+                <TableHead className="w-[150px] text-right">
+                  Sub Total
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -417,7 +443,7 @@ export default function ReportPage() {
                       £{category.total.toFixed(2).toLocaleString()}
                     </TableCell>
                   </TableRow>
-  
+
                   {/* Sort transactions by transactionMethod name */}
                   {expandedCategory === category.categoryName && (
                     <TableRow>
@@ -448,18 +474,29 @@ export default function ReportPage() {
                           <TableBody>
                             {category.transactions
                               .sort((a, b) => {
-                                if (a.transactionMethod.name < b.transactionMethod.name) {
+                                if (
+                                  a.transactionMethod.name <
+                                  b.transactionMethod.name
+                                ) {
                                   return -1;
                                 }
-                                if (a.transactionMethod.name > b.transactionMethod.name) {
+                                if (
+                                  a.transactionMethod.name >
+                                  b.transactionMethod.name
+                                ) {
                                   return 1;
                                 }
                                 return 0;
                               })
                               .map((transaction) => (
-                                <TableRow key={transaction._id} className="bg-gray-200">
+                                <TableRow
+                                  key={transaction._id}
+                                  className="bg-gray-200"
+                                >
                                   <TableCell className="text-right">
-                                    {new Date(transaction.transactionDate).toLocaleDateString()}
+                                    {new Date(
+                                      transaction.transactionDate
+                                    ).toLocaleDateString()}
                                   </TableCell>
                                   <TableCell className="text-right">
                                     {transaction.tcid}
@@ -516,7 +553,6 @@ export default function ReportPage() {
       </CardContent>
     </Card>
   );
-  
 
   return (
     <div className="flex flex-col gap-4">
@@ -551,9 +587,11 @@ export default function ReportPage() {
               Generate Report
             </Button>
 
-            <Button className="btn-theme mt-4" onClick={generatePDF}>
-              Download PDF Report
-            </Button>
+            {isReportGenerated && (
+              <Button className="btn-theme mt-4" onClick={generatePDF}>
+                Download PDF Report
+              </Button>
+            )}
           </div>
         </div>
 

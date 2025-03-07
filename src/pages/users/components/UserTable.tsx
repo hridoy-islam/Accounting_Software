@@ -141,6 +141,7 @@ export function UserTable() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead>Address</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -151,6 +152,7 @@ export function UserTable() {
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phone}</TableCell>
+                  <TableCell>{user.address}</TableCell>
                   <TableCell>{user.role}</TableCell>
 
                   <TableCell className="space-x-4 ">
@@ -209,6 +211,15 @@ export function UserTable() {
                   <Input
                     id="phone"
                     {...register('phone', {
+                      required: 'This field is required'
+                    })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    {...register('address', {
                       required: 'This field is required'
                     })}
                   />

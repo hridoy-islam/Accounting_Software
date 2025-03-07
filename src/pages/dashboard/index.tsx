@@ -137,6 +137,7 @@ export function Dashboard() {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
+              <TableHead>Address</TableHead>
               <TableHead>View</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -155,6 +156,7 @@ export function Dashboard() {
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.phone}</TableCell>
+                <TableCell>{user.address}</TableCell>
                 <TableCell>
                   <Link to={`company/${user._id}`}>
                     <Button variant="theme" className="w-full">
@@ -215,6 +217,13 @@ export function Dashboard() {
                 <Input
                   id="phone"
                   {...register('phone', { required: 'This field is required' })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  {...register('address', { required: 'This field is required' })}
                 />
               </div>
               <div>
