@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Users, Settings, Menu, X, Database, RectangleEllipsis, ClipboardMinus } from 'lucide-react';
+import {  Menu, X } from 'lucide-react';
 import { UserNav } from './user-nav';
 import { useSelector } from 'react-redux';
 import axiosInstance from '@/lib/axios'; 
@@ -13,38 +13,74 @@ export function TopNavigation() {
   const sidebarRef = useRef(null);
   const { id } = useParams();
 
+
+
+
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        setSidebarOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [sidebarOpen]);
+    const savedTheme = localStorage.getItem("themeColor");
+    if (savedTheme) {
+      document.documentElement.style.setProperty("--theme", savedTheme);
+      setCompanyThemeColor(savedTheme); // Set the theme color from localStorage
+    }
+  }, []);
 
-
-useEffect(() => {
-    const fetchCompanyData = async () => {
-
-      try {
-        const response = await axiosInstance.get(`/users/${id}`);
-        setCompanyThemeColor(response.data.data.themeColor); // Fetch and set the company theme color
-        
-      } catch (error) {
-        console.error('Error fetching company data:', error);
-      }
-    };
-    fetchCompanyData();
+  // Fetch company-specific theme color based on `id`
+  useEffect(() => {
+    if (id) {
+      const fetchCompanyData = async () => {
+        try {
+          const response = await axiosInstance.get(`/users/${id}`);
+          const themeColor = response.data.data.themeColor || '#a78bfa'; // Fallback theme color
+          setCompanyThemeColor(themeColor);
+          localStorage.setItem("themeColor", themeColor); // Store it in localStorage
+          document.documentElement.style.setProperty("--theme", themeColor); // Apply the new theme
+        } catch (error) {
+          console.error('Error fetching company data:', error);
+          // Fallback theme color in case of an error
+          const fallbackColor = '#a78bfa';
+          setCompanyThemeColor(fallbackColor);
+          localStorage.setItem("themeColor", fallbackColor); // Store fallback in localStorage
+          document.documentElement.style.setProperty("--theme", fallbackColor); // Apply fallback theme
+        }
+      };
+      fetchCompanyData();
+    } else {
+      // If id is undefined, apply default theme color
+      const fallbackColor = '#a78bfa';
+      setCompanyThemeColor(fallbackColor);
+      localStorage.setItem("themeColor", fallbackColor); // Store fallback in localStorage
+      document.documentElement.style.setProperty("--theme", fallbackColor); // Apply fallback theme
+    }
   }, [id]);
 
+
+
   useEffect(() => {
-    const themeColor = companyThemeColor || '#a78bfa'; // Default color (adjust as needed)
-    document.documentElement.style.setProperty('--theme', themeColor);
-  }, [companyThemeColor]);
-  
+    if (id) {
+      const fetchCompanyData = async () => {
+        try {
+          const response = await axiosInstance.get(`/users/${id}`);
+          const themeColor = response.data.data.themeColor || '#a78bfa'; // Fallback theme color
+          setCompanyThemeColor(themeColor);
+          localStorage.setItem("themeColor", themeColor); // Store it in localStorage
+          document.documentElement.style.setProperty("--theme", themeColor); // Apply the new theme
+        } catch (error) {
+          console.error('Error fetching company data:', error);
+        }
+      };
+      fetchCompanyData();
+    }
+  }, [id]);
+
+  // Apply theme color when `companyThemeColor` changes
+  useEffect(() => {
+    if (companyThemeColor) {
+      document.documentElement.style.setProperty("--theme", companyThemeColor); // Apply the new theme
+      localStorage.setItem("themeColor", companyThemeColor); // Store it in localStorage
+    }
+  }, [companyThemeColor,id]);
 
   return (
     <div className="flex flex-col">

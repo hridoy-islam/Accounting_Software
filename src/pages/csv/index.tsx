@@ -62,24 +62,31 @@ export default function CsvUploadPage() {
   const [hide, setHide] = useState(false);
   const [companyThemeColor, setCompanyThemeColor] = useState<string>('');
 
-  useEffect(() => {
-      const fetchCompanyData = async () => {
+  // useEffect(() => {
+  //     const fetchCompanyData = async () => {
   
-        try {
-          const response = await axiosInstance.get(`/users/${id}`);
-          setCompanyThemeColor(response.data.data.themeColor); // Fetch and set the company theme color
-          
-        } catch (error) {
-          console.error('Error fetching company data:', error);
-        }
-      };
-      fetchCompanyData();
-    }, [id]);
+  //       try {
+  //         const response = await axiosInstance.get(`/users/${id}`);
+  //         setCompanyThemeColor(response.data.data.themeColor); // Fetch and set the company theme color
+  //         const themeColor = companyThemeColor || '#a78bfa'; // Default color (adjust as needed)
+  //     document.documentElement.style.setProperty('--theme', themeColor);
+  //       } catch (error) {
+  //         console.error('Error fetching company data:', error);
+  //       }
+  //     };
+  //     fetchCompanyData();
+  //   }, [id]);
   
-    useEffect(() => {
-      const themeColor = companyThemeColor || '#a78bfa'; // Default color (adjust as needed)
-      document.documentElement.style.setProperty('--theme', themeColor);
-    }, [companyThemeColor]);
+  //   useEffect(() => {
+      
+  //   }, [companyThemeColor]);
+
+  //   useEffect(() => {
+  //     const savedTheme = localStorage.getItem("themeColor"); // Get stored theme
+  //     if (savedTheme) {
+  //       document.documentElement.style.setProperty("--theme", savedTheme);
+  //     }
+  //   }, []);
     
   
   const fetchData = async () => {

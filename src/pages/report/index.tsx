@@ -83,209 +83,200 @@ export default function ReportPage() {
 
  const [companyThemeColor, setCompanyThemeColor] = useState<string>('');
 
-  useEffect(() => {
-      const fetchCompanyData = async () => {
+  // useEffect(() => {
+  //     const fetchCompanyData = async () => {
   
-        try {
-          const response = await axiosInstance.get(`/users/${id}`);
-          setCompanyThemeColor(response.data.data.themeColor); // Fetch and set the company theme color
+  //       try {
+  //         const response = await axiosInstance.get(`/users/${id}`);
+  //         setCompanyThemeColor(response.data.data.themeColor); // Fetch and set the company theme color
           
-        } catch (error) {
-          console.error('Error fetching company data:', error);
-        }
-      };
-      fetchCompanyData();
-    }, [id]);
+  //       } catch (error) {
+  //         console.error('Error fetching company data:', error);
+  //       }
+  //     };
+  //     fetchCompanyData();
+  //   }, [id]);
   
-    useEffect(() => {
-      const themeColor = companyThemeColor || '#a78bfa'; // Default color (adjust as needed)
-      document.documentElement.style.setProperty('--theme', themeColor);
-    }, [companyThemeColor]);
+  //   useEffect(() => {
+  //     const themeColor = companyThemeColor || '#a78bfa'; // Default color (adjust as needed)
+  //     document.documentElement.style.setProperty('--theme', themeColor);
+  //   }, [companyThemeColor]);
     
   
 
-  const generatePDF = () => {
-    const doc = new jsPDF();
-
-    let yPos = 20;
-
-    // Company Header (Left Side)
-    doc.setFont('times', 'bold');
-    doc.setFontSize(22);
-    doc.setTextColor(0, 0, 0);
-    doc.text(companyDetail?.name.toUpperCase(), 20, yPos);
-
-    // Company Details (Right Side)
-    const companyDetails = [
-      `Address: ${companyDetail?.address}`,
-
-      `Phone: ${companyDetail?.phone}`,
-      `Email: ${companyDetail?.email}`
-    ];
-
-    // for address use companyDetail?.address, for phone use companyDetail.phone and for email use companyDetail.email
-
-    doc.setFontSize(10);
-    let detailY = 20;
-    companyDetails.forEach((text) => {
-      doc.text(text, doc.internal.pageSize.width - 70, detailY);
-      detailY += 5;
-    });
-
-    // Statement Details
-    yPos += 30;
-    doc.setFont('times', 'normal'); // Ensure Times font is used
-    doc.setFontSize(10);
-
-    // Concatenate both texts into a single line
-    const statementText = `STATEMENT OF ACCOUNT FOR THE PERIOD: ${fromDate} to ${toDate}`;
-
-    doc.text(statementText, 20, yPos);
-
-    // Add line separator
-    yPos += 10;
-    doc.setDrawColor(0, 0, 0);
-    doc.line(20, yPos, 190, yPos);
-
-    // Table Styling
-    const tableConfig = {
-      font: 'times', // Set Times font
-      theme: 'grid',
-      styles: {
-        fontSize: 9,
-        font: 'times', // Apply Times font
-        cellPadding: 2,
-        lineWidth: 0.2, // Border thickness
-        lineColor: [0, 0, 0] // Black border
-      },
-      headStyles: {
-        font: 'times', // Apply Times font to header
-        fillColor: [255, 255, 255], // White header background
-        textColor: 0, // Black text
-        fontStyle: 'bold',
-        lineWidth: 0.2, // Border thickness for header
-        lineColor: [0, 0, 0], // Black border
-        halign: 'right' // Right align header text
-      },
-      columnStyles: {
-        0: { halign: 'right' }, // Right align "Category"
-        1: { halign: 'right' }, // Right align "Count"
-        ...Object.fromEntries(
-          paymentMethods.map((_, index) => [index + 2, { halign: 'right' }])
-        ), // Right align all payment method columns
-        [paymentMethods.length + 2]: { halign: 'right', fontStyle: 'bold' } // Right align "Total" column and make it bold
-      },
-      footStyles: {
-        font: 'times', // Ensure Times font in footer
-        fontStyle: 'bold',
-        fillColor: [255, 255, 255],
-        textColor: 0,
-        halign: 'right' // Right align footer text
+    const generatePDF = () => {
+      const doc = new jsPDF();
+    
+      let yPos = 15; // Reduced margin from top
+    
+      // Company Header (Left Side)
+      doc.setFont('times', 'bold');
+      doc.setFontSize(20);
+      doc.setTextColor(0, 0, 0);
+      doc.text(companyDetail?.name.toUpperCase(), 15, yPos);
+    
+      // Company Details (Right Side)
+      const companyDetails = [
+        `Address: ${companyDetail?.address}`,
+        `Phone: ${companyDetail?.phone}`,
+        `Email: ${companyDetail?.email}`,
+      ];
+    
+      doc.setFontSize(10);
+      let detailY = 15;
+      companyDetails.forEach((text) => {
+        doc.text(text, doc.internal.pageSize.width - 80, detailY);
+        detailY += 5;
+      });
+    
+      // Statement Details
+      yPos += 20;
+      doc.setFont('times', 'normal');
+      doc.setFontSize(10);
+    
+      // Statement text centered
+      const statementText = `STATEMENT OF ACCOUNT FOR THE PERIOD: ${fromDate} to ${toDate}`;
+      doc.text(statementText, 15, yPos);
+    
+      // Separator Line
+      yPos += 8;
+      doc.setDrawColor(0, 0, 0);
+      doc.line(15, yPos, doc.internal.pageSize.width - 15, yPos);
+    
+      // Table Configuration (Improved alignment)
+      const tableConfig = {
+        font: 'times',
+        theme: 'grid',
+        styles: {
+          fontSize: 9,
+          font: 'times',
+          cellPadding: 2,
+          lineWidth: 0.2,
+          lineColor: [0, 0, 0],
+        },
+        headStyles: {
+          font: 'times',
+          fillColor: [255, 255, 255],
+          textColor: 0,
+          fontStyle: 'bold',
+          lineWidth: 0.2,
+          lineColor: [0, 0, 0],
+          halign: 'center', // Center align header text
+        },
+        columnStyles: {
+          0: { halign: 'left' },
+          1: { halign: 'center' },
+          ...Object.fromEntries(
+            paymentMethods.map((_, index) => [index + 2, { halign: 'right' }])
+          ),
+          [paymentMethods.length + 2]: { halign: 'right', fontStyle: 'bold' },
+        },
+        footStyles: {
+          font: 'times',
+          fontStyle: 'bold',
+          fillColor: [255, 255, 255],
+          textColor: 0,
+          halign: 'right',
+        },
+      };
+    
+      // Inflow Transactions Table
+      if (inflowData.length > 0) {
+        yPos += 12;
+        doc.setFontSize(12);
+        doc.text('INFLOW TRANSACTIONS', 15, yPos);
+        yPos += 8;
+    
+        const inflowTableData = inflowData.map((category) => [
+          category.categoryName,
+          category.transactions.length.toString(),
+          ...paymentMethods.map(
+            (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
+          ),
+          `£${category.total.toFixed(2)}`,
+        ]);
+    
+        // Add total row
+        inflowTableData.push([
+          'Total',
+          inflowData.reduce((acc, cat) => acc + cat.transactions.length, 0).toString(),
+          ...paymentMethods.map(
+            (method) =>
+              `£${inflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
+          ),
+          `£${inflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`,
+        ]);
+    
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Category', 'Transactions', ...paymentMethods, 'Total']],
+          body: inflowTableData,
+          ...tableConfig,
+        });
+    
+        yPos = doc.autoTable.previous.finalY + 15;
       }
+    
+      // Outflow Transactions Table
+      if (outflowData.length > 0) {
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 15;
+        }
+        doc.setFontSize(12);
+        doc.text('OUTFLOW TRANSACTIONS', 15, yPos);
+        yPos += 8;
+    
+        const outflowTableData = outflowData.map((category) => [
+          category.categoryName,
+          category.transactions.length.toString(),
+          ...paymentMethods.map(
+            (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
+          ),
+          `£${category.total.toFixed(2)}`,
+        ]);
+    
+        // Add total row
+        outflowTableData.push([
+          'Total',
+          outflowData.reduce((acc, cat) => acc + cat.transactions.length, 0).toString(),
+          ...paymentMethods.map(
+            (method) =>
+              `£${outflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
+          ),
+          `£${outflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`,
+        ]);
+    
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Category', 'Transactions', ...paymentMethods, 'Total']],
+          body: outflowTableData,
+          ...tableConfig,
+        });
+    
+        yPos = doc.autoTable.previous.finalY + 15;
+      }
+    
+      // Footer with Page Numbers and Timestamp (Centered)
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+    
+        const pageText = `Page ${i} of ${pageCount}`;
+        const timestampText = `Generated on: ${moment().format('YYYY-MM-DD hh:mm:ss A')}`;
+        
+        const pageWidth = doc.internal.pageSize.width;
+        const footerY = doc.internal.pageSize.height - 10;
+    
+        doc.text(pageText, pageWidth / 2 - 10, footerY);
+        doc.text(timestampText, 15, footerY);
+      }
+    
+      // Save the PDF
+      doc.save(`${companyDetail?.name.toLowerCase()}_statement_${fromDate}_${toDate}.pdf`);
     };
-
-    // Inflow Transactions Table
-    if (inflowData.length > 0) {
-      yPos += 15;
-      doc.setFontSize(12);
-      doc.text('INFLOW TRANSACTIONS', 20, yPos);
-      yPos += 10;
-
-      const inflowTableData = inflowData.map((category) => [
-        category.categoryName,
-        category.transactions.length.toString(),
-        ...paymentMethods.map(
-          (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
-        ),
-        `£${category.total.toFixed(2)}`
-      ]);
-
-      // Add total row
-      inflowTableData.push([
-        'Total',
-        inflowData
-          .reduce((acc, cat) => acc + cat.transactions.length, 0)
-          .toString(),
-        ...paymentMethods.map(
-          (method) =>
-            `£${inflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
-        ),
-        `£${inflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`
-      ]);
-
-      autoTable(doc, {
-        startY: yPos,
-        head: [['Category', 'Count', ...paymentMethods, 'Total']],
-        body: inflowTableData,
-        ...tableConfig
-      });
-
-      yPos = doc.autoTable.previous.finalY + 20;
-    }
-
-    // Outflow Transactions Table
-    if (outflowData.length > 0) {
-      if (yPos > 200) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFontSize(12);
-      doc.text('OUTFLOW TRANSACTIONS', 20, yPos);
-      yPos += 10;
-
-      const outflowTableData = outflowData.map((category) => [
-        category.categoryName,
-        category.transactions.length.toString(),
-        ...paymentMethods.map(
-          (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
-        ),
-        `£${category.total.toFixed(2)}`
-      ]);
-
-      outflowTableData.push([
-        'Total',
-        outflowData
-          .reduce((acc, cat) => acc + cat.transactions.length, 0)
-          .toString(),
-        ...paymentMethods.map(
-          (method) =>
-            `£${outflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
-        ),
-        `£${outflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`
-      ]);
-
-      autoTable(doc, {
-        startY: yPos,
-        head: [['Category', 'Transaction', ...paymentMethods, 'Total']],
-        body: outflowTableData,
-        ...tableConfig
-      });
-
-      yPos = doc.autoTable.previous.finalY + 20;
-    }
-
-    // Footer with Page Numbers and Timestamp
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.text(
-        `Page ${i} of ${pageCount}`,
-        doc.internal.pageSize.width - 30,
-        doc.internal.pageSize.height - 10
-      );
-      doc.text(
-        `Generated on: ${moment().format('YYYY-MM-DD hh:mm:ss A')}`,
-        20,
-        doc.internal.pageSize.height - 10
-      );
-    }
-
-    // Save the PDF
-    doc.save(
-      `${companyDetail?.name.toLowerCase()}_statement_${fromDate}_${toDate}.pdf`
-    );
-  };
+    
 
   // Fetch payment methods when the component mounts
   useEffect(() => {

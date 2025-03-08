@@ -1,5 +1,5 @@
 import { Layers } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import {  NavLink, useNavigate } from 'react-router-dom';
 import UserAuthForm from './components/user-auth-form';
@@ -8,19 +8,38 @@ import card from '../../../assets/imges/home/logos/money.png'
 export default function SignInPage() {
   const { user } = useSelector((state: any) => state.auth);
   const navigate = useNavigate();
+  const [theme, setTheme] = useState<string | null>(null);
+
 
   useEffect(() => {
-    if (!user) return; // Ensure user is not null before accessing properties
-  
+    if (theme) {
+      document.documentElement.style.setProperty("--theme", theme);
+    }
+  }, [theme]);
+
+
+  useEffect(() => {
+    if (!user) return;
+
+    let themeColor = "#a78bfa";
+
+    if (user.role === "company" && user.companyId?.themeColor) {
+      themeColor = user.companyId.themeColor;
+    }
+
+    localStorage.setItem("themeColor", themeColor);
+    setTheme(themeColor);
+
+    // Redirect user based on role
     if (user.role === "admin") {
-      navigate('/admin'); 
+      navigate("/admin");
     } else if (user.role === "company") {
       navigate(`/admin/company/${user._id}`);
-    }
-     else if (user.role === "user") {
+    } else if (user.role === "user") {
       navigate(`/admin/company/${user.companyId}`);
     }
   }, [user, navigate]);
+
 
   return (
     <div className="flex min-h-screen ">
