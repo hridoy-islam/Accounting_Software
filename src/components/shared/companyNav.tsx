@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Users, Settings, Menu, X, Database, RectangleEllipsis, ClipboardMinus, File, ArrowLeftRight, FileSpreadsheet, Archive } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, Menu, X, Database, RectangleEllipsis, ClipboardMinus, File, ArrowLeftRight, FileSpreadsheet, Archive, ClipboardList } from 'lucide-react';
 import { UserNav } from './user-nav';
 import { useSelector } from 'react-redux';
 import axiosInstance from '@/lib/axios';
@@ -48,6 +48,12 @@ export function Navigation() {
       to: `/admin/company/${id}`,
       icon: <LayoutDashboard className="mr-2 h-4 w-4" />,
       label: 'Dashboard',
+      roles: ['admin', 'user', 'company']
+    },
+    {
+      to: `/admin/company/${id}/invoice`,
+      icon: <ClipboardList   className="mr-2 h-4 w-4" />,
+      label: 'Invoice',
       roles: ['admin', 'user', 'company']
     },
     {
@@ -117,7 +123,7 @@ export function Navigation() {
           <div className='font-semibold'>
             {companyName?.name} 
           </div>
-          <nav className="flex items-center space-x-2">
+          <nav className="flex items-center ">
             {filteredNavItems.map(({ to, icon, label }) => (
               <Button
                 key={to}

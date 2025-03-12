@@ -31,7 +31,7 @@ export default function DashboardLayout({
             onClick={() => setSidebarOpen(true)}
           >
             <span className="sr-only">Open sidebar</span>
-            <MenuIcon className="h-6 w-6" aria-hidden="true" />
+            <MenuIcon className="h-6 w-6" />
           </button>
           <Header />
         </div>

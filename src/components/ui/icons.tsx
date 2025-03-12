@@ -78,7 +78,7 @@ export const Icons = {
   group: Users,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
-      aria-hidden="true"
+      
       focusable="false"
       data-prefix="fab"
       data-icon="github"
