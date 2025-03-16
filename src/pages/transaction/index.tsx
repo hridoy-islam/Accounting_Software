@@ -90,7 +90,6 @@ export default function TransactionPage() {
     setEditingTransaction(transaction);
     setEditDialogOpen(true);
 
-    // console.log("abc",transaction)
   };
   const onEditSubmit = async (transaction) => {
     try {

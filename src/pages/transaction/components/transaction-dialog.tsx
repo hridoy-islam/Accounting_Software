@@ -8,7 +8,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -16,14 +16,14 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,16 +32,16 @@ import { Label } from '@/components/ui/label';
 import { useParams } from 'react-router-dom';
 
 const formSchema = z.object({
+  transactionType: z.enum(['inflow', 'outflow']),
   transactionDate: z.string().min(1, 'Transaction date is required'),
   invoiceNumber: z.string().optional(),
   invoiceDate: z.string().optional(),
   details: z.string().optional(),
   description: z.string().optional(),
-  type: z.enum(['inflow', 'outflow']),
-  amount: z.string().min(1, 'Amount is required'),
-  category: z.string().min(1, 'Category is required'),
-  method: z.string().min(1, 'Method is required'),
-  storage: z.string().min(1, 'Storage is required'),
+  amount: z.string().min(1, 'Amount is required'), // This will be converted to `transactionAmount`
+  transactionCategory: z.string().min(1, 'Category is required'), // Added this field
+  transactionMethod: z.string().min(1, 'Method is required'), // Added this field
+  storage: z.string().min(1, 'Storage is required'), // Added this field
 });
 
 export function TransactionDialog({
@@ -51,26 +51,25 @@ export function TransactionDialog({
   methods,
   storages,
   onSubmit,
-  editingTransaction,
+  editingTransaction
 }) {
   const [file, setFile] = useState<File | null>(null);
   const { id } = useParams();
 
-  console.log("edit",editingTransaction)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: 'inflow',
+      transactionType: 'inflow',
+      transactionDate: new Date().toISOString().split('T')[0], // Default to today's date
+      invoiceNumber: '',
+      invoiceDate: '',
       details: '',
       description: '',
-      transactionDate: new Date().toISOString().split('T')[0], // Default to today's date
-      invoiceDate: '',
-      invoiceNumber: '',
       amount: '',
-      category: '',
-      method: '',
+      transactionCategory: '',
+      transactionMethod: '',
       storage: '',
-      ...editingTransaction, 
+      ...editingTransaction, // Spread editingTransaction to populate fields when editing
     },
   });
 
@@ -87,18 +86,26 @@ export function TransactionDialog({
         });
         fileUrl = fileUploadResponse.data.url;
       }
-
+  
       const payload = {
-        ...values,
-        transactionAmount: parseFloat(values.amount),
-        companyId: id,
-        transactionDoc: fileUrl,
+        transactionType: values.transactionType,
+        transactionDate: new Date(values.transactionDate).toISOString(), // Convert to ISO string
+        invoiceNumber: values.invoiceNumber,
+        invoiceDate: values.invoiceDate ? new Date(values.invoiceDate).toISOString() : null, // Convert to ISO string if exists
+        details: values.details,
+        description: values.description,
+        transactionAmount: parseFloat(values.amount), // Convert string to number
+        transactionCategory: values.transactionCategory,
+        transactionMethod: values.transactionMethod,
+        storage: values.storage,
+        transactionDoc: fileUrl, // Include the file URL if uploaded
+        companyId: id, // Include the company ID from URL params
       };
-
-      onSubmit(payload);
-      form.reset();
-      setFile(null);
-      onOpenChange(false);
+  
+      onSubmit(payload); // Pass the payload to the parent component
+      form.reset(); // Reset the form
+      setFile(null); // Clear the file state
+      onOpenChange(false); // Close the dialog
     } catch (error) {
       console.error('Error submitting transaction:', error);
     }
@@ -113,7 +120,10 @@ export function TransactionDialog({
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -159,7 +169,7 @@ export function TransactionDialog({
               />
               <FormField
                 control={form.control}
-                name="type"
+                name="transactionType"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type & Category</FormLabel>
@@ -167,11 +177,11 @@ export function TransactionDialog({
                       <CategorySelector
                         categories={categories}
                         onSelect={(categoryId) =>
-                          form.setValue('category', categoryId)
+                          form.setValue('transactionCategory', categoryId)
                         }
                         onTypeChange={(type) => {
-                          form.setValue('type', type);
-                          form.setValue('category', '');
+                          form.setValue('transactionType', type);
+                          form.setValue('transactionCategory', '');
                         }}
                         defaultType={field.value}
                       />
@@ -190,7 +200,10 @@ export function TransactionDialog({
                   <FormItem>
                     <FormLabel>Details</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter transaction details" {...field} />
+                      <Input
+                        placeholder="Enter transaction details"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -203,7 +216,11 @@ export function TransactionDialog({
                   <FormItem>
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="Enter amount" {...field} />
+                      <Input
+                        type="number"
+                        placeholder="Enter amount"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -230,54 +247,54 @@ export function TransactionDialog({
             />
 
             <div className="grid grid-cols-2 gap-4">
+            <FormField
+  control={form.control}
+  name="transactionMethod"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Method</FormLabel>
+      <Select onValueChange={field.onChange} value={field.value}>
+        <FormControl>
+          <SelectTrigger>
+            <SelectValue placeholder="Select method" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent>
+          {methods.map((method) => (
+            <SelectItem key={method._id} value={method._id}>
+              {method.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
               <FormField
-                control={form.control}
-                name="method"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Method</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select method" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {methods.map((method) => (
-                          <SelectItem key={method._id} value={method._id}>
-                            {method.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="storage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Storage</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select storage" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {storages.map((storage) => (
-                          <SelectItem key={storage._id} value={storage._id}>
-                            {storage.storageName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+  control={form.control}
+  name="storage"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Storage</FormLabel>
+      <Select onValueChange={field.onChange} value={field.value}>
+        <FormControl>
+          <SelectTrigger>
+            <SelectValue placeholder="Select storage" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent>
+          {storages.map((storage) => (
+            <SelectItem key={storage._id} value={storage._id}>
+              {storage.storageName}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
             </div>
 
             <div className="flex justify-end space-x-2">
