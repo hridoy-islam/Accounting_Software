@@ -85,7 +85,7 @@ export function Navigation() {
       to: `/admin/company/${id}/categories`,
       icon: <RectangleEllipsis className="mr-2 h-4 w-4" />,
       label: 'Category',
-      roles: ['admin', 'user']
+      roles: ['admin', 'user','company']
     },
     {
       to: `/admin/company/${id}/storages`,
