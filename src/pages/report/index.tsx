@@ -614,7 +614,7 @@ export default function ReportPage() {
             <div className="flex h-40 w-full flex-col items-center justify-center">
               <div className="flex flex-row items-center gap-4">
                 <p className="font-semibold">Please Wait..</p>
-                <div className="h-5 w-5 animate-spin rounded-full border-4 border-dashed border-[#a78bfa]"></div>
+                <div className="h-5 w-5 animate-spin rounded-full border-4 border-dashed border-theme"></div>
               </div>
             </div>
           ) : (

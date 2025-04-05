@@ -9,11 +9,9 @@ import { useParams } from 'react-router-dom';
 
 import TransactionTableForm from './components/TransactionTableForm';
 import { toast } from '@/components/ui/use-toast';
-import { Cross, X } from 'lucide-react';
 
 // Define types
 interface Transaction {
-  id: string;
   transactionDate: string;
   invoiceNumber?: string;
   invoiceDate?: string;
@@ -33,6 +31,16 @@ interface CSVRow {
   'Paid Out': string;
   'Paid In': string;
   Balance: string;
+}
+
+interface TCSV {
+  companyId: string;
+  transactions: {
+    date: string;
+    description: string;
+    paidOut: number;
+    paidIn: number;
+  }[];
 }
 
 interface Category {
@@ -57,40 +65,55 @@ export default function CsvUploadPage() {
   const [methods, setMethods] = useState<Method[]>([]);
   const [storages, setStorages] = useState<Storage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null); // State to store the selected file
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [hide, setHide] = useState(false);
-  const [companyThemeColor, setCompanyThemeColor] = useState<string>('');
+  const [csvDocId, setCsvDocId] = useState<string | null>(null);
 
-  // useEffect(() => {
-  //     const fetchCompanyData = async () => {
-  
-  //       try {
-  //         const response = await axiosInstance.get(`/users/${id}`);
-  //         setCompanyThemeColor(response.data.data.themeColor); // Fetch and set the company theme color
-  //         const themeColor = companyThemeColor || '#a78bfa'; // Default color (adjust as needed)
-  //     document.documentElement.style.setProperty('--theme', themeColor);
-  //       } catch (error) {
-  //         console.error('Error fetching company data:', error);
-  //       }
-  //     };
-  //     fetchCompanyData();
-  //   }, [id]);
-  
-  //   useEffect(() => {
-      
-  //   }, [companyThemeColor]);
+  const fetchTransactions = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axiosInstance.get<{ data: { result: TCSV[] } }>(
+        `/csv?companyId=${id}`
+      );
 
-  //   useEffect(() => {
-  //     const savedTheme = localStorage.getItem("themeColor"); // Get stored theme
-  //     if (savedTheme) {
-  //       document.documentElement.style.setProperty("--theme", savedTheme);
-  //     }
-  //   }, []);
-    
-  
+      if (response.data?.data?.result?.[0]) {
+        const csvDoc = response.data.data.result[0];
+        setCsvDocId(csvDoc._id); // Store the CSV document ID
+
+        const transformedTransactions = csvDoc.transactions
+          .map((transaction) => {
+            const transactionType =
+              transaction.paidIn > 0 ? 'inflow' : 'outflow';
+            const amount =
+              transaction.paidIn > 0 ? transaction.paidIn : transaction.paidOut;
+
+            return {
+              ...transaction,
+              _id: transaction._id, // Preserve the ID
+              transactionDate: transaction.date,
+              transactionAmount: amount,
+              transactionType
+            };
+          })
+          .filter(Boolean) as Transaction[];
+
+        setTransactions(transformedTransactions);
+        setHide(transformedTransactions.length > 0);
+      } else {
+        setTransactions([]);
+        setHide(false);
+      }
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      setTransactions([]);
+      setHide(false);
+    }
+  };
+
   const fetchData = async () => {
     try {
+      setIsLoading(true);
       const [categoriesRes, methodsRes, storagesRes] = await Promise.all([
         axiosInstance.get(`/categories/company/${id}?limit=all`),
         axiosInstance.get(`/methods/company/${id}?limit=all`),
@@ -99,32 +122,17 @@ export default function CsvUploadPage() {
       setCategories(categoriesRes.data.data.result);
       setMethods(methodsRes.data.data.result);
       setStorages(storagesRes.data.data.result);
+
+      // Fetch transactions separately
+      await fetchTransactions();
     } catch (error) {
       console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
-  useEffect(() => {
-    const storedTransactions = localStorage.getItem(`transactions-${id}`);
-    if (storedTransactions) {
-      const parsedTransactions = JSON.parse(storedTransactions);
-      if (parsedTransactions.length > 0) {
-        setTransactions(parsedTransactions);
-      }
-    }
-  }, [id]);
 
   useEffect(() => {
-    if (transactions.length === 0) {
-      localStorage.removeItem(`transactions-${id}`);
-    } else {
-      localStorage.setItem(`transactions-${id}`, JSON.stringify(transactions));
-    }
-  }, [transactions, id]);
-
-
-  useEffect(() => {
-   
-
     fetchData();
   }, [id]);
 
@@ -132,33 +140,34 @@ export default function CsvUploadPage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setSelectedFile(file); // Store the selected file in state
-      localStorage.setItem(`uploadedFileName-${id}`, file.name);
+      setSelectedFile(file);
     }
   };
 
-  // Handle CSV file parsing when the button is clicked
+  // Handle CSV file parsing and saving to database
   const handleUploadClick = () => {
     if (!selectedFile) {
-      alert('Please select a file first.');
+      toast({
+        title: 'Please select a file first.'
+      });
       return;
     }
+
     setIsUploading(true);
     setIsLoading(true);
 
-    // Clear existing transactions in the state and localStorage before uploading a new file
     setTransactions([]);
-    localStorage.removeItem(`transactions-${id}`);
 
     Papa.parse<CSVRow>(selectedFile, {
       header: true,
       skipEmptyLines: true,
-      complete: (results) => {
-        const parsedTransactions: Transaction[] = results.data
+      complete: async (results) => {
+        // Filter valid rows from CSV
+        const validRows = results.data
           .filter(
             (row) => row.Date?.trim() && (row['Paid In'] || row['Paid Out'])
           )
-          .map((row, index) => {
+          .map((row) => {
             let parsedDate: Date | null = null;
 
             try {
@@ -170,105 +179,109 @@ export default function CsvUploadPage() {
             const formattedDate = parsedDate
               ? format(parsedDate, 'yyyy-MM-dd')
               : row.Date.trim();
+
             const paidIn = row['Paid In']
               ? parseFloat(row['Paid In'].replace(/[^0-9.-]+/g, ''))
               : 0;
+
             const paidOut = row['Paid Out']
               ? parseFloat(row['Paid Out'].replace(/[^0-9.-]+/g, ''))
               : 0;
-            const amount = paidIn || paidOut;
-
-            const transactionType =
-              paidIn > 0 ? 'inflow' : paidOut > 0 ? 'outflow' : '';
 
             return {
-              id: `${index}`, // Temporary ID for rendering
-              transactionDate: formattedDate,
-              transactionAmount: amount,
-              transactionType: transactionType,
+              date: formattedDate,
               description: row.Description?.trim() || '',
-              invoiceNumber: '',
-              invoiceDate: '',
-              details: '',
-              transactionCategory: '',
-              transactionMethod: '',
-              storage: ''
+              paidOut: paidOut,
+              paidIn: paidIn
             };
           });
 
-        setTransactions(parsedTransactions); // Update state with new transactions
-        // Save new transactions to localStorage
-        localStorage.setItem(
-          `transactions-${id}`,
-          JSON.stringify(parsedTransactions)
-        );
-        setHide(true);
+        // Create a single TCSV object with the company ID and all transactions
+        const csvData = {
+          companyId: id,
+          transactions: validRows
+        };
+
+        try {
+          // Send CSV data to database
+          const response = await axiosInstance.post('/csv', csvData);
+
+          if (response.status === 200) {
+            toast({
+              title: 'CSV data successfully uploaded to database'
+            });
+
+            // After successful upload, fetch the transactions again
+            await fetchTransactions();
+          } else {
+            toast({
+              title: 'Failed to upload CSV data',
+              description: 'Please try again later'
+            });
+          }
+        } catch (error) {
+          console.error('Error saving CSV data:', error);
+          toast({
+            title: 'Failed to upload CSV data',
+            description: 'Server error'
+          });
+        }
+
         setIsLoading(false);
         setIsUploading(false);
+
         // Clear the file input value
-        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        const fileInput = document.querySelector(
+          'input[type="file"]'
+        ) as HTMLInputElement;
         if (fileInput) fileInput.value = '';
       },
       error: (error) => {
         console.error('Error parsing CSV:', error);
         setIsLoading(false);
+        setIsUploading(false);
+        toast({
+          title: 'Error parsing CSV file',
+          description: 'Please check the file format'
+        });
       }
     });
   };
 
-  useEffect(() => {
-    const storedTransactions = localStorage.getItem(`transactions-${id}`);
-    if (storedTransactions) {
-      setTransactions(JSON.parse(storedTransactions));
-    }
-    fetchData();
-  }, [id]);
-
-  // Handle transaction submission
   const handleSubmitTransactions = async (transaction) => {
     try {
+      setIsLoading(true);
       const payload = {
         ...transaction,
-        companyId: id,
+        companyId: id
       };
 
       const response = await axiosInstance.post('/transactions', payload);
 
+    
       if (response.status === 200) {
         toast({
-          title: 'Transaction Successfully Submitted',
+          title: 'Transaction Successfully Submitted'
         });
 
         const updatedTransactions = transactions.filter(
-          (t) => t.id !== transaction.id
+          (t) => t._id !== transaction._id
         );
         setTransactions(updatedTransactions);
-
-        localStorage.setItem(
-          `transactions-${id}`,
-          JSON.stringify(updatedTransactions)
-        );
       } else {
         toast({
-          title: 'Failed to submit transaction',
+          title: 'Failed to submit transaction'
         });
       }
     } catch (error) {
       toast({
-        title: 'Failed to submit transaction',
+        title: 'Failed to submit transaction'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  
-  
-
-  const handleRemoveFile = () => {
-    localStorage.removeItem(`uploadedFileName-${id}`);
-    localStorage.removeItem(`transactions-${id}`);
-    setSelectedFile(null);
-    setTransactions([]);
-  };
 
   return (
     <div className="bg-white shadow-lg">
@@ -276,47 +289,29 @@ export default function CsvUploadPage() {
         <h1 className="mb-6 text-2xl font-bold">CSV Transaction Upload</h1>
 
         <div className="mb-2">
-        {(!hide && transactions.length === 0) && (
-          <div>
-            <h2 className="mb-4 text-lg font-semibold">Upload Transaction CSV</h2>
-            <div className="flex items-center gap-4">
-              <Input
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="max-w-md"
-              />
-              <Button
-                onClick={handleUploadClick}
-                variant="theme"
-              >
-                {isLoading ? 'Processing...' : 'Upload CSV'}
-              </Button>
-            </div>
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              Upload a CSV file with columns: Date, Description, Paid Out, Paid In
-            </p>
-          </div>
-        )}
-          
-          {/* {!!localStorage.getItem(`uploadedFileName-${id}`) && (
-            <div className="ga-2 flex flex-row items-center justify-start">
-              <div>
-                <p className="text-gray-800">
-                  Uploaded file:{' '}
-                  <span className="font-semibold">
-                    {selectedFile?.name ||
-                      localStorage.getItem(`uploadedFileName-${id}`)}
-                  </span>
-                </p>
+          {!hide && transactions.length === 0 && (
+            <div>
+              <h2 className="mb-4 text-lg font-semibold">
+                Upload Transaction CSV
+              </h2>
+              <div className="flex items-center gap-4">
+                <Input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileChange}
+                  className="max-w-md"
+                />
+                <Button onClick={handleUploadClick} variant="theme">
+                  {isLoading ? 'Processing...' : 'Upload CSV'}
+                </Button>
               </div>
 
-              <div onClick={handleRemoveFile} className='cursor-pointer'>
-                <X className='w-4 h-4 text-red-800' strokeWidth={4}/>
-              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Upload a CSV file with columns: Date, Description, Paid Out,
+                Paid In
+              </p>
             </div>
-          )} */}
+          )}
         </div>
       </div>
       <div className="p-1">
@@ -328,6 +323,9 @@ export default function CsvUploadPage() {
             transactions={transactions}
             onSubmit={handleSubmitTransactions}
             setTransactions={setTransactions}
+            csvDocId={csvDocId}
+            setCsvDocId={setCsvDocId}
+            setHide={setHide}
           />
         )}
       </div>

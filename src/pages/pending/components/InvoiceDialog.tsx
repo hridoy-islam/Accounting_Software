@@ -33,30 +33,7 @@ import { Input } from '@/components/ui/input';
 import moment from 'moment';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '@/lib/axios';
-
-interface Transaction {
-  id: string;
-  tcid: string;
-  transactionDate: string;
-  invoiceNumber?: string;
-  invoiceDate?: string;
-  details?: string;
-  description?: string;
-  transactionAmount: number;
-  transactionDoc?: File | null;
-  transactionCategory: string;
-  transactionMethod: string;
-  storage: string;
-  transactionType: 'inflow' | 'outflow';
-  companyId: string;
-}
-
-interface InvoiceDialogProps {
-  invoice: Invoice | null;
-  open: boolean;
-  onClose: () => void;
-  // onConfirm: (paymentDetails) => void;
-}
+import { toast } from '@/components/ui/use-toast';
 
 export function InvoiceDialog({
   invoice,
@@ -116,7 +93,6 @@ export function InvoiceDialog({
       return;
     }
 
-    // Build the transaction payload
     const transactionPayload = {
       transactionDate: format(payload.transactionDate, 'yyyy-MM-dd'),
       invoiceNumber: invoice?.invoiceNumber,
@@ -138,18 +114,33 @@ export function InvoiceDialog({
         status: 'paid'
       };
 
-      await axiosInstance.patch(`/invoice/${invoice?._id}`, updatedInvoice);
-
-      // Update the invoices in state if needed
-      setInvoices((prevInvoices) =>
-        prevInvoices.map((inv) =>
-          inv._id === invoice._id ? updatedInvoice : inv
-        )
+      await axiosInstance.patch(
+        `/pending-transaction/${invoice?._id}`,
+        updatedInvoice
       );
 
+      await axiosInstance.delete(`/pending-transaction/${invoice?._id}`);
+
+      // setInvoices((prevInvoices) =>
+      //   prevInvoices.map((inv) =>
+      //     inv._id === invoice._id ? updatedInvoice : inv
+      //   )
+      // );
+      setInvoices((prevInvoices) =>
+        prevInvoices.filter((inv) => inv._id !== invoice._id)
+      );
+
+      toast({
+        title: 'Transaction Paid successfully',
+        className: 'bg-theme border-none text-white'
+      });
       onClose();
     } catch (error) {
       console.error('Error creating transaction or updating invoice:', error);
+      toast({
+        title: 'Transaction Paid failed',
+        className: 'bg-destructive border-none text-white'
+      });
     }
   };
 
@@ -159,7 +150,7 @@ export function InvoiceDialog({
     <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Confirm Payment</DialogTitle>
+          <DialogTitle>Complete Transaction</DialogTitle>
           <DialogDescription>
             Please provide payment details to mark this invoice as paid
           </DialogDescription>
@@ -202,7 +193,11 @@ export function InvoiceDialog({
                         </FormControl>
                         <SelectContent>
                           {methods.map((method: any) => (
-                            <SelectItem key={method.id} value={method.name}  className='hover:bg-black hover:text-white'>
+                            <SelectItem
+                              key={method.id}
+                              value={method.name}
+                              className="hover:bg-black hover:text-white"
+                            >
                               {method.name}
                             </SelectItem>
                           ))}
@@ -238,7 +233,7 @@ export function InvoiceDialog({
                               <SelectItem
                                 key={category.id}
                                 value={category.name}
-                                className='hover:bg-black hover:text-white'
+                                className="hover:bg-black hover:text-white"
                               >
                                 {category.name}
                               </SelectItem>
@@ -269,7 +264,7 @@ export function InvoiceDialog({
                             <SelectItem
                               key={storage.id}
                               value={storage.storageName}
-                               className='hover:bg-black hover:text-white'
+                              className="hover:bg-black hover:text-white"
                             >
                               {storage.storageName}
                             </SelectItem>
@@ -328,7 +323,7 @@ export function InvoiceDialog({
                     Cancel
                   </Button>
                   <Button type="submit" variant="theme">
-                    Confirm Payment
+                    Complete Transaction
                   </Button>
                 </div>
               </form>

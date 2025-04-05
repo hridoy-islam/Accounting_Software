@@ -139,7 +139,7 @@ export function TransactionFilters({
         </div>
 
 
-        <Button  className=" bg-black hover:bg-black/80 text-white" onClick={handleApplyFilters}>
+        <Button  className=" bg-theme hover:bg-black/80 text-white" onClick={handleApplyFilters}>
           Search
         </Button>
       </div>

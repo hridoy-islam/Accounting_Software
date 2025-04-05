@@ -26,6 +26,10 @@ import CsvUploadPage from '@/pages/csv';
 import CompanyLayout from '@/components/layout/company-layout';
 import ArchivePage from '@/pages/archive';
 import InvoicePage from '@/pages/invoice';
+import CustomerPage from '@/pages/invoice/customer';
+import CustomerDetailsPage from '@/pages/invoice/customer/details';
+import PendingTransactionPage from '@/pages/pending';
+import CompanyDetailsPage from '@/pages/company-details';
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
 // ----------------------------------------------------------------------
@@ -92,7 +96,21 @@ export default function AppRouter() {
           path: 'company/:id/invoice',
           element: <CompanyLayout><InvoicePage /></CompanyLayout>,
         },
-
+        {
+          path: 'company/:id/invoice/customer',
+          element: <CompanyLayout><CustomerPage /></CompanyLayout>,
+        },
+        {
+          path: 'company/:id/invoice/customer/:cid',
+          element: <CompanyLayout><CustomerDetailsPage /></CompanyLayout>,
+        }, {
+          path: 'company/:id/pending',
+          element: <CompanyLayout><PendingTransactionPage /></CompanyLayout>,
+        },
+       {
+          path: 'company/:id/company-details',
+          element: <CompanyLayout><CompanyDetailsPage /></CompanyLayout>,
+        },
         {
           path: 'profile',
           element: <ProfilePage />
