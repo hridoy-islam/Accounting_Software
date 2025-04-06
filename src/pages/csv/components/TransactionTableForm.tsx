@@ -28,8 +28,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { CategorySelector } from '@/pages/csv/components/category-selector';
+import { toast } from '@/components/ui/use-toast';
+import axiosInstance from '@/lib/axios';
 
-// Define the Zod schema
 const transactionSchema = z.object({
   transactionType: z.enum(['inflow', 'outflow'], {
     required_error: 'Transaction type is required.'
@@ -61,17 +62,19 @@ const TransactionTableForm = ({
   storages,
   transactions,
   onSubmit,
-  setTransactions
+  setTransactions,
+  csvDocId,
+  setCsvDocId,
+  setHide
 }) => {
-  // Initialize the form with Zod validation
-    const form = useForm({
+  const form = useForm({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       transactions: transactions.map((transaction) => ({
         ...transaction,
-        transactionCategory: '', // Reset category
-        transactionMethod: '', // Reset method
-        storage: '' // Reset storage
+        transactionCategory: '',
+        transactionMethod: '',
+        storage: ''
       }))
     }
   });
@@ -79,7 +82,6 @@ const TransactionTableForm = ({
   const handleRowSubmit = async (index) => {
     const transaction = form.getValues(`transactions.${index}`);
 
-    // Validate the transaction using safeParse
     const validationResult = transactionSchema.safeParse(transaction);
 
     if (!validationResult.success) {
@@ -96,30 +98,48 @@ const TransactionTableForm = ({
     try {
       await onSubmit(validationResult.data);
 
-      // Remove the submitted transaction from state
+      if (transaction._id && csvDocId) {
+        await axiosInstance.patch(`/csv/${csvDocId}`, {
+          transactionId: transaction._id
+        });
+
+        if (transactions.length === 1) {
+          await axiosInstance.delete(`/csv/${csvDocId}`);
+          setCsvDocId(null);
+          setHide(false);
+        }
+      } else {
+        console.warn('Missing transaction ID or CSV document ID');
+      }
+
       const updatedTransactions = transactions.filter((_, i) => i !== index);
       setTransactions(updatedTransactions);
 
-      // Reset the form with updated transactions
+      // Reset form
       form.reset({
         transactions: updatedTransactions.map((t) => ({
           ...t,
-          transactionCategory: '', // Explicitly reset category
-          transactionMethod: '', // Explicitly reset method
+          transactionCategory: '',
+          transactionMethod: '',
           storage: ''
         }))
       });
     } catch (error) {
       console.error('Submission error:', error);
+      toast({
+        title: 'Failed to submit transaction',
+
+        variant: 'destructive'
+      });
     }
   };
+
   return (
     <Form {...form}>
       <form className="space-y-4">
         <div className="flex flex-row justify-end font-medium text-gray-700">
           {form.watch('transactions')?.length || 0} Rows Found
         </div>
-        {/* Table container */}
         <div className="w-full overflow-hidden">
           <Table className="w-full">
             <TableHeader>

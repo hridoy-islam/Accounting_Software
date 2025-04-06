@@ -9,6 +9,7 @@ import { useParams } from 'react-router-dom';
 import { ImageUploader } from '@/components/shared/image-uploader';
 import { DataTablePagination } from '@/components/shared/data-table-pagination';
 import { EditTransactionDialog } from './components/EditTransactionDialog';
+import { RefreshCcw } from 'lucide-react';
 
 export default function TransactionPage() {
   const { id } = useParams();
@@ -24,7 +25,7 @@ export default function TransactionPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [entriesPerPage, setEntriesPerPage] = useState(100);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
 
   const [filters, setFilters] = useState({
     search: '',
@@ -58,7 +59,7 @@ export default function TransactionPage() {
               storage: storage || undefined,
               startDate: fromDate || undefined,
               endDate: toDate || undefined,
-              
+
             }
           }),
           axiosInstance.get(`/categories/company/${id}?limit=all`),
@@ -73,8 +74,8 @@ export default function TransactionPage() {
       setStorages(storagesRes.data.data.result);
     } catch (error) {
       console.error('Error fetching data:', error);
-    }finally {
-      setLoading(false); // Stop loading after fetching
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -84,20 +85,68 @@ export default function TransactionPage() {
   const refreshTransactions = () => {
     setRefreshKey((prevKey) => prevKey + 1);
   };
-  
+
 
   const handleEditTransaction = async (transaction: Transaction) => {
     setEditingTransaction(transaction);
     setEditDialogOpen(true);
 
   };
-  const onEditSubmit = async (transaction) => {
+
+  const onEditSubmit = async (transaction: Transaction) => {
     try {
-      const payload = { ...transaction }; // Ensure companyId is added
-      refreshTransactions();
-      await axiosInstance.patch(`/transactions/${transaction._id}`, payload);
+      // Prepare the payload with proper ID extraction
+      const payload = {
+        ...transaction,
+        transactionCategory: typeof transaction.transactionCategory === 'object'
+          ? transaction.transactionCategory._id
+          : transaction.transactionCategory,
+        transactionMethod: typeof transaction.transactionMethod === 'object'
+          ? transaction.transactionMethod._id
+          : transaction.transactionMethod,
+        storage: typeof transaction.storage === 'object'
+          ? transaction.storage._id
+          : transaction.storage,
+      };
+
+      // Make the API call
+      const response = await axiosInstance.patch(
+        `/transactions/${transaction._id}`,
+        payload
+      );
+
+      const getReference = (id: string, collection: any[]) =>
+        collection.find(item => item._id === id) || { _id: id, name: 'Unknown' };
+
+      const transactionCategory = getReference(
+        payload.transactionCategory,
+        categories
+      );
+      const transactionMethod = getReference(
+        payload.transactionMethod,
+        methods
+      );
+      const storage = getReference(
+        payload.storage,
+        storages
+      );
+
+      // Create the updated transaction with resolved references
+      const updatedTransaction = {
+        ...response.data.data,
+        transactionCategory,
+        transactionMethod,
+        storage
+      };
+
+      // Update state
+      setTransactions(prev => prev.map(t =>
+        t._id === transaction._id ? updatedTransaction : t
+      ));
+      setEditDialogOpen(false);
+
     } catch (error) {
-      console.error('Error updating category:', error);
+      console.error('Error updating transaction:', error);
     }
   };
 
@@ -107,14 +156,33 @@ export default function TransactionPage() {
 
   const handleApplyFilters = (filters) => {
     setAppliedFilters(filters);
-    setCurrentPage(1); // Reset to first page when applying new filters
+    setCurrentPage(1);
   };
 
+
   const onSubmit = async (payload) => {
-    await axiosInstance.post('/transactions', payload);
-    // fetchData(currentPage, entriesPerPage, filters);
-    refreshTransactions();
+    try {
+      const response = await axiosInstance.post('/transactions', payload);
+
+      const transactionCategory = categories.find(c => c._id === payload.transactionCategory);
+      const transactionMethod = methods.find(m => m._id === payload.transactionMethod);
+      const storage = storages.find(s => s._id === payload.storage);
+
+      const newTransaction = {
+        ...response.data.data,
+        transactionCategory,
+        transactionMethod,
+        storage
+      };
+
+      setTransactions(prev => [newTransaction, ...prev]);
+      setDialogOpen(false);
+
+    } catch (error) {
+      console.error('Error submitting transaction:', error);
+    }
   };
+
 
 
   const handleArchiveTransaction = (transactionId: string) => {
@@ -127,29 +195,17 @@ export default function TransactionPage() {
       <div className=" rounded-md bg-white p-4 shadow-lg">
         <div className="flex items-center justify-between pb-2">
           <h1 className="text-3xl font-bold">Transactions</h1>
-          <div className="space-x-2">
+          <div className="space-x-2 flex flex-row items-center justify-center ">
+            <Button variant="theme" onClick={() => refreshTransactions()}>
+              <div className='flex flex-row items-center justify-center gap-2'>
+                <RefreshCcw size='18' />
+                Refresh
+              </div>
+            </Button>
             <Button variant="theme" onClick={() => setDialogOpen(true)}>
               Add Transaction
             </Button>
-            {/* <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
-              Upload CSV
-            </Button>
-            <ImageUploader
-              open={uploadDialogOpen}
-              onOpenChange={setUploadDialogOpen}
-              onUploadComplete={() =>
-                fetchData(currentPage, entriesPerPage, filters)
-              }
-              companyId={id}
-              fetchData={undefined}
-              currentPage={undefined}
-              entriesPerPage={undefined}
-              filters={undefined}
-            /> */}
-            {/* <a href="/sample_transactions.csv" download>
-              <Button variant="outline">Download CSV Example</Button>
-            </a> */}
-            {/* <Button variant="destructive">Export PDF</Button> */}
+            
           </div>
         </div>
 
@@ -166,6 +222,9 @@ export default function TransactionPage() {
           onEdit={handleEditTransaction}
           onArchive={handleArchiveTransaction}
           loading={loading}
+          categories={categories}
+          methods={methods}
+          storages={storages}
         />
 
         <TransactionDialog

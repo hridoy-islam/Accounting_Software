@@ -121,12 +121,14 @@ export default function CreateUser({ onUserCreated }) {
               {error && <p className="text-red-500">{error}</p>}
             </div>
             <DialogFooter>
-              <Button className="hover:bg-[#a78bfa] hover:text-white" type="submit" disabled={isLoading}>
+              <Button className="hover:bg-theme hover:text-white" type="submit" disabled={isLoading}>
                 {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
+                  <div className="flex h-10 w-full flex-col items-center justify-center">
+                  <div className="flex flex-row items-center gap-4">
+                    <p className="font-semibold">Please Wait..</p>
+                    <div className="h-5 w-5 animate-spin rounded-full border-4 border-dashed border-theme"></div>
+                  </div>
+                </div>
                 ) : (
                   'Save User'
                 )}

@@ -22,6 +22,7 @@ export default function StudentsPage() {
     try {
       if (initialLoading) setInitialLoading(true);
       const { searchTerm, status } = filters;
+      
       const response = await axiosInstance.get(`/students`, {
         params: {
           page,
