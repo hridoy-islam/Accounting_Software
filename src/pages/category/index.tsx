@@ -49,7 +49,7 @@ export default function CategoriesPage() {
       fetchData();
       toast({
         title: 'Category Deleted successfully',
-        className: 'bg-background border-none text-white'
+        className: 'bg-theme border-none text-white'
       });
     } catch (error) {
       console.error('Error deleting category:', error);

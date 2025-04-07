@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
-import { PlusCircle, Search } from 'lucide-react';
+import { PlusCircle, RefreshCcw, Search } from 'lucide-react';
 
 import { InvoiceList } from './components/InvoiceList';
 import type { Invoice } from '@/types/invoice';
@@ -27,6 +27,8 @@ const PendingTransactionPage = () => {
   const [toDate, setToDate] = useState<string>('');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
 
   const form = useForm({
     defaultValues: {
@@ -38,6 +40,11 @@ const PendingTransactionPage = () => {
       amount: 0
     }
   });
+
+  
+  const refreshTransactions = () => {
+    setRefreshKey((prevKey) => prevKey + 1);
+  };
 
   const fetchInvoices = async (
     page: number,
@@ -71,11 +78,9 @@ const PendingTransactionPage = () => {
 
   useEffect(() => {
     fetchInvoices(currentPage, entriesPerPage, searchTerm);
-  }, [id]);
+  }, [id,refreshKey,currentPage, entriesPerPage]);
 
-  useEffect(() => {
-    fetchInvoices(currentPage, entriesPerPage, searchTerm);
-  }, [currentPage, entriesPerPage]);
+
 
   const handleEdit = (invoice: Invoice) => {
     form.reset({
@@ -124,6 +129,12 @@ const PendingTransactionPage = () => {
       <div className="mb-2 flex flex-col justify-between ">
         <div className="flex flex-row items-center justify-between">
           <h1 className="mb-2 text-3xl font-bold">Pending Transaction</h1>
+           <Button variant="theme" onClick={() => refreshTransactions()}>
+                        <div className='flex flex-row items-center justify-center gap-2'>
+                          <RefreshCcw size='18' />
+                          Refresh
+                        </div>
+                      </Button>
         </div>
 
         <div className=" flex flex-row items-center justify-between gap-8 space-x-4">
