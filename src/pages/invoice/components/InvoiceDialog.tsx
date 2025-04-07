@@ -178,7 +178,7 @@ export function InvoiceDialog({
                 <p className="mb-2 text-sm font-semibold">Invoice Details</p>
                 <div className="space-y-1">
                   <p className="text-sm text-black">
-                    <span className="font-medium">Invoice Number:</span>{' '}
+                    <span className="font-medium">Reference Invoice Number:</span>{' '}
                     {invoice.invoiceNumber}
                   </p>
                   <p className="text-sm text-black">

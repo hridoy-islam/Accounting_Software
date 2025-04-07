@@ -378,7 +378,7 @@ const InvoicePage = () => {
               </div>
 
               <div className="space-y-2">
-                <label>Invoice Number</label>
+                <label>Reference Invoice Number</label>
                 <Input {...form.register('invoiceNumber')} />
               </div>
 

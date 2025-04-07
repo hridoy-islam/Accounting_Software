@@ -224,7 +224,7 @@ export function InvoiceForm({
                 name="invoiceNumber"
                 render={({ field }) => (
                   <FormItem className="w-full ">
-                    <FormLabel>Invoice Number</FormLabel>
+                    <FormLabel>Reference Invoice Number</FormLabel>
                     <FormControl>
                       <Input placeholder="INV-001" {...field} />
                     </FormControl>

@@ -92,7 +92,7 @@ export default function InvoiceDetailsDialog({
               </div>
 
               <div className="space-y-1">
-                <p className="text-sm text-gray-500">Invoice Number</p>
+                <p className="text-sm text-gray-500">Reference Invoice Number</p>
                 <p className="font-medium">{getDisplayValue(invoice.invoiceNumber)}</p>
               </div>
 

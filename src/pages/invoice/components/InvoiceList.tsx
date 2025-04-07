@@ -68,7 +68,7 @@ export function InvoiceList({
             <TableHead className="text-left">INV ID</TableHead>
             <TableHead className="text-left">Created At</TableHead>
             <TableHead className="text-left">Invoice Date</TableHead>
-            <TableHead className="text-left">Invoice Number</TableHead>
+            <TableHead className="text-left">Reference Invoice Number</TableHead>
             <TableHead className="text-left">Customer</TableHead>
             <TableHead className="text-left">Amount</TableHead>
             <TableHead className="text-left">Status</TableHead>

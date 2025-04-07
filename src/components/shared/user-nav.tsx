@@ -32,7 +32,12 @@ export function UserNav() {
           <Button variant="outline" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10">
               <AvatarImage src="/placeholder.svg" alt="@shadcn" />
-              <AvatarFallback>SA</AvatarFallback>
+              <AvatarFallback>
+              {user?.name
+                ?.split(' ')
+                .map((n) => n[0])
+                .join('') || 'U'}
+            </AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
