@@ -22,11 +22,14 @@ import {
   Download,
   Receipt,
   Loader,
-  Pen
+  Pen,
+  Upload
 } from 'lucide-react';
 
 import moment from 'moment';
 import { Invoice } from 'src/types/invoice';
+import InvoiceDetailsDialog from './InvoiceDetailsDialog';
+import { ImageUploader } from './invoiceDoc-uploader';
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -43,20 +46,35 @@ export function InvoiceList({
   onMarkAsPaid,
   loading
 }: InvoiceListProps) {
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+
+  const handleRowClick = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setDialogOpen(true);
+  };
+
+  const handleUploadComplete = (data) => {
+    setUploadOpen(false);
+    setSelectedInvoice(null);
+  };
+
   return (
     <div className="  shadow-sm">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
+            <TableHead className="text-left">INV ID</TableHead>
             <TableHead className="text-left">Created At</TableHead>
             <TableHead className="text-left">Invoice Date</TableHead>
             <TableHead className="text-left">Invoice Number</TableHead>
-            <TableHead className="text-left">Billed From</TableHead>
             <TableHead className="text-left">Customer</TableHead>
             <TableHead className="text-left">Amount</TableHead>
             <TableHead className="text-left">Status</TableHead>
             <TableHead className="text-left">Type</TableHead>
             <TableHead className="text-left">Payment</TableHead>
+
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -64,12 +82,12 @@ export function InvoiceList({
           <TableBody>
             <TableRow>
               <TableCell colSpan={9} className="h-32 text-center">
-              <div className="flex h-10 w-full flex-col items-center justify-center">
-              <div className="flex flex-row items-center gap-4">
-                <p className="font-semibold">Please Wait..</p>
-                <div className="h-5 w-5 animate-spin rounded-full border-4 border-dashed border-theme"></div>
-              </div>
-            </div>
+                <div className="flex h-10 w-full flex-col items-center justify-center">
+                  <div className="flex flex-row items-center gap-4">
+                    <p className="font-semibold">Please Wait..</p>
+                    <div className="h-5 w-5 animate-spin rounded-full border-4 border-dashed border-theme"></div>
+                  </div>
+                </div>
               </TableCell>
             </TableRow>
           </TableBody>
@@ -87,48 +105,72 @@ export function InvoiceList({
             ) : (
               invoices.map((invoice) => (
                 <TableRow key={invoice._id} className="group">
-                  <TableCell className="text-left">
+                  <TableCell
+                    onClick={() => handleRowClick(invoice)}
+                    className="text-left"
+                  >
+                    {invoice.invId}
+                  </TableCell>
+                  <TableCell
+                    onClick={() => handleRowClick(invoice)}
+                    className="text-left"
+                  >
                     {moment(invoice?.createdAt).format('MM/DD/YY')}
                   </TableCell>
-                  <TableCell className="text-left">
+                  <TableCell
+                    onClick={() => handleRowClick(invoice)}
+                    className="text-left"
+                  >
                     {moment(invoice.invoiceDate).format('MM/DD/YY')}
                   </TableCell>
-                  <TableCell className="text-left">
+                  
+                  <TableCell
+                    onClick={() => handleRowClick(invoice)}
+                    className="text-left"
+                  >
                     {invoice.invoiceNumber}
                   </TableCell>
-                  <TableCell className="text-left">
-                    {invoice?.companyId?.name}
-                  </TableCell>
-                  <TableCell className="text-left">
+
+                  <TableCell
+                    onClick={() => handleRowClick(invoice)}
+                    className="text-left"
+                  >
                     {invoice?.customer?.name}
                   </TableCell>
-                  <TableCell className="text-left">
+                  <TableCell
+                    onClick={() => handleRowClick(invoice)}
+                    className="text-left"
+                  >
                     <div className="flex items-center justify-start gap-2">
                       £{invoice.amount.toFixed(2)}
                     </div>
                   </TableCell>
-                  <TableCell className="text-left">
+                  <TableCell
+                    onClick={() => handleRowClick(invoice)}
+                    className="text-left"
+                  >
                     <Badge
                       variant={
                         invoice.status === 'paid' ? 'default' : 'secondary'
                       }
                       className={
-                        invoice.status === 'paid'
-                          ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
-                          : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
+                        invoice.status === 'paid' ? 'bg-paid' : 'bg-due'
                       }
                     >
                       {invoice.status.charAt(0).toUpperCase() +
                         invoice.status.slice(1)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-left">
+                  <TableCell
+                    onClick={() => handleRowClick(invoice)}
+                    className="text-left"
+                  >
                     <Badge
-                      variant="outline"
+                      variant="default"
                       className={
                         invoice.transactionType === 'inflow'
-                          ? 'border-green-500/20 text-green-500'
-                          : 'border-red-500/20 text-red-500'
+                          ? 'bg-inflow'
+                          : 'bg-outflow'
                       }
                     >
                       {invoice.transactionType === 'inflow'
@@ -154,11 +196,22 @@ export function InvoiceList({
                       </Button>
                     )}
                   </TableCell>
-                  <TableCell className="text-right flex flex-row items-center justify-end gap-2">
+                  <TableCell className="flex flex-row items-center justify-end gap-2 text-right">
                     <Button
                       variant="theme"
                       size="icon"
-                      className='h-8 w-8'
+                      className="h-8 w-8"
+                      onClick={() => {
+                        setSelectedInvoice(invoice);
+                        setUploadOpen(true);
+                      }}
+                    >
+                      <Upload />
+                    </Button>
+                    <Button
+                      variant="theme"
+                      size="icon"
+                      className="h-8 w-8"
                       onClick={() => onEdit(invoice)}
                     >
                       <Pen />
@@ -190,6 +243,19 @@ export function InvoiceList({
           </TableBody>
         )}
       </Table>
+
+      <InvoiceDetailsDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        invoice={selectedInvoice}
+      />
+
+      <ImageUploader
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        onUploadComplete={handleUploadComplete}
+        entityId={selectedInvoice?._id}
+      />
     </div>
   );
 }

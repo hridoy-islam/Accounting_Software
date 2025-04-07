@@ -33,8 +33,9 @@
     --chart-5: 27 87% 67%;
     --supperagent: 180 84% 30%;
     --supperagent-foreground: 0 0% 98%;
-    --theme:255.14, 91.74%, 76.27% /* Optional, adjust as needed */
+    --theme:255.14, 91.74%, 76.27% 
   }
+
 
   .dark {
     --background: 240 10% 3.9%;
@@ -86,4 +87,21 @@
 
 .btn-theme{
   @apply bg-[#a78bfa] text-white hover:bg-[#a78bfa]/80
+}
+
+
+.bg-inflow{
+  @apply border-green-500/20 text-green-500
+}
+
+.bg-outflow{
+  @apply border-red-500/20 text-red-500
+}
+
+.bg-paid{
+  @apply bg-green-500/10 text-green-500 hover:bg-green-500/20
+}
+
+.bg-due{
+  @apply bg-red-500/10 text-red-500 hover:bg-red-500/20
 }

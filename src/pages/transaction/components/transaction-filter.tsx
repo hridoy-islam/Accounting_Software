@@ -47,7 +47,7 @@ export function TransactionFilters({
 
   return (
     <div className="space-y-4 pb-4 ">
-      <div className="flex  flex-row gap-4">
+      <div className="flex justify-between flex-row gap-4">
         <div className=" min-w-[100px]">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -59,6 +59,9 @@ export function TransactionFilters({
             />
           </div>
         </div>
+<div className="flex flex-row gap-4">
+
+
 
         <CategorySelector
           categories={categories}
@@ -67,27 +70,12 @@ export function TransactionFilters({
           defaultType={filters.type}
         />
 
-        {/* <Select
-          value={filters.category}
-          onValueChange={(value) => setFilters({ ...filters, category: value })}
-        >
-          <SelectTrigger className="w-[250px]">
-            <SelectValue placeholder="Select Method" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((cat) => (
-              <SelectItem key={cat._id} value={cat._id}>
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select> */}
 
         <Select
           value={filters.method}
           onValueChange={(value) => setFilters({ ...filters, method: value })}
         >
-          <SelectTrigger className="w-[145px]">
+          <SelectTrigger >
             <SelectValue placeholder="Select Method" />
           </SelectTrigger>
           <SelectContent>
@@ -103,7 +91,7 @@ export function TransactionFilters({
           value={filters.storage}
           onValueChange={(value) => setFilters({ ...filters, storage: value })}
         >
-          <SelectTrigger className="w-[145px]">
+          <SelectTrigger >
             <SelectValue placeholder="Select Storage" />
           </SelectTrigger>
           <SelectContent>
@@ -115,6 +103,10 @@ export function TransactionFilters({
           </SelectContent>
         </Select>
 
+
+
+        </div>
+
         {/* Date Range Picker */}
         <div className="flex gap-2">
           <div className="flex justify-center gap-2 items-center">
@@ -123,7 +115,7 @@ export function TransactionFilters({
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate( e.target.value)}
-              className="w-[140px] py-[4px] px-1 border rounded-md border-gray-300"
+              className=" py-[4px] px-1 border rounded-md border-gray-300"
             />
           </div>
 
@@ -133,13 +125,15 @@ export function TransactionFilters({
               type="date"
               value={toDate}
               onChange={(e) => setToDate( e.target.value )}
-              className="w-[140px] px-1 py-[4px] border rounded-md border-gray-300"
+              className=" px-1 py-[4px] border rounded-md border-gray-300"
             />
           </div>
         </div>
 
 
         <Button  className=" bg-theme hover:bg-black/80 text-white" onClick={handleApplyFilters}>
+        <Search className="mr-2 h-4 w-4" />
+
           Search
         </Button>
       </div>

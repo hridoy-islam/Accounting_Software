@@ -10,21 +10,22 @@ import {
 import { Transaction } from '@/types';
 import moment from 'moment';
 import { Badge } from '@/components/ui/badge';
-import { ArchiveX, Loader, Pen, Trash } from 'lucide-react';
+import { ArchiveX, Loader, Pen, Trash, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import axiosInstance from '@/lib/axios';
 import { useState } from 'react';
 import { ConfirmModal } from './ConfirmModal';
 import { TransactionDetailsDialog } from './TransactionDetailsDialog';
+import { ImageUploader } from './transactionDoc-uploader';
 
 interface TransactionTableProps {
   transactions: Transaction[];
   onEdit: (transaction: Transaction) => void;
   onArchive: (transactionId: string) => void;
   loading: boolean;
-  categories: any,
-  methods: any,
-  storages: any
+  categories: any;
+  methods: any;
+  storages: any;
 }
 
 export function TransactionTable({
@@ -36,39 +37,42 @@ export function TransactionTable({
   methods,
   storages
 }: TransactionTableProps) {
-
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<Transaction | null>(null);
-
-
+  const [uploadOpen, setUploadOpen] = useState(false);
   const handleArchive = async () => {
     if (!selectedTransaction) return;
 
     try {
       await axiosInstance.patch(`/transactions/${selectedTransaction._id}`, {
-        isDeleted: true,
+        isDeleted: true
       });
 
       onArchive(selectedTransaction._id);
     } catch (error) {
-      console.error("Error deleting transaction:", error);
+      console.error('Error deleting transaction:', error);
     } finally {
-
       setIsModalOpen(false);
       setSelectedTransaction(null);
     }
   };
-  return (
 
+  const handleUploadComplete = (data) => {
+    setUploadOpen(false);
+    setSelectedTransaction(null);
+  };
+
+  return (
     <div className="space-y-4">
       {loading ? (
-       <div className="flex h-10 w-full flex-col items-center justify-center">
-       <div className="flex flex-row items-center gap-4">
-         <p className="font-semibold">Please Wait..</p>
-         <div className="h-5 w-5 animate-spin rounded-full border-4 border-dashed border-theme"></div>
-       </div>
-     </div>
+        <div className="flex h-10 w-full flex-col items-center justify-center">
+          <div className="flex flex-row items-center gap-4">
+            <p className="font-semibold">Please Wait..</p>
+            <div className="h-5 w-5 animate-spin rounded-full border-4 border-dashed border-theme"></div>
+          </div>
+        </div>
       ) : (
         <div className="">
           <Table>
@@ -86,9 +90,10 @@ export function TransactionTable({
             </TableHeader>
             <TableBody>
               {transactions.map((transaction) => (
-                <TableRow key={transaction.tcid} className="text-left" 
-                >
-                  <TableCell onClick={() => setSelectedRow(transaction)}>{transaction.tcid}</TableCell>
+                <TableRow key={transaction.tcid} className="text-left">
+                  <TableCell onClick={() => setSelectedRow(transaction)}>
+                    {transaction.tcid}
+                  </TableCell>
                   <TableCell onClick={() => setSelectedRow(transaction)}>
                     {moment(transaction.transactionDate).format('YYYY-MM-DD')}
                   </TableCell>
@@ -96,21 +101,41 @@ export function TransactionTable({
                     <Badge
                       className={
                         transaction.transactionType === 'inflow'
-                          ? 'border-green-500/20 text-green-500'
-                        : 'border-red-500/20 text-red-500'
+                          ? 'bg-inflow'
+                          : 'bg-outflow'
                       }
                     >
                       {transaction.transactionType}
                     </Badge>
                   </TableCell>
-                  <TableCell onClick={() => setSelectedRow(transaction)} className="font-semibold">
+                  <TableCell
+                    onClick={() => setSelectedRow(transaction)}
+                    className="font-semibold"
+                  >
                     £{transaction.transactionAmount.toFixed(2)}
                   </TableCell>
-                  <TableCell onClick={() => setSelectedRow(transaction)}>{transaction.transactionCategory?.name}</TableCell>
-                  <TableCell onClick={() => setSelectedRow(transaction)}>{transaction.transactionMethod?.name}</TableCell>
-                  <TableCell onClick={() => setSelectedRow(transaction)}>{transaction.storage?.storageName}</TableCell>
+                  <TableCell onClick={() => setSelectedRow(transaction)}>
+                    {transaction.transactionCategory?.name}
+                  </TableCell>
+                  <TableCell onClick={() => setSelectedRow(transaction)}>
+                    {transaction.transactionMethod?.name}
+                  </TableCell>
+                  <TableCell onClick={() => setSelectedRow(transaction)}>
+                    {transaction.storage?.storageName}
+                  </TableCell>
                   <TableCell>
-                    <div className="flex w-full flex-row justify-end gap-4">
+                    <div className="flex w-full flex-row justify-end gap-2">
+                      <Button
+                        variant="theme"
+                        size="icon"
+                       
+                        onClick={() => {
+                          setSelectedTransaction(transaction);
+                          setUploadOpen(true);
+                        }}
+                      >
+                        <Upload />
+                      </Button>
                       <Button
                         variant="theme"
                         size="icon"
@@ -126,9 +151,7 @@ export function TransactionTable({
                           setIsModalOpen(true);
                         }}
                       >
-
                         <ArchiveX />
-
                       </Button>
                     </div>
                   </TableCell>
@@ -145,7 +168,8 @@ export function TransactionTable({
               ))}
             </TableBody>
           </Table>
-        </div>)}
+        </div>
+      )}
       <ConfirmModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -157,7 +181,13 @@ export function TransactionTable({
       <TransactionDetailsDialog
         transaction={selectedRow}
         onOpenChange={(open) => !open && setSelectedRow(null)}
-        
+      />
+
+      <ImageUploader
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        onUploadComplete={handleUploadComplete}
+        entityId={selectedTransaction?._id}
       />
     </div>
   );

@@ -41,7 +41,7 @@ const formSchema = z.object({
   amount: z.string().min(1, 'Amount is required'), // This will be converted to `transactionAmount`
   transactionCategory: z.string().min(1, 'Category is required'), // Added this field
   transactionMethod: z.string().min(1, 'Method is required'), // Added this field
-  storage: z.string().min(1, 'Storage is required'), // Added this field
+  storage: z.string().min(1, 'Storage is required') // Added this field
 });
 
 export function TransactionDialog({
@@ -69,8 +69,8 @@ export function TransactionDialog({
       transactionCategory: '',
       transactionMethod: '',
       storage: '',
-      ...editingTransaction, // Spread editingTransaction to populate fields when editing
-    },
+      ...editingTransaction // Spread editingTransaction to populate fields when editing
+    }
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -79,19 +79,25 @@ export function TransactionDialog({
       if (file) {
         const formData = new FormData();
         formData.append('file', file);
-        const fileUploadResponse = await axiosInstance.post('/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+        const fileUploadResponse = await axiosInstance.post(
+          '/upload',
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
         fileUrl = fileUploadResponse.data.url;
       }
-  
+
       const payload = {
         transactionType: values.transactionType,
         transactionDate: new Date(values.transactionDate).toISOString(), // Convert to ISO string
         invoiceNumber: values.invoiceNumber,
-        invoiceDate: values.invoiceDate ? new Date(values.invoiceDate).toISOString() : null, // Convert to ISO string if exists
+        invoiceDate: values.invoiceDate
+          ? new Date(values.invoiceDate).toISOString()
+          : "", // Convert to ISO string if exists
         details: values.details,
         description: values.description,
         transactionAmount: parseFloat(values.amount), // Convert string to number
@@ -99,9 +105,9 @@ export function TransactionDialog({
         transactionMethod: values.transactionMethod,
         storage: values.storage,
         transactionDoc: fileUrl, // Include the file URL if uploaded
-        companyId: id, // Include the company ID from URL params
+        companyId: id // Include the company ID from URL params
       };
-  
+
       onSubmit(payload); // Pass the payload to the parent component
       form.reset(); // Reset the form
       setFile(null); // Clear the file state
@@ -247,54 +253,54 @@ export function TransactionDialog({
             />
 
             <div className="grid grid-cols-2 gap-4">
-            <FormField
-  control={form.control}
-  name="transactionMethod"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Method</FormLabel>
-      <Select onValueChange={field.onChange} value={field.value}>
-        <FormControl>
-          <SelectTrigger>
-            <SelectValue placeholder="Select method" />
-          </SelectTrigger>
-        </FormControl>
-        <SelectContent>
-          {methods.map((method) => (
-            <SelectItem key={method._id} value={method._id}>
-              {method.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
               <FormField
-  control={form.control}
-  name="storage"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Storage</FormLabel>
-      <Select onValueChange={field.onChange} value={field.value}>
-        <FormControl>
-          <SelectTrigger>
-            <SelectValue placeholder="Select storage" />
-          </SelectTrigger>
-        </FormControl>
-        <SelectContent>
-          {storages.map((storage) => (
-            <SelectItem key={storage._id} value={storage._id}>
-              {storage.storageName}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
+                control={form.control}
+                name="transactionMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Method</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {methods.map((method) => (
+                          <SelectItem key={method._id} value={method._id}>
+                            {method.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="storage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Storage</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select storage" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {storages.map((storage) => (
+                          <SelectItem key={storage._id} value={storage._id}>
+                            {storage.storageName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <div className="flex justify-end space-x-2">

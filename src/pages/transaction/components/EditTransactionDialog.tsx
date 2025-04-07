@@ -16,15 +16,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Transaction } from '@/types';
 
 interface EditTransactionDialogProps {
@@ -55,10 +46,10 @@ export function EditTransactionDialog({
         ...editingTransaction,
         transactionDate: editingTransaction.transactionDate
           ? new Date(editingTransaction.transactionDate)
-          : null,
+          : "",
         invoiceDate: editingTransaction.invoiceDate
           ? new Date(editingTransaction.invoiceDate)
-          : null
+          : ""
       });
     }
   }, [editingTransaction]);
@@ -239,21 +230,21 @@ export function EditTransactionDialog({
 
             {/* Description */}
             <div className="col-span-2 space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="details">Details</Label>
               <Input
-                id="description"
-                value={formData.description || ''}
-                onChange={(e) => handleChange('description', e.target.value)}
+                id="details"
+                value={formData.details || ''}
+                onChange={(e) => handleChange('details', e.target.value)}
               />
             </div>
 
             {/* Details */}
             <div className="col-span-2 space-y-2">
-              <Label htmlFor="details">Details</Label>
+              <Label htmlFor="description">Description</Label>
               <Textarea
-                id="details"
-                value={formData.details || ''}
-                onChange={(e) => handleChange('details', e.target.value)}
+                id="description"
+                value={formData.description || ''}
+                onChange={(e) => handleChange('description', e.target.value)}
                 rows={3}
               />
             </div>

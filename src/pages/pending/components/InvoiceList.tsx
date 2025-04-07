@@ -46,16 +46,16 @@ export function InvoiceList({
   };
 
   return (
-    <div className="  shadow-sm">
+    <div className="shadow-sm">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="text-right">Invoice Date</TableHead>
-            <TableHead className="text-right">Invoice Number</TableHead>
-            <TableHead className="text-right">Billed From</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="text-right">Status</TableHead>
-            <TableHead className="text-right">Type</TableHead>
+            <TableHead className="text-left">Imported Date</TableHead>
+            <TableHead className="text-left">Invoice Date</TableHead>
+            <TableHead className="text-left">Invoice Number</TableHead>
+            <TableHead className="text-left">Imported From</TableHead>
+            <TableHead className="text-left">Amount</TableHead>
+            <TableHead className="text-left">Type</TableHead>
             <TableHead className="text-right">Payment</TableHead>
           
           </TableRow>
@@ -88,44 +88,32 @@ export function InvoiceList({
       
             invoices.map((invoice) => (
               <TableRow  key={invoice._id} className="group">
-                <TableCell  onClick={() => handleRowClick(invoice)} className="text-right">
+                <TableCell  onClick={() => handleRowClick(invoice)} className="text-left">
+                  {moment(invoice.createdAt).format('MM/DD/YY')}
+                </TableCell>
+                <TableCell  onClick={() => handleRowClick(invoice)} className="text-left">
                   {moment(invoice.invoiceDate).format('MM/DD/YY')}
                 </TableCell>
-                <TableCell  onClick={() => handleRowClick(invoice)} className="text-right">
+                <TableCell  onClick={() => handleRowClick(invoice)} className="text-left">
                   {invoice.invoiceNumber}
                 </TableCell>
-                <TableCell  onClick={() => handleRowClick(invoice)} className="text-right">
+                <TableCell  onClick={() => handleRowClick(invoice)} className="text-left">
                   {invoice?.companyId?.name}
                 </TableCell>
            
-                <TableCell  onClick={() => handleRowClick(invoice)} className="text-right">
-                  <div className="flex items-center justify-end gap-2">
+                <TableCell  onClick={() => handleRowClick(invoice)} className="text-left">
+                  <div className="flex items-center justify-start gap-2">
                   
                     £{invoice.amount.toFixed(2)}
                   </div>
                 </TableCell>
-                <TableCell  onClick={() => handleRowClick(invoice)} className="text-right">
+                
+                <TableCell  onClick={() => handleRowClick(invoice)} className="text-left">
                   <Badge
-                    variant={
-                      invoice.status === 'paid' ? 'default' : 'secondary'
-                    }
-                    className={
-                      invoice.status === 'paid'
-                        ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
-                        : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
-                    }
-                  >
-                    {invoice.status.charAt(0).toUpperCase() +
-                      invoice.status.slice(1)}
-                  </Badge>
-                </TableCell>
-                <TableCell  onClick={() => handleRowClick(invoice)} className="text-right">
-                  <Badge
-                    variant="outline"
                     className={
                       invoice.transactionType === 'inflow'
-                        ? 'border-green-500/20 text-green-500'
-                        : 'border-red-500/20 text-red-500'
+                        ? 'bg-inflow'
+                        : 'bg-outflow'
                     }
                   >
                     {invoice.transactionType === 'inflow'

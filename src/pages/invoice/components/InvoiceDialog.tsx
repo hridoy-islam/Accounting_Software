@@ -76,7 +76,7 @@ export function InvoiceDialog({
       category: '',
       storage: '',
       transactionDate: new Date(),
-      details: ''
+ 
     }
   });
 
@@ -127,7 +127,9 @@ export function InvoiceDialog({
       storage: selectedStorage._id, // Use _id of the selected storage
       transactionType: invoice?.transactionType, // Assuming this is already an _id or string
       details: payload.details,
-      companyId: id
+      companyId: id,
+      transactionDoc:invoice?.invDoc
+    
     };
 
     try {
@@ -153,37 +155,92 @@ export function InvoiceDialog({
     }
   };
 
+  const capitalizeFirst = (str: string) =>
+    str.charAt(0).toUpperCase() + str.slice(1);
+
   if (!invoice) return null;
 
   return (
     <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[650px] h-[80vh] overflow-y-auto">
+        <div>
           <DialogTitle>Confirm Payment</DialogTitle>
           <DialogDescription>
             Please provide payment details to mark this invoice as paid
           </DialogDescription>
-        </DialogHeader>
+        </div>
 
-        <div className="grid">
-          <div className="grid gap-4">
-            <div className="bg-theme/50 rounded-lg py-4">
-              <p className="text-sm font-semibold">Invoice Details:</p>
-              <p className="text-sm text-black">
-                Invoice Number: {invoice.invoiceNumber}
-              </p>
-              <p className="text-sm text-black">
-                Invoice Date: {format(invoice.invoiceDate, 'PPP')}
-              </p>
-              <p className="text-sm text-black">
-                Amount: ${invoice.amount.toFixed(2)}
-              </p>
+        <div className="-mt-4 grid">
+          <div className="grid gap-1">
+            <div className="bg-theme/50 grid grid-cols-2 gap-2 rounded-lg">
+              {/* Invoice Details Section */}
+              <div className="space-y-2">
+                <p className="mb-2 text-sm font-semibold">Invoice Details</p>
+                <div className="space-y-1">
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Invoice Number:</span>{' '}
+                    {invoice.invoiceNumber}
+                  </p>
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Invoice Date:</span>{' '}
+                    {format(invoice.invoiceDate, 'PPP')}
+                  </p>
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Billed To:</span>{' '}
+                    {invoice.companyId?.name}
+                  </p>
+                 
+                  {invoice.details && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-black">
+                      <span className="font-medium">Details:</span>{' '}
+                      {invoice.details}
+                    </p>
+                  </div>
+                )}
+                </div>
+              </div>
+
+              {/* Description and Transaction Details Section */}
+              <div className="mt-6 space-y-2">
+                
+            
+                <div className="space-y-1">
+                <p className="text-sm text-black">
+                    <span className="font-medium">Customer:</span>{' '}
+                    {invoice.customer?.name}
+                  </p>
+
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Transaction Type:</span>{' '}
+                    {capitalizeFirst(invoice.transactionType)}
+                  </p>
+
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Status:</span>{' '}
+                    {capitalizeFirst(invoice.status)}
+                  </p>
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Amount:</span> £
+                    {invoice.amount.toFixed(2)}
+                  </p>
+
+                  {invoice.description && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-black">
+                      <span className="font-medium">Description:</span>{' '}
+                      {invoice.description}
+                    </p>
+                  </div>
+                )}
+                </div>
+              </div>
             </div>
 
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+                className="space-y-1"
               >
                 <FormField
                   control={form.control}
@@ -202,7 +259,11 @@ export function InvoiceDialog({
                         </FormControl>
                         <SelectContent>
                           {methods.map((method: any) => (
-                            <SelectItem key={method.id} value={method.name}  className='hover:bg-black hover:text-white'>
+                            <SelectItem
+                              key={method.id}
+                              value={method.name}
+                              className="hover:bg-black hover:text-white"
+                            >
                               {method.name}
                             </SelectItem>
                           ))}
@@ -238,7 +299,7 @@ export function InvoiceDialog({
                               <SelectItem
                                 key={category.id}
                                 value={category.name}
-                                className='hover:bg-black hover:text-white'
+                                className="hover:bg-black hover:text-white"
                               >
                                 {category.name}
                               </SelectItem>
@@ -269,7 +330,7 @@ export function InvoiceDialog({
                             <SelectItem
                               key={storage.id}
                               value={storage.storageName}
-                               className='hover:bg-black hover:text-white'
+                              className="hover:bg-black hover:text-white"
                             >
                               {storage.storageName}
                             </SelectItem>
@@ -306,24 +367,9 @@ export function InvoiceDialog({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="details"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Details</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Add any additional payment notes..."
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                
 
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={onClose} type="button">
                     Cancel
                   </Button>

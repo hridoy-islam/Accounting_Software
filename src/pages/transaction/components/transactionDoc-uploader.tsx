@@ -79,7 +79,7 @@ export function ImageUploader({
 
       const formData = new FormData();
       formData.append('entityId', entityId);
-      formData.append('file_type', 'profile');
+      formData.append('file_type', 'transaction');
       formData.append('file', file);
 
       const response = await axiosInstance.post(
@@ -101,8 +101,8 @@ export function ImageUploader({
         throw new Error('Upload failed');
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
-      setUploadError('An error occurred while uploading the image. Please try again.');
+      console.error('Error uploading Document:', error);
+      setUploadError('An error occurred while uploading the Document. Please try again.');
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -115,7 +115,7 @@ export function ImageUploader({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload Profile Picture</DialogTitle>
+          <DialogTitle>Upload Document</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div
@@ -162,10 +162,10 @@ export function ImageUploader({
               <div className="flex flex-col items-center gap-2 text-center">
                 <ImageIcon className="h-8 w-8 text-muted-foreground" />
                 <div className="text-sm font-medium">
-                  Drag & drop an image here, or click to select
+                  Drag & drop an Document here, or click to select
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  PNG, JPG or GIF (max. 2MB)
+                  PNG, JPG or PDF (max. 2MB)
                 </div>
               </div>
             )}

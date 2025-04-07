@@ -26,26 +26,30 @@ const profileFormSchema = z.object({
   email: z.string().email({ message: 'Enter a valid email address' }),
   address: z.string().nonempty('Address Line 1 is required'),
   phone: z.string().optional(),
- 
+  sortCode: z.string().nonempty('Sort Code is required'),
+  accountNo: z.string().nonempty('Account Number is required'),
+  beneficiary: z.string().nonempty('Beneficiary is required')
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-
-
 export default function CompanyDetailsPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const { user } = useSelector((state: any) => state.auth);
-  const [profileData, setProfileData] = useState<ProfileFormValues | null>(null);
+  const [profileData, setProfileData] = useState<ProfileFormValues | null>(
+    null
+  );
   const { toast } = useToast();
-const {id} = useParams();
+  const { id } = useParams();
 
   const defaultValues: Partial<ProfileFormValues> = {
     name: profileData?.name || '',
     email: profileData?.email || '',
     address: profileData?.address || '',
     phone: profileData?.phone || '',
-    
+    sortCode: profileData?.sortCode || '',
+    accountNo: profileData?.accountNo || '',
+    beneficiary: profileData?.beneficiary || ''
   };
 
   const form = useForm<ProfileFormValues>({
@@ -83,8 +87,8 @@ const {id} = useParams();
       });
     } catch (error) {
       toast({
-        title: "Update Failed",
-        className: "bg-destructive border-none text-white",
+        title: 'Update Failed',
+        className: 'bg-destructive border-none text-white'
       });
     }
   };
@@ -95,103 +99,144 @@ const {id} = useParams();
   };
 
   return (
-    <div className="space-y-2 p-2 md:p-2">
-      <div className="relative h-48 w-48 overflow-hidden rounded-full">
-        <img
-          src={
-            profileData?.imgUrl ||
-            'https://kzmjkvje8tr2ra724fhh.lite.vusercontent.net/placeholder.svg'
-          }
-          alt={`${user?.name}`}
-          className="h-full w-full object-contain"
-        />
-        <Button
-          size="icon"
-          variant='theme'
-          onClick={() => setUploadOpen(true)}
-        >
-          <Camera className="h-4 w-4" />
-        </Button>
-      </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <div className="grid grid-cols-3 gap-2 pb-2">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter Your Name..." {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="example@example.com"
-                        disabled
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Phone" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter Your Address" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-        
-            </div>
-            <div className='flex justify-end'>
-
+    <div className="flex flex-col space-y-2 p-2 md:p-2">
+      <div className="flex flex-row space-x-8 rounded-lg bg-white p-4 shadow-sm">
+        <div className="flex basis-1/6 items-center justify-start">
+          <div className="relative h-48 w-48 overflow-hidden">
+            <img
+              src={
+                profileData?.imageUrl ||
+                'https://kzmjkvje8tr2ra724fhh.lite.vusercontent.net/placeholder.svg'
+              }
+              alt={`${user?.name}`}
+              className="h-full w-full object-contain"
+            />
             <Button
-              variant='theme'
-              type="submit"
-              >
-              Update Details
+              size="icon"
+              variant="theme"
+              onClick={() => setUploadOpen(true)}
+              className="absolute bottom-2 right-2 z-10"
+            >
+              <Camera className="h-6 w-6" />
             </Button>
-              </div>
           </div>
-        </form>
-      </Form>
+        </div>
+        <div className=" basis-5/6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <div className="">
+                <div className="grid grid-cols-3 gap-2 pb-2">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter Your Name..." {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="example@example.com"
+                            disabled
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Phone" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter Your Address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="sortCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sort Code</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter Your Address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="accountNo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter Your Address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="beneficiary"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Beneficiary</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter Your Address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button variant="theme" type="submit">
+                    Update Details
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </div>
 
       <ImageUploader
         open={uploadOpen}
         onOpenChange={setUploadOpen}
         onUploadComplete={handleUploadComplete}
-        entityId={user?._id}
+        entityId={id}
       />
     </div>
   );

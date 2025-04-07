@@ -44,7 +44,7 @@ export default function InvoiceDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] lg:max-w-[600px]">
+      <DialogContent className="sm:max-w-[400px] lg:max-w-[600px] h-[60vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             Invoice Details
@@ -57,8 +57,8 @@ export default function InvoiceDetailsDialog({
               <Badge
                 className={`capitalize ${
                   invoice.transactionType === 'inflow'
-                    ? 'bg-green-300'
-                    : 'bg-red-300'
+                    ? 'bg-inflow'
+                    : 'bg-outflow'
                 }`}
               >
                 {getDisplayValue(invoice.transactionType)}
@@ -73,8 +73,7 @@ export default function InvoiceDetailsDialog({
             <span className="text-3xl font-bold">
               £ {invoice.amount.toFixed(2)}
             </span>
-            
-            
+
           </div>
         </div>
 
@@ -100,7 +99,7 @@ export default function InvoiceDetailsDialog({
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-gray-500">Company</p>
+                <p className="text-sm text-gray-500">Imported From</p>
                 <p className="font-medium">
                   {getDisplayValue(invoice.companyId?.name)}
                 </p>
@@ -109,12 +108,7 @@ export default function InvoiceDetailsDialog({
 
             {/* Middle Grid - Invoice Details */}
             <div className="space-y-6">
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500">Status</p>
-                <p className="font-medium">
-                  {getDisplayValue(invoice.status)}
-                </p>
-              </div>
+              
 
          
                 <div className="space-y-2">

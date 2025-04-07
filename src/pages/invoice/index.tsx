@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
-import { PlusCircle, Search } from 'lucide-react';
+import { PlusCircle, RefreshCcw, Search } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -43,10 +43,8 @@ const InvoicePage = () => {
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const [companies, setCompanies] = useState([]);
-
-
+  const [status, setStatus] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
 
 
   const form = useForm({
@@ -57,7 +55,9 @@ const InvoicePage = () => {
       description: '',
       status: 'due',
       transactionType: 'inflow',
-      amount: 0
+      amount: 0,
+      details:'',
+      invDoc:''
     }
   });
 
@@ -74,7 +74,8 @@ const InvoicePage = () => {
         ...(searchTerm && { searchTerm }),
         ...(selectedCustomer && { customer: selectedCustomer }),
         ...(fromDate && { fromDate }),
-        ...(toDate && { toDate })
+        ...(toDate && { toDate }),
+        ...(status && { status })
       };
 
       const response = await axiosInstance.get(`/invoice/company/${id}`, {
@@ -90,18 +91,10 @@ const InvoicePage = () => {
   };
 
 
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const res = await axiosInstance.get('/users');
-        setCompanies(res.data.data); 
-      } catch (err) {
-        console.error('Failed to fetch companies:', err);
-      }
-    };
-  
-    fetchCompanies();
-  }, []);
+  const refreshTransactions = () => {
+    setRefreshKey((prevKey) => prevKey + 1);
+  };
+
 
   const fetchCustomers = async () => {
     setIsLoadingCustomers(true);
@@ -120,7 +113,7 @@ const InvoicePage = () => {
   useEffect(() => {
     fetchCustomers();
     fetchInvoices(currentPage, entriesPerPage, searchTerm);
-  }, [id]);
+  }, [id,refreshKey]);
 
   useEffect(() => {
     fetchInvoices(currentPage, entriesPerPage, searchTerm);
@@ -169,60 +162,60 @@ const InvoicePage = () => {
         customer: data.customer || undefined,
         amount: Number(data.amount)
       };
-  
+
+      let response;
       let updatedInvoices = [...invoices];
-      
+
       if (currentInvoice) {
         // Update existing invoice
-        const response = await axiosInstance.patch(
-          `/invoice/${currentInvoice._id}`, 
+        response = await axiosInstance.patch(
+          `/invoice/${currentInvoice._id}`,
           payload
         );
-        
-        updatedInvoices = invoices.map(invoice => {
+
+        updatedInvoices = invoices.map((invoice) => {
           if (invoice._id === currentInvoice._id) {
             return {
               ...response.data.data,
-              customer: invoice.customer || response.data.data.customer 
-              
+              customer: invoice.customer || response.data.data.customer
             };
           }
           return invoice;
         });
       } else {
-        const response = await axiosInstance.post('/invoice', payload);
-        
-        const customer = customers.find(c => c._id === data.customer);
-        
-        updatedInvoices = [{
-          ...response.data.data,
-          customer: customer || response.data.data.customer
-        }, ...invoices];
+        // Create new invoice
+        response = await axiosInstance.post('/invoice', payload);
+
+        const customer = customers.find((c) => c._id === data.customer);
+        updatedInvoices = [
+          {
+            ...response.data.data,
+            customer: customer || response.data.data.customer
+          },
+          ...invoices
+        ];
       }
-  
+
+      // UI updates and success toast
       setInvoices(updatedInvoices);
       setIsDialogFormOpen(false);
-      fetchInvoices(currentPage, entriesPerPage, searchTerm);
-      
-      toast({
-       
-        title: currentInvoice 
-          ? 'Your invoice has been updated successfully' 
-          : 'Your invoice has been created successfully',
+      setIsDialogOpen(false);
 
-          className:'bg-theme text-white',
-      });
-  
-    } catch (error) {
-      console.error('Error submitting invoice:', error);
       toast({
-      
-        title:  'Failed to submit invoice',
+        title: currentInvoice
+          ? 'Invoice updated successfully'
+          : 'Invoice created successfully',
+        className: 'bg-theme text-white border-none'
+      });
+    } catch (error: any) {
+      console.error('Error submitting invoice:', error);
+
+      toast({
+        title: 'Failed to submit invoice',
         variant: 'destructive'
       });
     }
   };
-
 
   const handleMarkAsPaid = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -242,6 +235,12 @@ const InvoicePage = () => {
         <div className="flex flex-row items-center justify-between">
           <h1 className="mb-2 text-3xl font-bold">Invoice Management</h1>
           <div className="flex flex-row items-center justify-center gap-2">
+          <Button variant="theme" onClick={() => refreshTransactions()}>
+              <div className='flex flex-row items-center justify-center gap-2'>
+                <RefreshCcw size='18' />
+                Refresh
+              </div>
+            </Button>
             <Button variant="theme" onClick={handleCustomer}>
               <PersonIcon className="mr-2 h-4 w-4" />
               Customer
@@ -253,45 +252,56 @@ const InvoicePage = () => {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-row items-center justify-start space-x-4">
+        <div className="mt-4 flex flex-row gap-8 items-center justify-between ">
           <Input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by Invoice Number"
-            className="h-8 max-w-[300px]"
+            className="h-8 "
           />
+          <div className="flex flex-row items-center gap-4">
+            <div className="flex flex-row items-center gap-2">
+              <p className="text-xs font-medium">From Date</p>
+              <Input
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                type="date"
+                
+              />
+            </div>
 
+            <div className="flex flex-row items-center gap-2">
+              <p className="text-xs font-medium">To Date</p>
+              <Input
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                type="date"
+               
+              />
+            </div>
+          </div>
           <div className="flex flex-row items-center gap-2">
-            <p className="text-xs font-medium">From Date</p>
-            <Input
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              type="date"
-              className="w-40"
-            />
+            
+            <Select onValueChange={setStatus} value={status}>
+              <SelectTrigger >
+                <SelectValue placeholder="Select Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="due">Due</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="flex flex-row items-center gap-2">
-            <p className="text-xs font-medium">To Date</p>
-            <Input
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              type="date"
-              className="w-40"
-            />
-          </div>
-
-          <div className="flex w-64 items-center gap-1">
-            <p className="whitespace-nowrap text-xs font-medium">
-              Select Customer
-            </p>
+          <div className="flex  items-center gap-1">
+            
             <Select
               onValueChange={setSelectedCustomer}
               value={selectedCustomer}
               disabled={isLoadingCustomers}
             >
-              <SelectTrigger className="w-40">
+              <SelectTrigger >
                 <SelectValue
                   placeholder={
                     isLoadingCustomers ? 'Loading...' : 'Select Customer'
@@ -391,6 +401,11 @@ const InvoicePage = () => {
                 </Select>
               </div>
 
+              <div className="space-y-2">
+                <label>Details</label>
+                <Input {...form.register('details')}  />
+              </div>
+
               {/* Amount */}
               <div className="space-y-2">
                 <label>Amount</label>
@@ -409,18 +424,19 @@ const InvoicePage = () => {
               <label>Description</label>
               <Textarea {...form.register('description')} />
             </div>
+            
 
             {/* Form Actions */}
             <div className="flex justify-end space-x-4">
-              <Button type="submit">
-                {currentInvoice ? 'Update Invoice' : 'Create Invoice'}
-              </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => handleClose()}
               >
                 Cancel
+              </Button>
+              <Button type="submit" variant="theme">
+                {currentInvoice ? 'Update Invoice' : 'Create Invoice'}
               </Button>
             </div>
           </form>
