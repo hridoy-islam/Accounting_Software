@@ -46,7 +46,7 @@ export default function InvoiceDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] h-[60vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             Invoice Details
@@ -67,9 +67,7 @@ export default function InvoiceDetailsDialog({
               </Badge>
             )}
           </DialogTitle>
-        </DialogHeader>
-
-        {/* Amount Section */}
+          {/* Amount Section */}
         <div className="border-b pb-4">
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold">
@@ -77,6 +75,9 @@ export default function InvoiceDetailsDialog({
             </span>
           </div>
         </div>
+        </DialogHeader>
+
+        
 
         <div className="space-y-6 py-4 overflow-y-auto">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">

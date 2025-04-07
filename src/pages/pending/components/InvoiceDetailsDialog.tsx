@@ -65,9 +65,7 @@ export default function InvoiceDetailsDialog({
               </Badge>
             )}
           </DialogTitle>
-        </DialogHeader>
-
-        {/* Amount Section */}
+           {/* Amount Section */}
         <div className="border-b pb-4">
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold">
@@ -76,6 +74,9 @@ export default function InvoiceDetailsDialog({
 
           </div>
         </div>
+        </DialogHeader>
+
+       
 
         <div className="space-y-6 py-4">
           {/* Main Grid - 3 Columns */}
