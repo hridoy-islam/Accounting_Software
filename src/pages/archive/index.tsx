@@ -121,7 +121,7 @@ export default function ArchivePage() {
 
 
   return (
-    <div className="rounded-md bg-white p-4 shadow-lg">
+    <div className="rounded-md bg-white p-4 mb-2 shadow-lg">
       <div className="flex items-center justify-between pb-2">
       <h1 className='text-3xl font-bold'>Archived Transactions</h1>
 
@@ -139,20 +139,20 @@ export default function ArchivePage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-right">TCID</TableHead>
-              <TableHead className="text-right">Transaction Date</TableHead>
-              <TableHead className="text-right">Type</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="text-right">Category</TableHead>
-              <TableHead className="text-right">Method</TableHead>
-              <TableHead className="text-right">Storage</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead className="text-left">TCID</TableHead>
+              <TableHead className="text-left">Transaction Date</TableHead>
+              <TableHead className="text-left">Type</TableHead>
+              <TableHead className="text-left">Amount</TableHead>
+              <TableHead className="text-left">Category</TableHead>
+              <TableHead className="text-left">Method</TableHead>
+              <TableHead className="text-left">Storage</TableHead>
+              <TableHead className="text-right">Restore</TableHead>
               {/* <TableHead className="text-right">Actions</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
             {transactions.map((transaction) => (
-              <TableRow key={transaction.tcid} className="text-right">
+              <TableRow key={transaction.tcid} className="text-left">
                 <TableCell>{transaction.tcid}</TableCell>
                 <TableCell>
                   {moment(transaction.transactionDate).format('YYYY-MM-DD')}
@@ -161,8 +161,8 @@ export default function ArchivePage() {
                   <Badge
                     className={
                       transaction.transactionType === 'inflow'
-                        ? `bg-green-300`
-                        : 'bg-red-300'
+                        ? `bg-inflow`
+                        : 'bg-outflow'
                     }
                   >
                     {transaction.transactionType.toUpperCase()}
@@ -174,9 +174,9 @@ export default function ArchivePage() {
                 <TableCell>{transaction.transactionCategory.name}</TableCell>
                 <TableCell>{transaction.transactionMethod.name}</TableCell>
                 <TableCell>{transaction.storage.storageName}</TableCell>
-                <TableCell>
+                <TableCell className='text-right'>
                 <Button
-                    variant="destructive"
+                    className='bg-green-500 text-white hover:bg-green-600'
                     size="icon"
                     onClick={() => {
                       setSelectedTransactionId(transaction._id);

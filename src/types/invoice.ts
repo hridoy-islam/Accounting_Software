@@ -11,7 +11,8 @@ export interface Invoice {
   transactionType: string;
   amount: number;
   details?: string;
-  companyId:string
+  companyId:string;
+  invDoc?: string;
 }
 
 export interface InvoiceFormData extends Omit<Invoice, '_id' | 'transactionDate'> {

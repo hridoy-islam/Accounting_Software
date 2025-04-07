@@ -120,39 +120,40 @@ const PendingTransactionPage = () => {
   // };
 
   return (
-    <div className="mb-2 rounded-md bg-white p-4 shadow-lg">
-      <div className="mb-2 flex flex-col justify-between">
+    <div className="rounded-md bg-white p-4  shadow-lg">
+      <div className="mb-2 flex flex-col justify-between ">
         <div className="flex flex-row items-center justify-between">
           <h1 className="mb-2 text-3xl font-bold">Pending Transaction</h1>
         </div>
 
-        <div className="mt-4 flex flex-row items-center justify-start space-x-4">
+        <div className=" flex flex-row items-center justify-between gap-8 space-x-4">
           <Input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by Invoice Number"
-            className="h-8 max-w-[300px]"
+            className="h-8 "
           />
+          <div className="flex flex-row items-center gap-4">
+            <div className="flex flex-row items-center gap-2">
+              <p>From Date</p>
+              <Input
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                type="date"
+                
+              />
+            </div>
 
-          <div className="flex flex-row items-center gap-2">
-            <p>From Date</p>
-            <Input
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              type="date"
-              className="w-40"
-            />
-          </div>
-
-          <div className="flex flex-row items-center gap-2">
-            <p>To Date</p>
-            <Input
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              type="date"
-              className="w-40"
-            />
+            <div className="flex flex-row items-center gap-2">
+              <p>To Date</p>
+              <Input
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                type="date"
+               
+              />
+            </div>
           </div>
 
           <Button className="bg-theme text-white" onClick={handleSearch}>

@@ -144,37 +144,72 @@ export function InvoiceDialog({
     }
   };
 
+  const capitalizeFirst = (str: string) =>
+    str.charAt(0).toUpperCase() + str.slice(1);
+
   if (!invoice) return null;
 
   return (
     <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[650px] h-[85vh] overflow-y-auto">
+        <div>
           <DialogTitle>Complete Transaction</DialogTitle>
           <DialogDescription>
             Please provide payment details to mark this invoice as paid
           </DialogDescription>
-        </DialogHeader>
+        </div>
 
-        <div className="grid">
-          <div className="grid gap-4">
-            <div className="bg-theme/50 rounded-lg py-4">
-              <p className="text-sm font-semibold">Invoice Details:</p>
-              <p className="text-sm text-black">
-                Invoice Number: {invoice.invoiceNumber}
-              </p>
-              <p className="text-sm text-black">
-                Invoice Date: {format(invoice.invoiceDate, 'PPP')}
-              </p>
-              <p className="text-sm text-black">
-                Amount: ${invoice.amount.toFixed(2)}
-              </p>
+        <div className="-mt-4 grid">
+          <div className="grid">
+            <div className="bg-theme/50 grid grid-cols-2 gap-2 rounded-lg ">
+              <div className="space-y-2">
+                <p className="mb-2 text-sm font-semibold">Invoice Details</p>
+                <div className="space-y-2">
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Invoice Number:</span>{' '}
+                    {invoice.invoiceNumber}
+                  </p>
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Invoice Date:</span>{' '}
+                    {format(invoice.invoiceDate, 'PPP')}
+                  </p>
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Imported From:</span>{' '}
+                    {invoice.companyId?.name}
+                  </p>
+
+                  
+                </div>
+              </div>
+
+              <div className="space-y-4 mt-6">
+                
+                <div className="space-y-2">
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Transaction Type:</span>{' '}
+                    {capitalizeFirst(invoice.transactionType)}
+                  </p>
+                 
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Amount:</span> £
+                    {invoice.amount.toFixed(2)}
+                  </p>
+                </div>
+              </div>
             </div>
+            {invoice.description && (
+                  <div className="space-y-1 my-1">
+                    <p className="text-sm text-black">
+                      <span className="font-medium">Description:</span>{' '}
+                      {invoice.description}
+                    </p>
+                  </div>
+                )}
 
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+                className="space-y-1"
               >
                 <FormField
                   control={form.control}
@@ -318,7 +353,7 @@ export function InvoiceDialog({
                   )}
                 />
 
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex justify-end gap-3 ">
                   <Button variant="outline" onClick={onClose} type="button">
                     Cancel
                   </Button>

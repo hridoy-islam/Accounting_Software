@@ -173,7 +173,7 @@ export function Dashboard() {
               <TableRow key={user.id}>
                 <TableCell className="flex flex-row justify-end">
                   <img
-                    src={user.image || company}
+                    src={user.imageUrl || company}
                     alt="User"
                     className="h-10 w-10 rounded-full object-cover"
                   />

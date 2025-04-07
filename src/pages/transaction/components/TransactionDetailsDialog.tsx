@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, FileIcon } from 'lucide-react';
 import { Transaction } from '@/types';
 import moment from 'moment';
+import { Button } from '@/components/ui/button';
 
 interface TransactionDetailsDialogProps {
   transaction: Transaction | null;
@@ -44,7 +45,7 @@ export function TransactionDetailsDialog({
 
   return (
     <Dialog open={!!transaction} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] lg:max-w-[900px]">
+      <DialogContent className="sm:max-w-[700px] lg:max-w-[900px] h-[60vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             Transaction Details
@@ -57,32 +58,33 @@ export function TransactionDetailsDialog({
               <Badge
                 className={`capitalize ${
                   transaction.transactionType === 'inflow'
-                    ? 'bg-green-300'
-                    : 'bg-red-300'
+                    ? 'bg-inflow'
+                    : 'bg-outflow'
                 }`}
               >
                 {getDisplayValue(transaction.transactionType)}
               </Badge>
             )}
+            
           </DialogTitle>
-        </DialogHeader>
-
-        {/* Amount Section */}
+          {/* Amount Section */}
         <div className="border-b pb-4">
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold">
               £ {getDisplayValue(transaction.transactionAmount)}
             </span>
-            
           </div>
         </div>
+        </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        
+
+        <div className="space-y-3 ">
           {/* Main Grid - 3 Columns */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             {/* Left Grid - Basic Info */}
-            <div className="space-y-6">
-              <div className="space-y-2">
+            <div className="space-y-3">
+              <div className="space-y-1">
                 <p className="text-sm text-gray-500">Transaction Date</p>
                 <div className="flex items-center gap-2">
                   <p className="font-medium">
@@ -91,37 +93,39 @@ export function TransactionDetailsDialog({
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <p className="text-sm text-gray-500">Category</p>
                 <p className="font-medium">
                   {getDisplayValue(transaction.transactionCategory)}
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500">Payment Method</p>
-                <p className="font-medium">
-                  {getDisplayValue(transaction.transactionMethod)}
-                </p>
-              </div>
-
               {transaction.storage && (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <p className="text-sm text-gray-500">Storage</p>
                   <p className="font-medium">
                     {getDisplayValue(transaction.storage)}
                   </p>
                 </div>
               )}
+
+              {transaction.details && (
+                <div className="space-y12">
+                  <p className="text-sm text-gray-500">Details</p>
+                  <p className="text-sm">
+                    {getDisplayValue(transaction.details)}
+                  </p>
+                </div>
+              )}
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-1">
               {(transaction.invoiceNumber || transaction.invoiceDate) && (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium">Invoice Information</h3>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {transaction.invoiceNumber && (
                       <div>
                         <p className="text-sm text-gray-500">Invoice Number</p>
@@ -144,20 +148,18 @@ export function TransactionDetailsDialog({
 
               {(transaction.description || transaction.details) && (
                 <div className="space-y-4">
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500">Payment Method</p>
+                    <p className="font-medium">
+                      {getDisplayValue(transaction.transactionMethod)}
+                    </p>
+                  </div>
+
                   {transaction.description && (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <p className="text-sm text-gray-500">Description</p>
                       <p className="text-sm">
                         {getDisplayValue(transaction.description)}
-                      </p>
-                    </div>
-                  )}
-
-                  {transaction.details && (
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-500">Details</p>
-                      <p className="text-sm">
-                        {getDisplayValue(transaction.details)}
                       </p>
                     </div>
                   )}
@@ -168,18 +170,23 @@ export function TransactionDetailsDialog({
             {/* Right Grid - Document Link */}
 
             <div className="space-y-6">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <h3 className="font-medium">Transaction Document</h3>
                 {transaction.transactionDoc ? (
-                  <a
-                    href={getDisplayValue(transaction.transactionDoc)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-primary hover:underline"
+                  <Button
+                    variant="theme"
+                    onClick={() =>
+                      window.open(
+                        getDisplayValue(transaction.transactionDoc),
+                        '_blank',
+                        'noopener,noreferrer'
+                      )
+                    }
+                    className="inline-flex items-center gap-2 text-primary "
                   >
                     <FileIcon className="h-4 w-4" />
-                    <span>View Document</span>
-                  </a>
+                    <span className="text-xs">View Document</span>
+                  </Button>
                 ) : (
                   <p className="text-sm text-gray-500">No Document Available</p>
                 )}
