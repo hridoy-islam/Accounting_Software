@@ -258,10 +258,10 @@ export default function CsvUploadPage() {
 
       const response = await axiosInstance.post('/transactions', payload);
 
-    
       if (response.status === 200) {
         toast({
-          title: 'Transaction Successfully Submitted'
+          title: 'Transaction Successfully Submitted',
+          className:"bg-theme text-white border-theme",
         });
 
         const updatedTransactions = transactions.filter(
@@ -270,18 +270,19 @@ export default function CsvUploadPage() {
         setTransactions(updatedTransactions);
       } else {
         toast({
-          title: 'Failed to submit transaction'
+          title: 'Failed to submit transaction',
+          className:"destructive border-none",
         });
       }
     } catch (error) {
       toast({
-        title: 'Failed to submit transaction'
+        title: 'Failed to submit transaction',
+        className:"destructive border-none",
       });
     } finally {
       setIsLoading(false);
     }
   };
-
 
   return (
     <div className="bg-white shadow-lg">
@@ -310,6 +311,12 @@ export default function CsvUploadPage() {
                 Upload a CSV file with columns: Date, Description, Paid Out,
                 Paid In
               </p>
+
+              <a href="/demo.csv" download="sample.csv">
+                <Button variant="theme" className="mt-4 ">
+                  Download Sample CSV
+                </Button>
+              </a>
             </div>
           )}
         </div>
