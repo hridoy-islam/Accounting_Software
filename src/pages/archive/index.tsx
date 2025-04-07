@@ -165,7 +165,7 @@ export default function ArchivePage() {
                         : 'bg-outflow'
                     }
                   >
-                    {transaction.transactionType.toUpperCase()}
+                    {transaction.transactionType}
                   </Badge>
                 </TableCell>
                 <TableCell className="font-semibold">

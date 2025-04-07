@@ -115,7 +115,7 @@ export function ImageUploader({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload Profile Picture</DialogTitle>
+          <DialogTitle>Upload Picture</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div
