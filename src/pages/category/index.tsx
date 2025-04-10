@@ -13,7 +13,7 @@ export default function CategoriesPage() {
   const fetchData = async () => {
     try {
       if (initialLoading) setInitialLoading(true);
-      const response = await axiosInstance.get(`/categories/company/${id}?limit=1000`);
+      const response = await axiosInstance.get(`/categories/company/${id}?limit=10000`);
       setCategories(response.data.data.result);
       console.log(categories)
     } catch (error) {
@@ -30,7 +30,7 @@ export default function CategoriesPage() {
   const handleUpdateCategory = async (updatedCategory: Category) => {
     try {
       const payload = { ...updatedCategory, companyId: id }; // Ensure companyId is added
-      console.log("Submitting Payload:", payload); // Debugging step
+      
   
       const response = updatedCategory._id
         ? await axiosInstance.patch(`/categories/${updatedCategory._id}`, payload)

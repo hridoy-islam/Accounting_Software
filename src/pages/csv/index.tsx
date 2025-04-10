@@ -11,6 +11,7 @@ import TransactionTableForm from './components/TransactionTableForm';
 import { toast } from '@/components/ui/use-toast';
 import { usePermission } from '@/hooks/usePermission';
 
+
 interface Transaction {
   transactionDate: string;
   invoiceNumber?: string;
@@ -70,6 +71,7 @@ export default function CsvUploadPage() {
   const [hide, setHide] = useState(false);
   const [csvDocId, setCsvDocId] = useState<string | null>(null);
   const {hasPermission} = usePermission();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchTransactions = async () => {
     try {
@@ -116,15 +118,14 @@ export default function CsvUploadPage() {
     try {
       setIsLoading(true);
       const [categoriesRes, methodsRes, storagesRes] = await Promise.all([
-        axiosInstance.get(`/categories/company/${id}?limit=all`),
-        axiosInstance.get(`/methods/company/${id}?limit=all`),
-        axiosInstance.get(`/storages/company/${id}?limit=all`)
+        axiosInstance.get(`/categories/company/${id}?limit=10000`),
+        axiosInstance.get(`/methods/company/${id}?limit=10000`),
+        axiosInstance.get(`/storages/company/${id}?limit=10000`)
       ]);
       setCategories(categoriesRes.data.data.result);
       setMethods(methodsRes.data.data.result);
       setStorages(storagesRes.data.data.result);
 
-      // Fetch transactions separately
       await fetchTransactions();
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -135,7 +136,7 @@ export default function CsvUploadPage() {
 
   useEffect(() => {
     fetchData();
-  }, [id]);
+  }, [id,refreshKey]);
 
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -291,6 +292,7 @@ export default function CsvUploadPage() {
           (t) => t._id !== transaction._id
         );
         setTransactions(updatedTransactions);
+        setRefreshKey((prev) => prev + 1);
       } else {
         toast({
           title: 'Failed to submit transaction',

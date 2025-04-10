@@ -31,6 +31,7 @@ import { CategorySelector } from '@/pages/csv/components/category-selector';
 import { toast } from '@/components/ui/use-toast';
 import axiosInstance from '@/lib/axios';
 import { usePermission } from '@/hooks/usePermission';
+import { useEffect } from 'react';
 
 
 const transactionSchema = z.object({
@@ -82,6 +83,17 @@ const TransactionTableForm = ({
       }))
     }
   });
+console.log(categories)
+  useEffect(() => {
+    form.reset({
+      transactions: transactions.map((transaction) => ({
+        ...transaction,
+        transactionCategory: '',
+        transactionMethod: '',
+        storage: ''
+      }))
+    });
+  }, [transactions, form]);
 
   const handleRowSubmit = async (index) => {
     const transaction = form.getValues(`transactions.${index}`);
@@ -139,7 +151,7 @@ const TransactionTableForm = ({
   };
 
   return (
-    <Form {...form}>
+    <Form  key={transactions.length} {...form}>
       <form className="space-y-4">
         <div className="flex flex-row justify-end font-medium text-gray-700">
           {form.watch('transactions')?.length || 0} Rows Found
