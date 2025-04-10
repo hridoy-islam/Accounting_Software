@@ -16,6 +16,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CustomerDialog } from './components/customer-dialog';
 import { Input } from '@/components/ui/input';
 import { DataTablePagination } from '@/components/shared/data-table-pagination';
+import { usePermission } from '@/hooks/usePermission';
+
 
 export default function CustomerPage() {
   const [customers, setcustomers] = useState<any>([]);
@@ -26,6 +28,7 @@ export default function CustomerPage() {
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("")
   const{id} = useParams()
+   const {hasPermission} = usePermission();
 
   const fetchData = async (page, entriesPerPage, searchTerm = "") => {
     try {
@@ -108,6 +111,7 @@ export default function CustomerPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back To Invoice
           </Button>
+          {hasPermission('Invoice', 'edit') &&(
           <Button
             variant="theme"
             size={'sm'}
@@ -117,7 +121,7 @@ export default function CustomerPage() {
           >
             <Plus className="mr-2 h-4 w-4" />
             New customer
-          </Button>
+          </Button>)}
         </div>
       </div>
       <div className="flex items-center space-x-4">

@@ -24,6 +24,8 @@ interface CategoryTableProps {
     onUpdate: (category: Category) => void
     onDelete: (id: string) => void
 }
+import { usePermission } from '@/hooks/usePermission';
+
 
 export function CategoryTable({ type, categories, onUpdate, onDelete }: CategoryTableProps) {
     const [dialogOpen, setDialogOpen] = useState(false)
@@ -60,6 +62,8 @@ export function CategoryTable({ type, categories, onUpdate, onDelete }: Category
 
     // Render category row with proper indentation
     const renderCategoryRow = (category: Category, level: number = 0) => {
+        
+
         return (
             <>
                 <TableRow key={category._id}>
@@ -73,7 +77,9 @@ export function CategoryTable({ type, categories, onUpdate, onDelete }: Category
                     </TableCell>
                     <TableCell>{category.audit}</TableCell>
                     <TableCell>{category.status}</TableCell>
+                    {hasPermission('Category', 'edit') && (
                     <TableCell className="text-right">
+                    {hasPermission('Category', 'edit') && (
                         <Button
                             variant="ghost"
                             size="icon"
@@ -83,15 +89,17 @@ export function CategoryTable({ type, categories, onUpdate, onDelete }: Category
                             }}
                         >
                             <Pen className="h-4 w-4" />
-                        </Button>
+                        </Button>)}
+
+                        {hasPermission('Category', 'delete') && (
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => onDelete(category._id)}
                         >
                             <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </TableCell>
+                        </Button>)}
+                    </TableCell>)}
                 </TableRow>
                 {category.children?.map(child => renderCategoryRow(child, level + 1))}
             </>
@@ -100,6 +108,7 @@ export function CategoryTable({ type, categories, onUpdate, onDelete }: Category
 
     const filteredCategories = categories.filter(cat => cat.type === type)
     const hierarchicalCategories = buildHierarchy(filteredCategories)
+    const {hasPermission} = usePermission();
 
     return (
         <Card className="p-4">
@@ -107,6 +116,8 @@ export function CategoryTable({ type, categories, onUpdate, onDelete }: Category
                 <CardTitle>
                     {type === 'inflow' ? 'Inflow Categories' : 'Outflow Categories'}
                 </CardTitle>
+
+                {hasPermission('Category', 'create') && (
                 <Button
                     variant='theme'
                     onClick={() => {
@@ -116,7 +127,7 @@ export function CategoryTable({ type, categories, onUpdate, onDelete }: Category
 
                 >
                     Add Category
-                </Button>
+                </Button>)}
             </CardHeader>
             <CardContent>
                 <div className="">
@@ -126,7 +137,8 @@ export function CategoryTable({ type, categories, onUpdate, onDelete }: Category
                                 <TableHead>Category Name</TableHead>
                                 <TableHead>Audit</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Action</TableHead>
+                                {hasPermission('Category', 'edit') && (
+                                <TableHead className="text-right">Action</TableHead>)}
                             </TableRow>
                         </TableHeader>
                         <TableBody>

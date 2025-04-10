@@ -46,7 +46,7 @@ export default function InvoiceDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] h-[60vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] h-[48vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             Invoice Details
@@ -102,10 +102,7 @@ export default function InvoiceDetailsDialog({
                   {moment(invoice.createdAt).format('MMM DD YYYY')}
                 </p>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Details</p>
-                <p className="text-sm">{getDisplayValue(invoice.details)}</p>
-              </div>
+             
               
             </div>
 
@@ -129,12 +126,7 @@ export default function InvoiceDetailsDialog({
                 </p>
               </div>
 
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Description</p>
-                <p className="text-sm">
-                  {getDisplayValue(invoice.description)}
-                </p>
-              </div>
+              
               
             </div>
 

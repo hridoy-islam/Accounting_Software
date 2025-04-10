@@ -12,6 +12,7 @@ import {
 import moment from 'moment';
 import { Badge } from '@/components/ui/badge';
 import { ArchiveRestore, Pen, Trash } from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
 
 import axiosInstance from '@/lib/axios';
 import { useParams } from 'react-router-dom';
@@ -35,6 +36,7 @@ export default function ArchivePage() {
     method: '',
     storage: ''
   });
+  const {hasPermission} = usePermission();
 
   const [appliedFilters, setAppliedFilters] = useState(filters);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -146,7 +148,8 @@ export default function ArchivePage() {
               <TableHead className="text-left">Category</TableHead>
               <TableHead className="text-left">Method</TableHead>
               <TableHead className="text-left">Storage</TableHead>
-              <TableHead className="text-right">Restore</TableHead>
+              {hasPermission('TransactionList', 'edit') && (
+              <TableHead className="text-right">Restore</TableHead>)}
               {/* <TableHead className="text-right">Actions</TableHead> */}
             </TableRow>
           </TableHeader>
@@ -174,6 +177,7 @@ export default function ArchivePage() {
                 <TableCell>{transaction.transactionCategory.name}</TableCell>
                 <TableCell>{transaction.transactionMethod.name}</TableCell>
                 <TableCell>{transaction.storage.storageName}</TableCell>
+                {hasPermission('TransactionList', 'edit') && (
                 <TableCell className='text-right'>
                 <Button
                     className='bg-green-500 text-white hover:bg-green-600'
@@ -185,7 +189,7 @@ export default function ArchivePage() {
                   >
                     <ArchiveRestore />
                   </Button>
-                </TableCell>
+                </TableCell>)}
                 {/* <TableCell className="text-right">
                   <Button
                     variant="ghost"

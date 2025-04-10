@@ -20,6 +20,8 @@ import {
 import moment from 'moment';
 import { Invoice } from 'src/types/invoice';
 import  InvoiceDetailsDialog  from './InvoiceDetailsDialog'; 
+import { usePermission } from '@/hooks/usePermission';
+
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -39,7 +41,7 @@ export function InvoiceList({
   
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-
+  const {hasPermission} = usePermission();
   const handleRowClick = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setDialogOpen(true);
@@ -56,7 +58,8 @@ export function InvoiceList({
             <TableHead className="text-left">Imported From</TableHead>
             <TableHead className="text-left">Amount</TableHead>
             <TableHead className="text-left">Type</TableHead>
-            <TableHead className="text-right">Payment</TableHead>
+            {hasPermission('TransactionList', 'create') &&(
+            <TableHead className="text-right">Payment</TableHead>)}
           
           </TableRow>
         </TableHeader>
@@ -121,6 +124,8 @@ export function InvoiceList({
                       : 'Outflow'}
                   </Badge>
                 </TableCell>
+
+                {hasPermission('TransactionList', 'create') &&(
                 <TableCell className="text-right">
                   {invoice.status === 'paid' ? (
                     <div
@@ -138,7 +143,7 @@ export function InvoiceList({
                       Complete Transaction
                     </Button>
                   )}
-                </TableCell>
+                </TableCell>)}
                
               </TableRow>
             ))

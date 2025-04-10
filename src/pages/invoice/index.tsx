@@ -25,6 +25,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { InvoiceDialog } from './components/InvoiceDialog';
 import { toast } from '@/components/ui/use-toast';
+import { usePermission } from '@/hooks/usePermission';
+
 
 const InvoicePage = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -45,8 +47,8 @@ const InvoicePage = () => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
-
-
+  const {hasPermission} = usePermission();
+  
   const form = useForm({
     defaultValues: {
       customer: '',
@@ -229,6 +231,10 @@ const InvoicePage = () => {
     setSelectedInvoice(null);
   };
 
+  const handleCreateInvoice = () => {
+    navigate(`/admin/company/${id}/invoice/new`);
+  };
+
   return (
     <div className="mb-2 rounded-md bg-white p-4 shadow-lg">
       <div className="mb-2 flex flex-col justify-between">
@@ -245,10 +251,12 @@ const InvoicePage = () => {
               <PersonIcon className="mr-2 h-4 w-4" />
               Customer
             </Button>
-            <Button variant="theme" onClick={handleCreate}>
+            {hasPermission('Invoice', 'create') &&(
+            <Button variant="theme" onClick={() => handleCreateInvoice()}>
               <PlusCircle className="mr-2 h-4 w-4" />
               New Invoice
-            </Button>
+            </Button>)}
+
           </div>
         </div>
 

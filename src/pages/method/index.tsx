@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
 import { useForm } from 'react-hook-form';
-
+import { usePermission } from '@/hooks/usePermission';
 import { useParams } from 'react-router-dom';
 
 interface Method {
@@ -37,6 +37,8 @@ export function Method() {
   const [editingMethod, setEditingMethod] = useState<any>(null);
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
   const {id} = useParams()
+    const {hasPermission} = usePermission();
+  
   const {
     register,
     handleSubmit,
@@ -62,7 +64,6 @@ export function Method() {
 
   const onSubmit = async (data: any) => {
     const payload = { ...data, companyId: id };
-    console.log("Submitting Payload:", payload);
     if (editingMethod) {
       await axiosInstance.patch(`/methods/${editingMethod?._id}`, payload);
       toast({
@@ -94,6 +95,7 @@ export function Method() {
         <div className="p-4 ">
           <div className="flex  justify-between ">
             <h1 className=" text-2xl font-semibold">Methods</h1>
+            {hasPermission('Method', 'create') && (
             <Button
               variant="theme"
               onClick={() => {
@@ -103,7 +105,7 @@ export function Method() {
             >
               <Plus className="mr-2 h-4 w-4" />
               New Method
-            </Button>
+            </Button>)}
           </div>
         </div>
         <div className="space-x-1">
@@ -112,13 +114,16 @@ export function Method() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Method Name</TableHead>
-                  <TableHead className="w-32 text-center">Actions</TableHead>
+                  {hasPermission('Method', 'edit') && (
+                  <TableHead className="w-32 text-center">Actions</TableHead>)}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {methods.map((method) => (
                   <TableRow key={method.id}>
                     <TableCell>{method.name}</TableCell>
+
+                    {hasPermission('Method', 'edit') && (
                     <TableCell className="space-x-4 text-center ">
                       <Button
                         variant="ghost"
@@ -128,7 +133,7 @@ export function Method() {
                       >
                         <Pen className="h-4 w-4" />
                       </Button>
-                    </TableCell>
+                    </TableCell>)}
                   </TableRow>
                 ))}
               </TableBody>

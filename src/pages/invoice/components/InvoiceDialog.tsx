@@ -75,8 +75,7 @@ export function InvoiceDialog({
       method: '',
       category: '',
       storage: '',
-      transactionDate: new Date(),
- 
+      transactionDate: new Date()
     }
   });
 
@@ -128,8 +127,7 @@ export function InvoiceDialog({
       transactionType: invoice?.transactionType, // Assuming this is already an _id or string
       details: payload.details,
       companyId: id,
-      transactionDoc:invoice?.invDoc
-    
+      transactionDoc: invoice?.invDoc
     };
 
     try {
@@ -162,7 +160,7 @@ export function InvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="sm:max-w-[650px] h-[80vh] overflow-y-auto">
+      <DialogContent className="h-[80vh] overflow-y-auto sm:max-w-[650px]">
         <div>
           <DialogTitle>Confirm Payment</DialogTitle>
           <DialogDescription>
@@ -178,32 +176,36 @@ export function InvoiceDialog({
                 <p className="mb-2 text-sm font-semibold">Invoice Details</p>
                 <div className="space-y-1">
                   <p className="text-sm text-black">
-                    <span className="font-medium">Reference Invoice Number:</span>{' '}
+                    <span className="font-medium">
+                      Reference Invoice Number:
+                    </span>{' '}
                     {invoice.invoiceNumber}
                   </p>
                   <p className="text-sm text-black">
-                    <span className="font-medium">Invoice Date:</span>{' '}
+                    <span className="font-medium">Reference Invoice Date:</span>{' '}
                     {format(invoice.invoiceDate, 'PPP')}
                   </p>
-                  
-                 
+
                   {invoice.details && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-black">
-                      <span className="font-medium">Details:</span>{' '}
-                      {invoice.details}
-                    </p>
-                  </div>
-                )}
+                    <div className="space-y-1">
+                      <p className="text-sm text-black">
+                        <span className="font-medium">Details:</span>{' '}
+                        {invoice.details}
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-sm text-black">
+                    <span className="font-medium">Status:</span>{' '}
+                    {capitalizeFirst(invoice.status)}
+                  </p>
                 </div>
               </div>
 
               {/* Description and Transaction Details Section */}
               <div className="mt-6 space-y-2">
-                
-            
                 <div className="space-y-1">
-                <p className="text-sm text-black">
+                  <p className="text-sm text-black">
                     <span className="font-medium">Customer:</span>{' '}
                     {invoice.customer?.name}
                   </p>
@@ -214,22 +216,18 @@ export function InvoiceDialog({
                   </p>
 
                   <p className="text-sm text-black">
-                    <span className="font-medium">Status:</span>{' '}
-                    {capitalizeFirst(invoice.status)}
-                  </p>
-                  <p className="text-sm text-black">
                     <span className="font-medium">Amount:</span> £
                     {invoice.amount.toFixed(2)}
                   </p>
 
                   {invoice.description && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-black">
-                      <span className="font-medium">Description:</span>{' '}
-                      {invoice.description}
-                    </p>
-                  </div>
-                )}
+                    <div className="space-y-1">
+                      <p className="text-sm text-black">
+                        <span className="font-medium">Description:</span>{' '}
+                        {invoice.description}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -363,8 +361,6 @@ export function InvoiceDialog({
                     </FormItem>
                   )}
                 />
-
-                
 
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={onClose} type="button">

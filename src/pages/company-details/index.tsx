@@ -20,6 +20,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Camera } from 'lucide-react';
 import { ImageUploader } from './components/userImage-uploader';
 import { useParams } from 'react-router-dom';
+import { usePermission } from '@/hooks/usePermission';
 
 const profileFormSchema = z.object({
   name: z.string().nonempty('Name is required'),
@@ -41,6 +42,7 @@ export default function CompanyDetailsPage() {
   );
   const { toast } = useToast();
   const { id } = useParams();
+  const {hasPermission} = usePermission();
 
   const defaultValues: Partial<ProfileFormValues> = {
     name: profileData?.name || '',
@@ -111,6 +113,7 @@ export default function CompanyDetailsPage() {
               alt={`${user?.name}`}
               className="h-full w-full object-contain"
             />
+            {hasPermission('CompanyDetails', 'edit') &&(
             <Button
               size="icon"
               variant="theme"
@@ -118,7 +121,7 @@ export default function CompanyDetailsPage() {
               className="absolute bottom-2 right-2 z-10"
             >
               <Camera className="h-6 w-6" />
-            </Button>
+            </Button>)}
           </div>
         </div>
         <div className=" basis-5/6">
@@ -222,9 +225,10 @@ export default function CompanyDetailsPage() {
                   />
                 </div>
                 <div className="flex justify-end">
+                {hasPermission('CompanyDetails', 'edit') &&(
                   <Button variant="theme" type="submit">
                     Update Details
-                  </Button>
+                  </Button>)}
                 </div>
               </div>
             </form>

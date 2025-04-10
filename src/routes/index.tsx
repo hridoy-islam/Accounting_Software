@@ -30,6 +30,9 @@ import CustomerPage from '@/pages/invoice/customer';
 import CustomerDetailsPage from '@/pages/invoice/customer/details';
 import PendingTransactionPage from '@/pages/pending';
 import CompanyDetailsPage from '@/pages/company-details';
+import CreateInvoice from '@/pages/invoice/components/createInvoice';
+import EditInvoice from '@/pages/invoice/components/editInvoice';
+import PermissionPage from '@/pages/permission';
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
 // ----------------------------------------------------------------------
@@ -97,6 +100,14 @@ export default function AppRouter() {
           element: <CompanyLayout><InvoicePage /></CompanyLayout>,
         },
         {
+          path: 'company/:id/invoice/new',
+          element: <CompanyLayout><CreateInvoice /></CompanyLayout>,
+        },
+        {
+          path: 'company/:id/invoice/:invoiceId',
+          element: <CompanyLayout><EditInvoice /></CompanyLayout>,
+        },
+        {
           path: 'company/:id/invoice/customer',
           element: <CompanyLayout><CustomerPage /></CompanyLayout>,
         },
@@ -110,6 +121,10 @@ export default function AppRouter() {
        {
           path: 'company/:id/company-details',
           element: <CompanyLayout><CompanyDetailsPage /></CompanyLayout>,
+        },
+       {
+          path: 'company/:id/permission',
+          element: <CompanyLayout>< PermissionPage/></CompanyLayout>,
         },
         {
           path: 'profile',

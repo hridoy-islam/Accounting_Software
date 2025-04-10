@@ -9,8 +9,8 @@ import { useParams } from 'react-router-dom';
 
 import TransactionTableForm from './components/TransactionTableForm';
 import { toast } from '@/components/ui/use-toast';
+import { usePermission } from '@/hooks/usePermission';
 
-// Define types
 interface Transaction {
   transactionDate: string;
   invoiceNumber?: string;
@@ -69,6 +69,7 @@ export default function CsvUploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [hide, setHide] = useState(false);
   const [csvDocId, setCsvDocId] = useState<string | null>(null);
+  const {hasPermission} = usePermission();
 
   const fetchTransactions = async () => {
     try {
@@ -148,7 +149,8 @@ export default function CsvUploadPage() {
   const handleUploadClick = () => {
     if (!selectedFile) {
       toast({
-        title: 'Please select a file first.'
+        title: 'Please select a file first.',
+        className: 'bg-theme text-white border-none'
       });
       return;
     }
@@ -162,23 +164,41 @@ export default function CsvUploadPage() {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
-        // Filter valid rows from CSV
         const validRows = results.data
           .filter(
             (row) => row.Date?.trim() && (row['Paid In'] || row['Paid Out'])
           )
           .map((row) => {
             let parsedDate: Date | null = null;
+            const dateStr = row.Date.trim();
 
-            try {
-              parsedDate = parse(row.Date.trim(), 'dd-MMM-yy', new Date());
-            } catch (error) {
-              console.error('Error parsing date:', row.Date, error);
+            const dateFormats = [
+              'dd-MMM-yy',
+              'dd/MM/yyyy',
+              'MM/dd/yyyy',
+              'yyyy-MM-dd',
+              'dd-MM-yyyy',
+              'MMM dd, yyyy',
+              'MMMM dd, yyyy'
+            ];
+
+            for (const formatStr of dateFormats) {
+              try {
+                parsedDate = parse(dateStr, formatStr, new Date());
+                // If parsing didn't throw but got an invalid date, continue trying
+                if (!isNaN(parsedDate.getTime())) {
+                  break;
+                }
+              } catch (error) {
+                // Try next format
+                continue;
+              }
             }
 
-            const formattedDate = parsedDate
-              ? format(parsedDate, 'yyyy-MM-dd')
-              : row.Date.trim();
+            const formattedDate =
+              parsedDate && !isNaN(parsedDate.getTime())
+                ? format(parsedDate, 'yyyy-MM-dd')
+                : dateStr;
 
             const paidIn = row['Paid In']
               ? parseFloat(row['Paid In'].replace(/[^0-9.-]+/g, ''))
@@ -208,7 +228,8 @@ export default function CsvUploadPage() {
 
           if (response.status === 200) {
             toast({
-              title: 'CSV data successfully uploaded to database'
+              title: 'CSV uploaded',
+              className: 'bg-theme text-white border-none'
             });
 
             // After successful upload, fetch the transactions again
@@ -216,14 +237,16 @@ export default function CsvUploadPage() {
           } else {
             toast({
               title: 'Failed to upload CSV data',
-              description: 'Please try again later'
+              description: 'Please try again later',
+              className: 'destructive border-none'
             });
           }
         } catch (error) {
           console.error('Error saving CSV data:', error);
           toast({
             title: 'Failed to upload CSV data',
-            description: 'Server error'
+            description: 'Server error',
+            className: 'destructive border-none'
           });
         }
 
@@ -261,7 +284,7 @@ export default function CsvUploadPage() {
       if (response.status === 200) {
         toast({
           title: 'Transaction Successfully Submitted',
-          className:"bg-theme text-white border-theme",
+          className: 'bg-theme text-white border-theme'
         });
 
         const updatedTransactions = transactions.filter(
@@ -271,13 +294,13 @@ export default function CsvUploadPage() {
       } else {
         toast({
           title: 'Failed to submit transaction',
-          className:"destructive border-none",
+          className: 'destructive border-none'
         });
       }
     } catch (error) {
       toast({
         title: 'Failed to submit transaction',
-        className:"destructive border-none",
+        className: 'destructive border-none'
       });
     } finally {
       setIsLoading(false);
@@ -302,9 +325,12 @@ export default function CsvUploadPage() {
                   onChange={handleFileChange}
                   className="max-w-md"
                 />
-                <Button onClick={handleUploadClick} variant="theme">
-                  {isLoading ? 'Processing...' : 'Upload CSV'}
-                </Button>
+
+                {hasPermission('TransactionList', 'create') && (
+                  <Button onClick={handleUploadClick} variant="theme">
+                    {isLoading ? 'Processing...' : 'Upload CSV'}
+                  </Button>
+                )}
               </div>
 
               <p className="mt-2 text-sm text-muted-foreground">

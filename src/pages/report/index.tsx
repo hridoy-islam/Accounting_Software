@@ -18,6 +18,9 @@ import axiosInstance from '@/lib/axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import moment from 'moment';
+import { toast } from '@/components/ui/use-toast';
+import { usePermission } from '@/hooks/usePermission';
+
 
 type Transaction = {
   _id: string;
@@ -80,203 +83,207 @@ export default function ReportPage() {
   const [hasFetched, setHasFetched] = useState(false); // Track fetch attempt
   const [companyDetail, setCompanyDetail] = useState('');
   const [isReportGenerated, setIsReportGenerated] = useState(false);
-
- const [companyThemeColor, setCompanyThemeColor] = useState<string>('');
-
-  // useEffect(() => {
-  //     const fetchCompanyData = async () => {
-  
-  //       try {
-  //         const response = await axiosInstance.get(`/users/${id}`);
-  //         setCompanyThemeColor(response.data.data.themeColor); // Fetch and set the company theme color
-          
-  //       } catch (error) {
-  //         console.error('Error fetching company data:', error);
-  //       }
-  //     };
-  //     fetchCompanyData();
-  //   }, [id]);
-  
-  //   useEffect(() => {
-  //     const themeColor = companyThemeColor || '#a78bfa'; // Default color (adjust as needed)
-  //     document.documentElement.style.setProperty('--theme', themeColor);
-  //   }, [companyThemeColor]);
-    
+  const { hasPermission, getAuditAccessMethods } = usePermission();
+  const auditAccessMethods = getAuditAccessMethods();
   
 
-    const generatePDF = () => {
-      const doc = new jsPDF();
-    
-      let yPos = 15; // Reduced margin from top
-    
-      // Company Header (Left Side)
-      doc.setFont('times', 'bold');
-      doc.setFontSize(20);
-      doc.setTextColor(0, 0, 0);
-      doc.text(companyDetail?.name.toUpperCase(), 15, yPos);
-    
-      // Company Details (Right Side)
-      const companyDetails = [
-        `Address: ${companyDetail?.address}`,
-        `Phone: ${companyDetail?.phone}`,
-        `Email: ${companyDetail?.email}`,
-      ];
-    
-      doc.setFontSize(10);
-      let detailY = 15;
-      companyDetails.forEach((text) => {
-        doc.text(text, doc.internal.pageSize.width - 80, detailY);
-        detailY += 5;
-      });
-    
-      // Statement Details
-      yPos += 20;
-      doc.setFont('times', 'normal');
-      doc.setFontSize(10);
-    
-      // Statement text centered
-      const statementText = `STATEMENT OF ACCOUNT FOR THE PERIOD: ${fromDate} to ${toDate}`;
-      doc.text(statementText, 15, yPos);
-    
-      // Separator Line
-      yPos += 8;
-      doc.setDrawColor(0, 0, 0);
-      doc.line(15, yPos, doc.internal.pageSize.width - 15, yPos);
-    
-      // Table Configuration (Improved alignment)
-      const tableConfig = {
+  const generatePDF = () => {
+    const doc = new jsPDF();
+
+    let yPos = 15; // Reduced margin from top
+
+    // Company Header (Left Side)
+    doc.setFont('times', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(0, 0, 0);
+    doc.text(companyDetail?.name.toUpperCase(), 15, yPos);
+
+    // Company Details (Right Side)
+    const companyDetails = [
+      `Address: ${companyDetail?.address}`,
+      `Phone: ${companyDetail?.phone}`,
+      `Email: ${companyDetail?.email}`
+    ];
+
+    doc.setFontSize(10);
+    let detailY = 15;
+    companyDetails.forEach((text) => {
+      doc.text(text, doc.internal.pageSize.width - 80, detailY);
+      detailY += 5;
+    });
+
+    // Statement Details
+    yPos += 20;
+    doc.setFont('times', 'normal');
+    doc.setFontSize(10);
+
+    // Statement text centered
+    const statementText = `STATEMENT OF ACCOUNT FOR THE PERIOD: ${fromDate} to ${toDate}`;
+    doc.text(statementText, 15, yPos);
+
+    // Separator Line
+    yPos += 8;
+    doc.setDrawColor(0, 0, 0);
+    doc.line(15, yPos, doc.internal.pageSize.width - 15, yPos);
+
+    // Table Configuration (Improved alignment)
+    const tableConfig = {
+      font: 'times',
+      theme: 'grid',
+      styles: {
+        fontSize: 9,
         font: 'times',
-        theme: 'grid',
-        styles: {
-          fontSize: 9,
-          font: 'times',
-          cellPadding: 2,
-          lineWidth: 0.2,
-          lineColor: [0, 0, 0],
-        },
-        headStyles: {
-          font: 'times',
-          fillColor: [255, 255, 255],
-          textColor: 0,
-          fontStyle: 'bold',
-          lineWidth: 0.2,
-          lineColor: [0, 0, 0],
-          halign: 'center', // Center align header text
-        },
-        columnStyles: {
-          0: { halign: 'left' },
-          1: { halign: 'center' },
-          ...Object.fromEntries(
-            paymentMethods.map((_, index) => [index + 2, { halign: 'right' }])
-          ),
-          [paymentMethods.length + 2]: { halign: 'right', fontStyle: 'bold' },
-        },
-        footStyles: {
-          font: 'times',
-          fontStyle: 'bold',
-          fillColor: [255, 255, 255],
-          textColor: 0,
-          halign: 'right',
-        },
-      };
-    
-      // Inflow Transactions Table
-      if (inflowData.length > 0) {
-        yPos += 12;
-        doc.setFontSize(12);
-        doc.text('INFLOW TRANSACTIONS', 15, yPos);
-        yPos += 8;
-    
-        const inflowTableData = inflowData.map((category) => [
-          category.categoryName,
-          category.transactions.length.toString(),
-          ...paymentMethods.map(
-            (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
-          ),
-          `£${category.total.toFixed(2)}`,
-        ]);
-    
-        // Add total row
-        inflowTableData.push([
-          'Total',
-          inflowData.reduce((acc, cat) => acc + cat.transactions.length, 0).toString(),
-          ...paymentMethods.map(
-            (method) =>
-              `£${inflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
-          ),
-          `£${inflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`,
-        ]);
-    
-        autoTable(doc, {
-          startY: yPos,
-          head: [['Category', 'Transactions', ...paymentMethods, 'Total']],
-          body: inflowTableData,
-          ...tableConfig,
-        });
-    
-        yPos = doc.autoTable.previous.finalY + 15;
+        cellPadding: 2,
+        lineWidth: 0.2,
+        lineColor: [0, 0, 0]
+      },
+      headStyles: {
+        font: 'times',
+        fillColor: [255, 255, 255],
+        textColor: 0,
+        fontStyle: 'bold',
+        lineWidth: 0.2,
+        lineColor: [0, 0, 0],
+        halign: 'center' // Center align header text
+      },
+      columnStyles: {
+        0: { halign: 'left' },
+        1: { halign: 'center' },
+        ...Object.fromEntries(
+          paymentMethods.map((_, index) => [index + 2, { halign: 'right' }])
+        ),
+        [paymentMethods.length + 2]: { halign: 'right', fontStyle: 'bold' }
+      },
+      footStyles: {
+        font: 'times',
+        fontStyle: 'bold',
+        fillColor: [255, 255, 255],
+        textColor: 0,
+        halign: 'right'
       }
-    
-      // Outflow Transactions Table
-      if (outflowData.length > 0) {
-        if (yPos > 200) {
-          doc.addPage();
-          yPos = 15;
-        }
-        doc.setFontSize(12);
-        doc.text('OUTFLOW TRANSACTIONS', 15, yPos);
-        yPos += 8;
-    
-        const outflowTableData = outflowData.map((category) => [
-          category.categoryName,
-          category.transactions.length.toString(),
-          ...paymentMethods.map(
-            (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
-          ),
-          `£${category.total.toFixed(2)}`,
-        ]);
-    
-        // Add total row
-        outflowTableData.push([
-          'Total',
-          outflowData.reduce((acc, cat) => acc + cat.transactions.length, 0).toString(),
-          ...paymentMethods.map(
-            (method) =>
-              `£${outflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
-          ),
-          `£${outflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`,
-        ]);
-    
-        autoTable(doc, {
-          startY: yPos,
-          head: [['Category', 'Transactions', ...paymentMethods, 'Total']],
-          body: outflowTableData,
-          ...tableConfig,
-        });
-    
-        yPos = doc.autoTable.previous.finalY + 15;
-      }
-    
-      // Footer with Page Numbers and Timestamp (Centered)
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-    
-        const pageText = `Page ${i} of ${pageCount}`;
-        const timestampText = `Generated on: ${moment().format('YYYY-MM-DD hh:mm:ss A')}`;
-        
-        const pageWidth = doc.internal.pageSize.width;
-        const footerY = doc.internal.pageSize.height - 10;
-    
-        doc.text(pageText, pageWidth / 2 - 10, footerY);
-        doc.text(timestampText, 15, footerY);
-      }
-    
-      // Save the PDF
-      doc.save(`${companyDetail?.name.toLowerCase()}_statement_${fromDate}_${toDate}.pdf`);
     };
-    
+
+    const filteredInflowData = auditAccessMethods 
+    ? inflowData.map(category => ({
+        ...category,
+        transactions: category.transactions.filter(t => 
+          auditAccessMethods.includes(t.transactionMethod._id)
+        )
+      })).filter(category => category.transactions.length > 0)
+    : inflowData;
+
+  const filteredOutflowData = auditAccessMethods 
+    ? outflowData.map(category => ({
+        ...category,
+        transactions: category.transactions.filter(t => 
+          auditAccessMethods.includes(t.transactionMethod._id)
+        )
+      })).filter(category => category.transactions.length > 0)
+    : outflowData;
+
+
+    // Inflow Transactions Table
+    if (filteredInflowData.length > 0) {
+      yPos += 12;
+      doc.setFontSize(12);
+      doc.text('INFLOW TRANSACTIONS', 15, yPos);
+      yPos += 8;
+
+      const inflowTableData = inflowData.map((category) => [
+        category.categoryName,
+        category.transactions.length.toString(),
+        ...paymentMethods.map(
+          (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
+        ),
+        `£${category.total.toFixed(2)}`
+      ]);
+
+      // Add total row
+      inflowTableData.push([
+        'Total',
+        inflowData
+          .reduce((acc, cat) => acc + cat.transactions.length, 0)
+          .toString(),
+        ...paymentMethods.map(
+          (method) =>
+            `£${inflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
+        ),
+        `£${inflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Category', 'Transactions', ...paymentMethods, 'Total']],
+        body: inflowTableData,
+        ...tableConfig
+      });
+
+      yPos = doc.autoTable.previous.finalY + 15;
+    }
+
+    // Outflow Transactions Table
+    if (filteredOutflowData.length > 0) {
+      if (yPos > 200) {
+        doc.addPage();
+        yPos = 15;
+      }
+      doc.setFontSize(12);
+      doc.text('OUTFLOW TRANSACTIONS', 15, yPos);
+      yPos += 8;
+
+      const outflowTableData = outflowData.map((category) => [
+        category.categoryName,
+        category.transactions.length.toString(),
+        ...paymentMethods.map(
+          (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
+        ),
+        `£${category.total.toFixed(2)}`
+      ]);
+
+      // Add total row
+      outflowTableData.push([
+        'Total',
+        outflowData
+          .reduce((acc, cat) => acc + cat.transactions.length, 0)
+          .toString(),
+        ...paymentMethods.map(
+          (method) =>
+            `£${outflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
+        ),
+        `£${outflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Category', 'Transactions', ...paymentMethods, 'Total']],
+        body: outflowTableData,
+        ...tableConfig
+      });
+
+      yPos = doc.autoTable.previous.finalY + 15;
+    }
+
+    // Footer with Page Numbers and Timestamp (Centered)
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+
+      const pageText = `Page ${i} of ${pageCount}`;
+      const timestampText = `Generated on: ${moment().format('YYYY-MM-DD hh:mm:ss A')}`;
+
+      const pageWidth = doc.internal.pageSize.width;
+      const footerY = doc.internal.pageSize.height - 10;
+
+      doc.text(pageText, pageWidth / 2 - 10, footerY);
+      doc.text(timestampText, 15, footerY);
+    }
+
+    // Save the PDF
+    doc.save(
+      `${companyDetail?.name.toLowerCase()}_statement_${fromDate}_${toDate}.pdf`
+    );
+  };
 
   // Fetch payment methods when the component mounts
   useEffect(() => {
@@ -288,10 +295,21 @@ export default function ReportPage() {
       const response = await axiosInstance.get(
         `/methods/company/${id}?limit=all`
       );
-      const methods = response.data.data.result.map(
-        (method: { name: string }) => method.name
+      let methods = response.data.data.result.map(
+        (method: { _id: string; name: string }) => ({
+          id: method._id,
+          name: method.name
+        })
       );
-      setPaymentMethods(methods);
+
+      // Filter methods if user is audit
+      if (auditAccessMethods) {
+        methods = methods.filter(method => 
+          auditAccessMethods.includes(method.id)
+        );
+      }
+
+      setPaymentMethods(methods.map(m => m.name));
     } catch (error) {
       console.error('Error fetching payment methods:', error);
     }
@@ -316,11 +334,16 @@ export default function ReportPage() {
     paymentMethods: string[]
   ) => {
     const categoryMap: { [key: string]: CategorySummary } = {};
-
+  
     transactions.forEach((transaction) => {
+      // Skip if transaction method is not in allowed methods for audit
+      if (auditAccessMethods && !auditAccessMethods.includes(transaction.transactionMethod._id)) {
+        return;
+      }
+  
       const categoryName = transaction.transactionCategory.name;
       const methodName = transaction.transactionMethod.name;
-
+  
       if (!categoryMap[categoryName]) {
         categoryMap[categoryName] = {
           categoryName,
@@ -331,28 +354,36 @@ export default function ReportPage() {
           total: 0
         };
       }
-
+  
       categoryMap[categoryName].transactions.push(transaction);
-
+  
       if (categoryMap[categoryName].methodTotals[methodName] !== undefined) {
         categoryMap[categoryName].methodTotals[methodName] +=
           transaction.transactionAmount;
       }
-
+  
       categoryMap[categoryName].total += transaction.transactionAmount;
     });
-
+  
     return Object.values(categoryMap);
   };
 
   const fetchData = async () => {
     if (!fromDate || !toDate) {
-      alert('Please select both "From Date" and "To Date".');
+      toast({
+        title: 'Please select both "From Date" and "To Date".',
+        className: 'bg-destructive text-white border-none'
+      });
       return;
     }
 
     if (new Date(fromDate) > new Date(toDate)) {
-      alert('"From Date" cannot be later than "To Date".');
+   
+
+      toast({
+        title: '"From Date" cannot be later than "To Date".',
+        className: 'bg-destructive text-white border-none'
+      });
       return;
     }
 
@@ -362,10 +393,11 @@ export default function ReportPage() {
         params: {
           startDate: fromDate,
           endDate: toDate
+        
         }
       });
 
-      const transactions = response.data.data.result;
+      const transactions = response.data.data;
 
       const inflowTransactions = transactions.filter(
         (t: Transaction) => t.transactionType === 'inflow'
@@ -383,7 +415,11 @@ export default function ReportPage() {
       setIsReportGenerated(true);
     } catch (error) {
       console.error('Error fetching data:', error);
-      alert('An error occurred while fetching data. Please try again.');
+      toast({
+        title: 'Error fetching data.',
+        description: 'Please try again later.',
+        className: 'bg-destructive text-white border-none'
+      });
     } finally {
       setLoading(false);
     }
@@ -403,7 +439,7 @@ export default function ReportPage() {
         <div className="border">
           <Table>
             <TableHeader>
-              <TableRow className="bg-theme text-white hover:bg-theme/80 ">
+              <TableRow className="hover:bg-theme/80 bg-theme text-white ">
                 <TableHead className="w-[250px] ">Category Name</TableHead>
                 <TableHead className="w-[150px] text-right">
                   Transaction Count
@@ -464,7 +500,7 @@ export default function ReportPage() {
                       <TableCell colSpan={paymentMethods.length + 3}>
                         <Table>
                           <TableHeader>
-                            <TableRow className="bg-theme text-white hover:bg-theme/80">
+                            <TableRow className="hover:bg-theme/80 bg-theme text-white">
                               <TableHead className="w-[200px] text-right">
                                 Date
                               </TableHead>

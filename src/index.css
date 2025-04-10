@@ -103,5 +103,5 @@
 }
 
 .bg-due{
-  @apply bg-red-500/10 text-red-500 
+  @apply bg-red-500/10 text-red-500 border-none
 }

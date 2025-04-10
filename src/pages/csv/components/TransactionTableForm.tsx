@@ -30,6 +30,8 @@ import { Check } from 'lucide-react';
 import { CategorySelector } from '@/pages/csv/components/category-selector';
 import { toast } from '@/components/ui/use-toast';
 import axiosInstance from '@/lib/axios';
+import { usePermission } from '@/hooks/usePermission';
+
 
 const transactionSchema = z.object({
   transactionType: z.enum(['inflow', 'outflow'], {
@@ -67,6 +69,8 @@ const TransactionTableForm = ({
   setCsvDocId,
   setHide
 }) => {
+  const {hasPermission} = usePermission();
+  
   const form = useForm({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -373,6 +377,7 @@ const TransactionTableForm = ({
                       {transaction.transactionType}
                     </span>
                   </TableCell>
+                  {hasPermission('TransactionList', 'create') && (
                   <TableCell className="min-w-[50px]">
                     <Button
                       size="icon"
@@ -383,7 +388,7 @@ const TransactionTableForm = ({
                     >
                       <Check className="h-4 w-4" />
                     </Button>
-                  </TableCell>
+                  </TableCell>)}
                 </TableRow>
               ))}
             </TableBody>

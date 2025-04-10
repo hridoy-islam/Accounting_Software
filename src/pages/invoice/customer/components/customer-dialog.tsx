@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import ErrorMessage from "@/components/shared/error-message";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { usePermission } from '@/hooks/usePermission';
+
 
 export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
   const{id} = useParams();
@@ -29,6 +31,7 @@ export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
 
     },
   });
+  const {hasPermission} = usePermission();
 
   useEffect(() => {
     if (open) {
@@ -103,7 +106,7 @@ export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
             </div>
 
           </div>
-
+          {hasPermission('Customer', 'create') &&(
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
@@ -111,7 +114,7 @@ export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
             <Button type="submit" variant="theme">
               {initialData ? "Save Changes" : "Add Customer"}
             </Button>
-          </DialogFooter>
+          </DialogFooter>)}
         </form>
       </DialogContent>
     </Dialog>

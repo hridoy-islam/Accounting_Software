@@ -21,6 +21,7 @@ import { useForm } from 'react-hook-form';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
 import { useSelector } from 'react-redux';
+import { usePermission } from '@/hooks/usePermission';
 
 import { useParams } from 'react-router-dom';
 
@@ -60,6 +61,7 @@ export function UserTable() {
   const [initialLoading, setInitialLoading] = useState(true); // New state for initial loading
   const { id } = useParams();
   const { register, handleSubmit, reset } = useForm();
+  const {hasPermission} = usePermission();
 
   useEffect(() => {
     if (editingUser) {
@@ -121,7 +123,7 @@ export function UserTable() {
         <div className="flex items-center justify-between pb-12">
           <div className="flex flex-1 items-center justify-between space-x-4">
             <h1 className="pb-6 text-2xl font-semibold">User Management</h1>
-
+            {hasPermission('CreateUser', 'create') &&(
             <Button
               variant="theme"
               onClick={() => {
@@ -131,7 +133,7 @@ export function UserTable() {
             >
               <Plus className="mr-2 h-4 w-4" />
               New User
-            </Button>
+            </Button>)}
           </div>
         </div>
         <div className="rounded-md   ">
@@ -143,7 +145,9 @@ export function UserTable() {
                 <TableHead>Phone</TableHead>
                 <TableHead>Address</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>Actions</TableHead>
+                {hasPermission('CreateUser', 'edit') &&(
+
+                <TableHead>Actions</TableHead>)}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -154,6 +158,7 @@ export function UserTable() {
                   <TableCell>{user.phone}</TableCell>
                   <TableCell>{user.address}</TableCell>
                   <TableCell>{user.role}</TableCell>
+                  {hasPermission('CreateUser', 'edit') &&(
 
                   <TableCell className="space-x-4 ">
                     <Button
@@ -166,7 +171,7 @@ export function UserTable() {
                     >
                       <Pen className="h-4 w-4" />
                     </Button>
-                  </TableCell>
+                  </TableCell>)}
                 </TableRow>
               ))}
             </TableBody>

@@ -18,7 +18,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/redux/store';
 import { useToast } from '@/components/ui/use-toast';
 import { convertToLowerCase } from '@/lib/utils';
-import { fetchUserProfile } from '@/redux/features/profileSlice';
 
 export default function CreateUser({ onUserCreated }) {
   const { user } = useSelector((state: any) => state.auth);
@@ -37,7 +36,6 @@ export default function CreateUser({ onUserCreated }) {
       data.company = user?._id;
     }
     if (user?.role === 'creator') {
-      dispatch(fetchUserProfile(user?._id));
       data.company = profileData.company;
     }
     setIsLoading(true); // Set loading state
@@ -45,8 +43,8 @@ export default function CreateUser({ onUserCreated }) {
 
     try {
       await dispatch(registerUser(data)).unwrap(); // Dispatch registerUser with data
-      reset(); // Reset form fields
-      onUserCreated(); // Trigger the refresh for the director list
+      reset(); 
+      onUserCreated(); 
       toast({
         title: 'User created successfully!'
       });

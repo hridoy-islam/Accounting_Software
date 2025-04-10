@@ -2,15 +2,15 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import authReducer from './features/authSlice';
-import profileReducer from './features/profileSlice';
+import permissionReducer from './features/permissionSlice';
 const persistConfig = {
-  key: 'taskplanner',
+  key: 'accounting',
   storage
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
-  profile: profileReducer
+  permission: permissionReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

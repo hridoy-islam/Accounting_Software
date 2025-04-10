@@ -30,6 +30,10 @@ import moment from 'moment';
 import { Invoice } from 'src/types/invoice';
 import InvoiceDetailsDialog from './InvoiceDetailsDialog';
 import { ImageUploader } from './invoiceDoc-uploader';
+import { useNavigate, useParams } from 'react-router-dom';
+import { InvoicePDFDownload } from './InvoicePDF';
+import { useSelector } from 'react-redux';
+import { usePermission } from '@/hooks/usePermission';
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -49,7 +53,9 @@ export function InvoiceList({
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
-
+  const { id: companyId } = useParams();
+  const permission = useSelector((state: any) => state.permission.permissions);
+  
   const handleRowClick = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setDialogOpen(true);
@@ -60,6 +66,10 @@ export function InvoiceList({
     setSelectedInvoice(null);
   };
 
+  const navigate = useNavigate();
+  const {hasPermission} = usePermission();
+
+
   return (
     <div className="  shadow-sm">
       <Table>
@@ -68,12 +78,15 @@ export function InvoiceList({
             <TableHead className="text-left">INV ID</TableHead>
             <TableHead className="text-left">Created At</TableHead>
             <TableHead className="text-left">Invoice Date</TableHead>
-            <TableHead className="text-left">Reference Invoice Number</TableHead>
+            <TableHead className="text-left">
+              Reference Invoice Number
+            </TableHead>
             <TableHead className="text-left">Customer</TableHead>
             <TableHead className="text-left">Amount</TableHead>
             <TableHead className="text-left">Status</TableHead>
             <TableHead className="text-left">Type</TableHead>
-            <TableHead className="text-left">Payment</TableHead>
+            {hasPermission('TransactionList', 'create') &&(
+            <TableHead className="text-left">Payment</TableHead>)}
 
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
@@ -115,15 +128,15 @@ export function InvoiceList({
                     onClick={() => handleRowClick(invoice)}
                     className="text-left"
                   >
-                    {moment(invoice?.createdAt).format('MM/DD/YY')}
+                    {moment(invoice?.createdAt).format('MM/DD/YYYY')}
                   </TableCell>
                   <TableCell
                     onClick={() => handleRowClick(invoice)}
                     className="text-left"
                   >
-                    {moment(invoice.invoiceDate).format('MM/DD/YY')}
+                    {moment(invoice.invoiceDate).format('MM/DD/YYYY')}
                   </TableCell>
-                  
+
                   <TableCell
                     onClick={() => handleRowClick(invoice)}
                     className="text-left"
@@ -150,9 +163,7 @@ export function InvoiceList({
                     className="text-left"
                   >
                     <Badge
-                      variant={
-                        invoice.status === 'paid' ? 'default' : 'secondary'
-                      }
+                      variant="outline"
                       className={
                         invoice.status === 'paid' ? 'bg-paid' : 'bg-due'
                       }
@@ -178,25 +189,26 @@ export function InvoiceList({
                         : 'Outflow'}
                     </Badge>
                   </TableCell>
+                  {hasPermission('TransactionList', 'create') &&(
                   <TableCell className="text-left">
                     {invoice.status === 'paid' ? (
-                      <div
-                        // Assuming you have a function to revert the payment
-                        className=" text-xs text-gray-600 hover:text-gray-800"
-                      >
+                      <div className=" text-xs text-gray-600 hover:text-gray-800">
                         Completed
                       </div>
                     ) : (
                       <Button
-                        onClick={() => onMarkAsPaid(invoice)} // Function to mark invoice as paid
+                        onClick={() => onMarkAsPaid(invoice)}
                         variant="theme"
                         size="sm"
                       >
                         Mark as Paid
                       </Button>
                     )}
-                  </TableCell>
+                  </TableCell>)}
+
+                  
                   <TableCell className="flex flex-row items-center justify-end gap-2 text-right">
+                  {hasPermission('Invoice', 'edit') &&(
                     <Button
                       variant="theme"
                       size="icon"
@@ -207,15 +219,20 @@ export function InvoiceList({
                       }}
                     >
                       <Upload />
-                    </Button>
-                    <Button
+                    </Button>)}
+
+                    {hasPermission('Invoice', 'edit') &&(<Button
                       variant="theme"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => onEdit(invoice)}
+                      onClick={() =>
+                        navigate(`/admin/company/${companyId}/invoice/${invoice._id}`)
+                      }
                     >
                       <Pen />
-                    </Button>
+                    </Button>) }
+                    
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="theme" className="h-8 w-8 p-0 ">
@@ -224,16 +241,18 @@ export function InvoiceList({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-[160px]">
                         <DropdownMenuItem>
-                          <Download className="mr-2 h-4 w-4" />
-                          Download PDF
+                          
+                          <InvoicePDFDownload invoice={invoice} />
                         </DropdownMenuItem>
-                        <DropdownMenuItem
+
+                        {hasPermission('Invoice', 'delete') &&(<DropdownMenuItem
                           className="text-red-500 focus:bg-red-800 focus:text-white"
                           onClick={() => onDelete(invoice._id)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete Invoice
-                        </DropdownMenuItem>
+                        </DropdownMenuItem>)}
+                        
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

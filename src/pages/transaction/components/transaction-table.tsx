@@ -17,6 +17,8 @@ import { useState } from 'react';
 import { ConfirmModal } from './ConfirmModal';
 import { TransactionDetailsDialog } from './TransactionDetailsDialog';
 import { ImageUploader } from './transactionDoc-uploader';
+import { usePermission } from '@/hooks/usePermission';
+
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -42,6 +44,7 @@ export function TransactionTable({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<Transaction | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const {hasPermission} = usePermission();
   const handleArchive = async () => {
     if (!selectedTransaction) return;
 
@@ -58,6 +61,7 @@ export function TransactionTable({
       setSelectedTransaction(null);
     }
   };
+   
 
   const handleUploadComplete = (data) => {
     setUploadOpen(false);
@@ -85,7 +89,8 @@ export function TransactionTable({
                 <TableHead className="text-left">Category</TableHead>
                 <TableHead className="text-left">Method</TableHead>
                 <TableHead className="text-left">Storage</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                {hasPermission('TransactionList', 'edit') &&(
+                <TableHead className="text-right">Action</TableHead>)}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -123,8 +128,10 @@ export function TransactionTable({
                   <TableCell onClick={() => setSelectedRow(transaction)}>
                     {transaction.storage?.storageName}
                   </TableCell>
+                  {hasPermission('TransactionList', 'edit') &&(
                   <TableCell>
                     <div className="flex w-full flex-row justify-end gap-2">
+                    {hasPermission('TransactionList', 'edit') &&(
                       <Button
                         variant="theme"
                         size="icon"
@@ -135,14 +142,18 @@ export function TransactionTable({
                         }}
                       >
                         <Upload />
-                      </Button>
+                      </Button>)}
+
+                      {hasPermission('TransactionList', 'edit') &&(
                       <Button
                         variant="theme"
                         size="icon"
                         onClick={() => onEdit(transaction)}
                       >
                         <Pen />
-                      </Button>
+                      </Button>)}
+
+                      {hasPermission('TransactionList', 'delete') &&(
                       <Button
                         variant="destructive"
                         size="icon"
@@ -152,9 +163,9 @@ export function TransactionTable({
                         }}
                       >
                         <ArchiveX />
-                      </Button>
+                      </Button>)}
                     </div>
-                  </TableCell>
+                  </TableCell>)}
                   {/* <TableCell className="text-right">
                   <Button
                     variant="ghost"

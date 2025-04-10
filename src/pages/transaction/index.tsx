@@ -10,6 +10,8 @@ import { ImageUploader } from '@/components/shared/image-uploader';
 import { DataTablePagination } from '@/components/shared/data-table-pagination';
 import { EditTransactionDialog } from './components/EditTransactionDialog';
 import { RefreshCcw } from 'lucide-react';
+import { usePermission } from '@/hooks/usePermission';
+
 
 export default function TransactionPage() {
   const { id } = useParams();
@@ -26,6 +28,7 @@ export default function TransactionPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const {hasPermission} = usePermission();
 
   const [filters, setFilters] = useState({
     search: '',
@@ -202,9 +205,10 @@ export default function TransactionPage() {
                 Refresh
               </div>
             </Button>
+            {hasPermission('TransactionList', 'create') &&(
             <Button variant="theme" onClick={() => setDialogOpen(true)}>
               Add Transaction
-            </Button>
+            </Button>)}
             
           </div>
         </div>
