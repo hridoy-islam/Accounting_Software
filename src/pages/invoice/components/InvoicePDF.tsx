@@ -5,13 +5,10 @@ import {
   View,
   Document,
   StyleSheet,
-  PDFDownloadLink,
-  
+  PDFDownloadLink
 } from '@react-pdf/renderer';
 import { Download } from 'lucide-react';
 import moment from 'moment';
-
-
 
 const styles = StyleSheet.create({
   page: {
@@ -19,19 +16,10 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: 'Helvetica'
   },
-  header: {
-    marginBottom: 10,
-    borderBottomColor: '#000',
-    paddingBottom: 10
-  },
-  companyInfo: {
-    marginBottom: 10
-  },
   invoiceInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
-    paddingTop: 10
+    marginBottom: 30
   },
   title: {
     fontSize: 18,
@@ -84,7 +72,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   totalRow: {
-    width: '100%',
+    width: '98%',
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginBottom: 5
@@ -123,37 +111,63 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.companyInfo}>
+        {/* Header: Company Info and Invoice Info Side by Side */}
+        <View style={styles.invoiceInfo}>
+          {/* Left: Company Info */}
+          <View style={{ width: '50%' }}>
             <Text style={styles.title}>{invoice.companyId.name}</Text>
             <Text>{invoice.companyId.email}</Text>
             <Text>{invoice.companyId.address}</Text>
           </View>
-        </View>
 
-        {/* Bill To / Invoice Info */}
-        <View style={styles.invoiceInfo}>
-          <View>
-            <Text style={styles.subtitle}>Bill To</Text>
-            <Text style={[styles.boldText, { marginBottom: 5 }]}>
-              {typeof invoice.customer === 'object'
-                ? invoice.customer.name
-                : ''}
-            </Text>
-           
-          </View>
-          <View>
-            <Text style={{ fontWeight: 'semibold', fontSize: 20, paddingBottom: 5 }}>
+          {/* Right: Invoice Info */}
+          <View style={{ width: '35%' }}>
+            <Text
+              style={{
+                fontWeight: 'semibold',
+                fontSize: 20,
+                paddingBottom: 5,
+                textAlign: 'right'
+              }}
+            >
               INVOICE
             </Text>
-            <Text style={styles.subtitle}>Invoice # {invoice.invId || ''}</Text>
-            <Text style={styles.subtitle}>Invoice Date: {date}</Text>
-            <Text style={styles.subtitle}>Terms: Due On Receipt</Text>
-            <Text style={styles.subtitle}>
-              Due Date: {moment(invoice.createdAt).format('DD/MM/YYYY')}
-            </Text>
+            {[
+              { label: 'Invoice #:', value: invoice.invId || '' },
+              { label: 'Invoice Date:', value: date },
+              { label: 'Terms:', value: 'Due On Receipt' },
+              {
+                label: 'Due Date:',
+                value: moment(invoice.createdAt).format('DD/MM/YYYY')
+              }
+            ].map((item, index) => (
+              <View
+                key={index}
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  marginBottom: 2
+                }}
+              >
+                <Text style={[styles.subtitle, { flex: 1, textAlign: 'left' }]}>
+                  {item.label}
+                </Text>
+                <Text
+                  style={[styles.subtitle, { flex: 1, textAlign: 'right' }]}
+                >
+                  {item.value}
+                </Text>
+              </View>
+            ))}
           </View>
+        </View>
+
+        {/* Bill To */}
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>Bill To</Text>
+          <Text style={[styles.boldText, { marginBottom: 5 }]}>
+            {typeof invoice.customer === 'object' ? invoice.customer.name : ''}
+          </Text>
         </View>
 
         {/* Invoice Details Table */}
@@ -197,7 +211,7 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
             </View>
             <View style={styles.totalRow}>
               <Text style={[styles.boldText, { fontSize: 12 }]}>
-              Balance Due: £{invoice.amount?.toFixed(2) || ''}
+                Balance Due: £{invoice.amount?.toFixed(2) || ''}
               </Text>
             </View>
           </View>
@@ -212,7 +226,9 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
             </>
           )}
           {invoice.termsAndConditions && (
-            <Text style={{ fontWeight: 'bold', marginTop: 10, marginBottom: 5 }}>
+            <Text
+              style={{ fontWeight: 'bold', marginTop: 10, marginBottom: 5 }}
+            >
               {invoice.termsAndConditions}
             </Text>
           )}
@@ -233,12 +249,10 @@ export const InvoicePDFDownload = ({ invoice }: { invoice }) => {
       document={<InvoicePDF invoice={invoice} />}
       fileName={`invoice_${invoice.invId}.pdf`}
     >
-     
-        <div className="flex cursor-pointer flex-row items-center text-sm font-medium">
-          <Download className="mr-2 h-4 w-4" />
+      <div className="flex cursor-pointer flex-row items-center text-sm font-medium">
+        <Download className="mr-2 h-4 w-4" />
         Download PDF
-        </div>
-    
+      </div>
     </PDFDownloadLink>
   );
 };

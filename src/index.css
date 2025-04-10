@@ -99,9 +99,9 @@
 }
 
 .bg-paid{
-  @apply bg-green-500/10 text-green-500 hover:bg-green-500/20
+  @apply bg-green-500/10 text-green-500 hover:bg-green-500/20 border-none 
 }
 
 .bg-due{
-  @apply bg-red-500/10 text-red-500 border-none
+  @apply bg-red-500/10 text-red-500 border-none 
 }
