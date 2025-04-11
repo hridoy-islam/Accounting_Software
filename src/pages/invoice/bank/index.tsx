@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,7 @@ export default function BankPage() {
   const {id}= useParams()
   const {hasPermission} = usePermission();
 
+  const navigate = useNavigate();
 
   const fetchData = async (page, entriesPerPage, searchTerm = "") => {
     try {
@@ -104,6 +105,18 @@ export default function BankPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">All Bank List</h1>
 
+        <div className='flex flex-row items-center gap-4'>
+
+        <div className="flex flex-row items-start justify-end">
+          <Button
+            className="bg-theme text-white "
+            size={'sm'}
+            onClick={() => navigate(`/admin/company/${id}/invoice`)}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back To Bank List
+          </Button>
+        </div>
         {hasPermission('Invoice', 'create') &&(
         <div className="space-x-4">
         
@@ -118,6 +131,8 @@ export default function BankPage() {
             Create Bank Account
           </Button>
         </div>)}
+
+        </div>
       </div>
       <div className="flex items-center space-x-4">
         <Input
