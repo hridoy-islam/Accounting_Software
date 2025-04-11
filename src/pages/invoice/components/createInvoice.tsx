@@ -1,6 +1,8 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PlusCircle, Search, Trash2, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft } from 'lucide-react';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
 
@@ -24,7 +26,13 @@ export default function CreateInvoice() {
   const navigate = useNavigate();
 
   const [items, setItems] = useState([
-    { id: 1, details: '', quantity: 1, rate: 0, amount: 0 }
+    {
+      id: 1,
+      details: '',
+      quantity: 1,
+      rate: '',
+      amount: 0
+    }
   ]);
 
   // State for customers
@@ -32,7 +40,9 @@ export default function CreateInvoice() {
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [transactionType, setTransactionType] = useState('');
-
+  const [banks, setBanks] = useState<any[]>([]);
+  const [isLoadingBanks, setIsLoadingBanks] = useState(false);
+  const [selectedBank, setSelectedBank] = useState('');
   // State for new customer dialog
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
@@ -45,49 +55,104 @@ export default function CreateInvoice() {
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
 
-
   const [notes, setNotes] = useState('');
   const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
   const [termsAndConditions, setTermsAndConditions] = useState('');
 
   const [total, setTotal] = useState(0);
 
+  // Add state variables for invoice-level tax and discount at the top of the component
+  const [invoiceTax, setInvoiceTax] = useState('0');
+  const [invoiceDiscount, setInvoiceDiscount] = useState('0');
+  const [invoiceDiscountType, setInvoiceDiscountType] = useState('percentage');
+  const [subtotal, setSubtotal] = useState(0);
+
+  const fetchCustomers = async () => {
+    if (!companyId) return;
+
+    setIsLoadingCustomers(true);
+    try {
+      const response = await axiosInstance.get(
+        `/customer?companyId=${companyId}&limit=all`
+      );
+      setCustomers(response.data.data.result || []);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      toast({
+        title: 'Failed to load customers',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoadingCustomers(false);
+    }
+  };
+  const fetchBanks = async () => {
+    if (!companyId) return;
+
+    setIsLoadingBanks(true);
+    try {
+      const response = await axiosInstance.get(
+        `/bank?companyId=${companyId}&limit=10000`
+      );
+      setBanks(response.data.data.result || []);
+    } catch (error) {
+      console.error('Error fetching Banks:', error);
+      toast({
+        title: 'Failed to load Banks',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoadingBanks(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchCustomers = async () => {
-      if (!companyId) return;
-
-      setIsLoadingCustomers(true);
-      try {
-        const response = await axiosInstance.get(
-          `/customer?companyId=${companyId}&limit=all`
-        );
-        setCustomers(response.data.data.result || []);
-      } catch (error) {
-        console.error('Error fetching customers:', error);
-        toast({
-          title: 'Failed to load customers',
-          variant: 'destructive'
-        });
-      } finally {
-        setIsLoadingCustomers(false);
-      }
-    };
-
+    fetchBanks();
     fetchCustomers();
   }, [companyId]);
 
-  // Calculate total when items change
   useEffect(() => {
-    const newTotal = items.reduce((sum, item) => sum + item.amount, 0);
+    const newSubtotal = items.reduce((sum, item) => {
+      const rate =
+        typeof item.rate === 'string'
+          ? Number.parseFloat(item.rate) || 0
+          : item.rate;
+      return sum + item.quantity * rate;
+    }, 0);
+
+    setSubtotal(newSubtotal);
+
+    const parsedTax = Number.parseFloat(invoiceTax);
+    const parsedDiscount = Number.parseFloat(invoiceDiscount);
+
+    const taxAmount =
+      !isNaN(parsedTax) && parsedTax > 0 ? newSubtotal * (parsedTax / 100) : 0;
+
+    // Compute discount only if valid
+    let discountAmount = 0;
+    if (!isNaN(parsedDiscount) && parsedDiscount > 0) {
+      discountAmount =
+        invoiceDiscountType === 'percentage'
+          ? newSubtotal * (parsedDiscount / 100)
+          : parsedDiscount;
+    }
+
+    const newTotal = newSubtotal + taxAmount - discountAmount;
     setTotal(newTotal);
-  }, [items]);
+  }, [items, invoiceTax, invoiceDiscount, invoiceDiscountType]);
 
   const handleAddRow = () => {
     const newId =
       items.length > 0 ? Math.max(...items.map((item) => item.id)) + 1 : 1;
     setItems([
       ...items,
-      { id: newId, details: '', quantity: 1, rate: 0, amount: 0 }
+      {
+        id: newId,
+        details: '',
+        quantity: 1,
+        rate: '',
+        amount: 0
+      }
     ]);
   };
 
@@ -111,11 +176,29 @@ export default function CreateInvoice() {
       if (item.id === id) {
         const updatedItem = { ...item, [field]: value };
 
-        // Recalculate amount if quantity or rate changes
+        // Handle rate validation and parsing
+        if (field === 'rate') {
+          // Ensure rate is a valid number
+          const parsedRate = Number.parseFloat(value);
+          if (!isNaN(parsedRate)) {
+            updatedItem.rate = parsedRate;
+          } else {
+            updatedItem.rate = value; // Keep as string for input
+          }
+        }
+
         if (field === 'quantity' || field === 'rate') {
           const quantity =
             field === 'quantity' ? Number.parseFloat(value) : item.quantity;
-          const rate = field === 'rate' ? Number.parseFloat(value) : item.rate;
+          const rate =
+            field === 'rate'
+              ? typeof value === 'string'
+                ? Number.parseFloat(value) || 0
+                : value
+              : typeof item.rate === 'string'
+                ? Number.parseFloat(item.rate) || 0
+                : item.rate;
+
           updatedItem.amount = quantity * rate;
         }
 
@@ -172,6 +255,22 @@ export default function CreateInvoice() {
       return;
     }
 
+    if (!selectedBank) {
+      toast({
+        title: 'Please select a bank',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!transactionType) {
+      toast({
+        title: 'Please select a transaction type',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     if (items.some((item) => !item.details)) {
       toast({
         title: 'Please fill in all item details',
@@ -184,21 +283,32 @@ export default function CreateInvoice() {
       const invoiceData = {
         companyId,
         customer: selectedCustomer,
+        bank: selectedBank,
         invoiceNumber,
         invoiceDate,
         termsAndConditions,
-        items: items.map(({ id, ...rest }) => rest),
+        items: items.map(({ id, ...rest }) => ({
+          ...rest,
+          rate:
+            typeof rest.rate === 'string'
+              ? Number.parseFloat(rest.rate) || 0
+              : rest.rate
+        })),
         notes,
         transactionType,
         status: 'due',
         amount: total,
-   
+        total: total,
+        tax: Number.parseFloat(invoiceTax) || 0,
+        discount: Number.parseFloat(invoiceDiscount) || 0,
+        discountType: invoiceDiscountType,
+        subtotal: subtotal
       };
 
       await axiosInstance.post('/invoice', invoiceData);
 
       toast({
-        title: 'Invoice save successfully',
+        title: 'Invoice saved successfully',
         className: 'bg-theme text-white border-none'
       });
 
@@ -226,12 +336,10 @@ export default function CreateInvoice() {
         <h1 className="text-2xl font-bold">Create New Invoice</h1>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
         <div className="space-y-2">
           <div className="space-y-2">
-            <Label htmlFor="customer" >
-              Customer Name*
-            </Label>
+            <Label htmlFor="customer">Customer Name*</Label>
             <div className="flex items-center gap-2">
               <Select
                 id="customer"
@@ -247,23 +355,36 @@ export default function CreateInvoice() {
                 placeholder="Select or add customer"
                 isLoading={isLoadingCustomers}
               />
-              <Button
-                variant="theme"
-                size="icon"
-                onClick={() => setIsNewCustomerDialogOpen(true)}
-              >
-                <PlusCircle className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="invoiceNumber" >
-            Reference Invoice Number
-          </Label>
+          <div className="space-y-2">
+            <Label htmlFor="bank">Bank*</Label>
+            <div className="flex items-center gap-2">
+              <Select
+                id="bank"
+                className="w-full"
+                value={banks.find((b) => b._id === selectedBank)}
+                onChange={(selectedOption) =>
+                  setSelectedBank(selectedOption?._id || '')
+                }
+                options={banks}
+                getOptionLabel={(option) => option.name}
+                getOptionValue={(option) => option._id}
+                isDisabled={isLoadingBanks}
+                placeholder="Select Bank Account"
+                isLoading={isLoadingBanks}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="invoiceNumber">Reference Invoice Number</Label>
           <div className="flex items-center gap-2">
             <Input
-                className='rounded-sm h-10'
+              className="h-10 rounded-sm"
               id="invoiceNumber"
               value={invoiceNumber}
               onChange={(e) => setInvoiceNumber(e.target.value)}
@@ -272,11 +393,9 @@ export default function CreateInvoice() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="invoiceDate" >
-            Reference Invoice Date
-          </Label>
+          <Label htmlFor="invoiceDate">Reference Invoice Date</Label>
           <Input
-          className='rounded-sm h-10'
+            className="h-10 rounded-sm"
             id="invoiceDate"
             type="date"
             value={invoiceDate}
@@ -285,9 +404,7 @@ export default function CreateInvoice() {
         </div>
         {/* Transaction Type */}
         <div className="space-y-2">
-          <Label htmlFor="transactionType" >
-            Transaction Type*
-          </Label>
+          <Label htmlFor="transactionType">Transaction Type*</Label>
           <Select
             id="transactionType"
             className="w-full"
@@ -324,9 +441,9 @@ export default function CreateInvoice() {
                 <tbody>
                   {items.map((item) => (
                     <tr key={item.id} className="border-b border-gray-200">
-                      <td className="min-w-[400px] p-3">
+                      <td className="min-w-[300px] p-3">
                         <Textarea
-                        className='border-gray-200'
+                          className="border-gray-200"
                           value={item.details}
                           onChange={(e) =>
                             handleItemChange(item.id, 'details', e.target.value)
@@ -349,28 +466,25 @@ export default function CreateInvoice() {
                           className="text-center"
                         />
                       </td>
-                      <td className="max-w-[140px] p-3">
+                      <td className="max-w-[100px] p-3">
                         <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
+                          type="text"
                           value={item.rate}
                           onChange={(e) =>
-                            handleItemChange(
-                              item.id,
-                              'rate',
-                              Number.parseFloat(e.target.value)
-                            )
+                            handleItemChange(item.id, 'rate', e.target.value)
                           }
                           className="text-center"
                         />
                       </td>
-
                       <td className="p-3">
                         <Input
                           type="number"
                           readOnly
-                          value={item.amount.toFixed(2)}
+                          value={
+                            typeof item.amount === 'number'
+                              ? item.amount.toFixed(2)
+                              : '0.00'
+                          }
                           className="text-center"
                         />
                       </td>
@@ -390,17 +504,106 @@ export default function CreateInvoice() {
             </div>
 
             <div className="flex justify-between p-4">
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
+                <div className="mb-2 flex items-center">
+                  <span className="mr-4 w-28 font-medium">VAT (%)</span>
+                  <Input
+                    type="text"
+                    min="0"
+                    max="100"
+                    value={invoiceTax}
+                    onChange={(e) => {
+                      // Allow only numbers and decimal point
+                      const value = e.target.value.replace(/[^0-9.]/g, '');
+                      // Ensure only one decimal point
+                      if ((value.match(/\./g) || []).length <= 1) {
+                        setInvoiceTax(value);
+                      }
+                    }}
+                    className="ml-auto w-32 text-center"
+                  />
+                </div>
+
+                <div className="mb-2 flex items-center">
+                  <span className="mr-4 w-28 font-medium">Discount</span>
+                  <div className="flex w-full items-center gap-2">
+                    <Select
+                      id="invoiceDiscountType"
+                      value={[
+                        { label: 'Percentage', value: 'percentage' },
+                        { label: 'Flat', value: 'flat' }
+                      ].find((opt) => opt.value === invoiceDiscountType)}
+                      onChange={(selectedOption) =>
+                        setInvoiceDiscountType(
+                          selectedOption?.value || 'percentage'
+                        )
+                      }
+                      options={[
+                        { label: 'Percentage', value: 'percentage' },
+                        { label: 'Flat', value: 'flat' }
+                      ]}
+                    />
+                    <div className="ml-auto">
+                      <Input
+                        type="text"
+                        min="0"
+                        value={invoiceDiscount}
+                        onChange={(e) => {
+                          // Allow only numbers and decimal point
+                          const value = e.target.value.replace(/[^0-9.]/g, '');
+                          // Ensure only one decimal point
+                          if ((value.match(/\./g) || []).length <= 1) {
+                            setInvoiceDiscount(value);
+                          }
+                        }}
+                        className="w-32 text-center"
+                      />
+                    </div>
+                  </div>
+                </div>
                 <Button variant="theme" onClick={handleAddRow}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add New Row
                 </Button>
               </div>
 
-              <div className="text-right">
-                <div className="mb-2 flex justify-end">
-                  <span className="mr-8 font-medium">Total</span>
-                  <span className="w-32 font-medium">£{total.toFixed(2)}</span>
+              <div className="flex flex-wrap justify-between gap-4 p-4">
+                <div className="flex flex-col text-left">
+                  <div className="mb-2 flex items-center">
+                    <span className="mr-4 w-28 font-medium">Subtotal</span>
+                    <span className=" ml-auto w-32 text-center font-medium">
+                      {subtotal.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="mb-2 flex items-center">
+                    <span className="mr-4 w-28 font-medium">
+                      VAT ({Number(invoiceTax) || 0}%)
+                    </span>
+                    <span className="ml-auto w-32 text-center font-medium">
+                      {(subtotal * (Number(invoiceTax) / 100)).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="mb-2 flex items-center">
+                    <span className="mr-4 w-32 font-medium">
+                      {invoiceDiscountType === 'percentage'
+                        ? `Discount (${Number(invoiceDiscount) || 0}%)`
+                        : 'Discount'}
+                    </span>
+                    <span className="ml-auto w-32 text-center font-medium">
+                      
+                      {(invoiceDiscountType === 'percentage'
+                        ? subtotal * (Number(invoiceDiscount) / 100)
+                        : Number(invoiceDiscount)
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="mb-2 flex items-center">
+                    <span className="mr-4 w-28 font-medium">Total</span>
+                    <span className=" ml-auto w-32 text-center font-bold">
+                      £{total.toFixed(2)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -523,7 +726,9 @@ export default function CreateInvoice() {
             >
               Cancel
             </Button>
-            <Button variant='theme' onClick={handleCreateCustomer}>Create Customer</Button>
+            <Button variant="theme" onClick={handleCreateCustomer}>
+              Create Customer
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
-import { PlusCircle, RefreshCcw, Search } from 'lucide-react';
+import { Landmark, PlusCircle, RefreshCcw, Search } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -234,6 +234,9 @@ const InvoicePage = () => {
   const handleCreateInvoice = () => {
     navigate(`/admin/company/${id}/invoice/new`);
   };
+  const handleViewBank = () => {
+    navigate(`/admin/company/${id}/invoice/bank-list`);
+  };
 
   return (
     <div className="mb-2 rounded-md bg-white p-4 shadow-lg">
@@ -251,6 +254,11 @@ const InvoicePage = () => {
               <PersonIcon className="mr-2 h-4 w-4" />
               Customer
             </Button>
+            {hasPermission('Invoice', 'create') &&(
+            <Button variant="theme" onClick={() => handleViewBank()}>
+              <Landmark  className="mr-2 h-4 w-4" />
+              Bank List
+            </Button>)}
             {hasPermission('Invoice', 'create') &&(
             <Button variant="theme" onClick={() => handleCreateInvoice()}>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -374,7 +382,7 @@ const InvoicePage = () => {
                 </Select>
               </div>
 
-              {/* Invoice Date */}
+            
               <div className="space-y-2">
                 <label>Invoice Date</label>
                 <Input
@@ -427,7 +435,6 @@ const InvoicePage = () => {
               </div>
             </div>
 
-            {/* Description (full width) */}
             <div className="space-y-2">
               <label>Description</label>
               <Textarea {...form.register('description')} />

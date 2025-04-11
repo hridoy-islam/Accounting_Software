@@ -51,19 +51,19 @@ const styles = StyleSheet.create({
     padding: 5
   },
   tableColDesc: {
-    width: '45%',
+    width: '61%',
     padding: 5
   },
   tableColQty: {
-    width: '15%',
+    width: '12%',
     padding: 5
   },
   tableColRate: {
-    width: '15%',
+    width: '12%',
     padding: 5
   },
   tableColAmount: {
-    width: '20%',
+    width: '12%',
     padding: 5,
     textAlign: 'right'
   },
@@ -99,25 +99,39 @@ const styles = StyleSheet.create({
 });
 
 const InvoicePDF = ({ invoice }: { invoice }) => {
-  const [date, setDate] = useState('');
-
-  useEffect(() => {
-    if (invoice.invoiceDate) {
-      const formattedDate = moment(invoice.invoiceDate).format('DD/MM/YYYY');
-      setDate(formattedDate);
-    }
-  }, [invoice.invoiceDate]);
-
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header: Company Info and Invoice Info Side by Side */}
         <View style={styles.invoiceInfo}>
-          {/* Left: Company Info */}
           <View style={{ width: '50%' }}>
             <Text style={styles.title}>{invoice.companyId.name}</Text>
-            <Text>{invoice.companyId.email}</Text>
-            <Text>{invoice.companyId.address}</Text>
+            <Text style={{ marginBottom: 4 }}>{invoice.companyId.email}</Text>
+            <Text style={{ marginBottom: 4 }}>{invoice.companyId.address}</Text>
+
+            {/* Payment Information Section */}
+            <View style={{ marginTop: 20 }}>
+              <Text style={[styles.title, { marginBottom: 5 }]}>
+                Payment Information
+              </Text>
+              {invoice.bank && (
+                <>
+                  <Text style={{ marginBottom: 4 }}>
+                    Bank: {invoice.bank.name}
+                  </Text>
+                  <Text style={{ marginBottom: 4 }}>
+                    Account No: {invoice.bank.accountNo}
+                  </Text>
+                  <Text style={{ marginBottom: 4 }}>
+                    Sort Code: {invoice.bank.sortCode}
+                  </Text>
+                  {invoice.bank.beneficiary && (
+                    <Text style={{ marginBottom: 4 }}>
+                      Beneficiary: {invoice.bank.beneficiary}
+                    </Text>
+                  )}
+                </>
+              )}
+            </View>
           </View>
 
           {/* Right: Invoice Info */}
@@ -133,8 +147,11 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
               INVOICE
             </Text>
             {[
-              { label: 'Invoice #:', value: invoice.invId || '' },
-              { label: 'Invoice Date:', value: date },
+              { label: 'Invoice:', value: invoice.invId || '' },
+              {
+                label: 'Invoice Date:',
+                value: moment(invoice.invoiceDate).format('DD/MM/YYYY')
+              },
               { label: 'Terms:', value: 'Due On Receipt' },
               {
                 label: 'Due Date:',
@@ -196,22 +213,97 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
           </View>
         </View>
 
-        {/* Totals */}
         <View style={styles.totals}>
-          <View style={{ width: '100%', marginTop: -20 }}>
-            <View style={styles.totalRow}>
-              <Text style={[styles.boldText, { fontSize: 12 }]}>
-                SubTotal: {invoice.amount?.toFixed(2) || ''}
+          <View style={{ width: '35%' }}>
+            <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
+              <Text
+                style={[
+                  styles.tableColAmount,
+                  { width: '50%', textAlign: 'left' }
+                ]}
+              >
+                Subtotal:
+              </Text>
+              <Text style={[styles.tableColAmount, { width: '50%' }]}>
+                £{invoice.subtotal?.toFixed(2) || '0.00'}
               </Text>
             </View>
-            <View style={styles.totalRow}>
-              <Text style={[styles.boldText, { fontSize: 12 }]}>
-                Total: £{invoice.amount?.toFixed(2) || ''}
+            
+            {invoice.tax > 0 && (
+              <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
+                <Text
+                  style={[
+                    styles.tableColAmount,
+                    { width: '50%', textAlign: 'left' }
+                  ]}
+                >
+                  VAT ({invoice.tax}%):
+                </Text>
+                <Text style={[styles.tableColAmount, { width: '50%' }]}>
+                  +£{((invoice.subtotal * invoice.tax) / 100).toFixed(2)}
+                </Text>
+              </View>
+            )}
+
+            {invoice.discount > 0 && (
+              <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
+                <Text
+                  style={[
+                    styles.tableColAmount,
+                    { width: '50%', textAlign: 'left' }
+                  ]}
+                >
+                  Discount{' '}
+                  {invoice.discountType === 'percentage'
+                    ? `(${invoice.discount}%)`
+                    : ''}
+                  :
+                </Text>
+                <Text style={[styles.tableColAmount, { width: '50%' }]}>
+                  -£
+                  {(invoice.discountType === 'percentage'
+                    ? (invoice.subtotal * invoice.discount) / 100
+                    : invoice.discount
+                  ).toFixed(2)}
+                </Text>
+              </View>
+            )}
+
+            <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
+              <Text
+                style={[
+                  styles.tableColAmount,
+                  { width: '50%', textAlign: 'left', fontWeight: 'bold' }
+                ]}
+              >
+                Total:
+              </Text>
+              <Text
+                style={[
+                  styles.tableColAmount,
+                  { width: '50%', fontWeight: 'bold' }
+                ]}
+              >
+                £{invoice.total?.toFixed(2) || '0.00'}
               </Text>
             </View>
-            <View style={styles.totalRow}>
-              <Text style={[styles.boldText, { fontSize: 12 }]}>
-                Balance Due: £{invoice.amount?.toFixed(2) || ''}
+
+            <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
+              <Text
+                style={[
+                  styles.tableColAmount,
+                  { width: '50%', textAlign: 'left', fontWeight: 'bold' }
+                ]}
+              >
+                Balance Due:
+              </Text>
+              <Text
+                style={[
+                  styles.tableColAmount,
+                  { width: '50%', fontWeight: 'bold' }
+                ]}
+              >
+                £{invoice.total?.toFixed(2) || '0.00'}
               </Text>
             </View>
           </View>
