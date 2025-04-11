@@ -505,6 +505,10 @@ export default function CreateInvoice() {
 
             <div className="flex justify-between p-4">
               <div className="flex flex-col gap-2">
+              <Button variant="theme" onClick={handleAddRow}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add New Row
+                </Button>
                 <div className="mb-2 flex items-center">
                   <span className="mr-4 w-28 font-medium">VAT (%)</span>
                   <Input
@@ -525,6 +529,7 @@ export default function CreateInvoice() {
                 </div>
 
                 <div className="mb-2 flex items-center">
+                  
                   <span className="mr-4 w-28 font-medium">Discount</span>
                   <div className="flex w-full items-center gap-2">
                     <Select
@@ -561,10 +566,7 @@ export default function CreateInvoice() {
                     </div>
                   </div>
                 </div>
-                <Button variant="theme" onClick={handleAddRow}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add New Row
-                </Button>
+                
               </div>
 
               <div className="flex flex-wrap justify-between gap-4 p-4">
@@ -580,7 +582,7 @@ export default function CreateInvoice() {
                       VAT ({Number(invoiceTax) || 0}%)
                     </span>
                     <span className="ml-auto w-32 text-center font-medium">
-                      {(subtotal * (Number(invoiceTax) / 100)).toFixed(2)}
+                    +{(subtotal * (Number(invoiceTax) / 100)).toFixed(2)}
                     </span>
                   </div>
                   <div className="mb-2 flex items-center">
@@ -591,7 +593,7 @@ export default function CreateInvoice() {
                     </span>
                     <span className="ml-auto w-32 text-center font-medium">
                       
-                      {(invoiceDiscountType === 'percentage'
+                      -{(invoiceDiscountType === 'percentage'
                         ? subtotal * (Number(invoiceDiscount) / 100)
                         : Number(invoiceDiscount)
                       ).toFixed(2)}

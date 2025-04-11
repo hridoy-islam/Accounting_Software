@@ -1,163 +1,184 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { PlusCircle, Trash2, ArrowLeft } from "lucide-react"
-import axiosInstance from "@/lib/axios"
-import { toast } from "@/components/ui/use-toast"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import Select from "react-select"
-import { TableBody, TableCell, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import moment from "moment"
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { PlusCircle, Trash2, ArrowLeft } from 'lucide-react';
+import axiosInstance from '@/lib/axios';
+import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import Select from 'react-select';
+import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import moment from 'moment';
 
 export default function EditInvoice() {
-  const { id: companyId, invoiceId } = useParams<{ id: string; invoiceId: string }>()
-  const navigate = useNavigate()
+  const { id: companyId, invoiceId } = useParams<{
+    id: string;
+    invoiceId: string;
+  }>();
+  const navigate = useNavigate();
 
   // State for invoice items
-  const [items, setItems] = useState<any[]>([])
+  const [items, setItems] = useState<any[]>([]);
 
   // State for customers
-  const [customers, setCustomers] = useState<any[]>([])
-  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false)
-  const [selectedCustomer, setSelectedCustomer] = useState("")
-  const [transactionType, setTransactionType] = useState("")
-  const [banks, setBanks] = useState<any[]>([])
-  const [isLoadingBanks, setIsLoadingBanks] = useState(false)
-  const [selectedBank, setSelectedBank] = useState("")
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [transactionType, setTransactionType] = useState('');
+  const [banks, setBanks] = useState<any[]>([]);
+  const [isLoadingBanks, setIsLoadingBanks] = useState(false);
+  const [selectedBank, setSelectedBank] = useState('');
 
   // State for new customer dialog
-  const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false)
+  const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-  })
+    name: '',
+    email: '',
+    phone: '',
+    address: ''
+  });
 
   // State for invoice details
-  const [invoiceNumber, setInvoiceNumber] = useState("")
-  const [invoiceDate, setInvoiceDate] = useState("")
-  const [notes, setNotes] = useState("")
-  const [showTermsAndConditions, setShowTermsAndConditions] = useState(false)
-  const [termsAndConditions, setTermsAndConditions] = useState("")
-  const [total, setTotal] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [invoiceStatus, setInvoiceStatus] = useState("")
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [invoiceDate, setInvoiceDate] = useState('');
+  const [notes, setNotes] = useState('');
+  const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
+  const [termsAndConditions, setTermsAndConditions] = useState('');
+  const [total, setTotal] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [invoiceStatus, setInvoiceStatus] = useState('');
 
   // Add state variables for invoice-level tax and discount
-  const [invoiceTax, setInvoiceTax] = useState("")
-  const [invoiceDiscount, setInvoiceDiscount] = useState("")
-  const [invoiceDiscountType, setInvoiceDiscountType] = useState("percentage")
-  const [subtotal, setSubtotal] = useState(0)
+  const [invoiceTax, setInvoiceTax] = useState('');
+  const [invoiceDiscount, setInvoiceDiscount] = useState('');
+  const [invoiceDiscountType, setInvoiceDiscountType] = useState('percentage');
+  const [subtotal, setSubtotal] = useState(0);
 
   // Fetch invoice data
   useEffect(() => {
     const fetchInvoiceData = async () => {
-      if (!companyId || !invoiceId) return
+      if (!companyId || !invoiceId) return;
 
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const response = await axiosInstance.get(`/invoice/${invoiceId}`)
-        const invoice = response.data.data
+        const response = await axiosInstance.get(`/invoice/${invoiceId}`);
+        const invoice = response.data.data;
 
-        setSelectedCustomer(invoice.customer || "")
-        setSelectedBank(invoice.bank || "")
-        setInvoiceNumber(invoice.invoiceNumber || "")
-        setInvoiceDate(invoice.invoiceDate ? moment(invoice.invoiceDate).format("YYYY-MM-DD") : "")
-        setTransactionType(invoice.transactionType || "")
-        setNotes(invoice.notes || "")
-        setInvoiceStatus(invoice.status || "")
+        setSelectedCustomer(invoice.customer || '');
+        setSelectedBank(invoice.bank || '');
+        setInvoiceNumber(invoice.invoiceNumber || '');
+        setInvoiceDate(
+          invoice.invoiceDate
+            ? moment(invoice.invoiceDate).format('YYYY-MM-DD')
+            : ''
+        );
+        setTransactionType(invoice.transactionType || '');
+        setNotes(invoice.notes || '');
+        setInvoiceStatus(invoice.status || '');
 
         // Set tax, discount, and subtotal
-        setInvoiceTax(invoice.tax ? invoice.tax.toString() : "0")
-        setInvoiceDiscount(invoice.discount ? invoice.discount.toString() : "0")
-        setInvoiceDiscountType(invoice.discountType || "percentage")
-        setSubtotal(invoice.subtotal || 0)
+        setInvoiceTax(invoice.tax ? invoice.tax.toString() : '0');
+        setInvoiceDiscount(
+          invoice.discount ? invoice.discount.toString() : '0'
+        );
+        setInvoiceDiscountType(invoice.discountType || 'percentage');
+        setSubtotal(invoice.subtotal || 0);
 
         if (invoice.termsAndConditions) {
-          setShowTermsAndConditions(true)
-          setTermsAndConditions(invoice.termsAndConditions)
+          setShowTermsAndConditions(true);
+          setTermsAndConditions(invoice.termsAndConditions);
         }
 
         // Set items
         if (invoice.items && invoice.items.length > 0) {
-          const formattedItems = invoice.items.map((item: any, index: number) => ({
-            id: index + 1,
-            details: item.details || "",
-            quantity: item.quantity || 1,
-            rate: item.rate || 0,
-            amount: item.amount || 0,
-          }))
-          setItems(formattedItems)
+          const formattedItems = invoice.items.map(
+            (item: any, index: number) => ({
+              id: index + 1,
+              details: item.details || '',
+              quantity: item.quantity || 1,
+              rate: item.rate || 0,
+              amount: item.amount || 0
+            })
+          );
+          setItems(formattedItems);
         } else {
-          setItems([{ id: 1, details: "", quantity: 1, rate: 0, amount: 0 }])
+          setItems([{ id: 1, details: '', quantity: 1, rate: 0, amount: 0 }]);
         }
       } catch (error) {
-        console.error("Error fetching invoice:", error)
+        console.error('Error fetching invoice:', error);
         toast({
-          title: "Failed to load invoice",
-          variant: "destructive",
-        })
-        navigate(`/admin/company/${companyId}/invoice`)
+          title: 'Failed to load invoice',
+          variant: 'destructive'
+        });
+        navigate(`/admin/company/${companyId}/invoice`);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchInvoiceData()
-  }, [companyId, invoiceId, navigate])
+    fetchInvoiceData();
+  }, [companyId, invoiceId, navigate]);
 
   // Fetch customers
   useEffect(() => {
     const fetchCustomers = async () => {
-      if (!companyId) return
+      if (!companyId) return;
 
-      setIsLoadingCustomers(true)
+      setIsLoadingCustomers(true);
       try {
-        const response = await axiosInstance.get(`/customer?companyId=${companyId}&limit=all`)
-        setCustomers(response.data.data.result || [])
+        const response = await axiosInstance.get(
+          `/customer?companyId=${companyId}&limit=all`
+        );
+        setCustomers(response.data.data.result || []);
       } catch (error) {
-        console.error("Error fetching customers:", error)
+        console.error('Error fetching customers:', error);
         toast({
-          title: "Failed to load customers",
-          variant: "destructive",
-        })
+          title: 'Failed to load customers',
+          variant: 'destructive'
+        });
       } finally {
-        setIsLoadingCustomers(false)
+        setIsLoadingCustomers(false);
       }
-    }
+    };
 
-    fetchCustomers()
-  }, [companyId])
+    fetchCustomers();
+  }, [companyId]);
 
   // Fetch banks
   useEffect(() => {
     const fetchBanks = async () => {
-      if (!companyId) return
+      if (!companyId) return;
 
-      setIsLoadingBanks(true)
+      setIsLoadingBanks(true);
       try {
-        const response = await axiosInstance.get(`/bank?companyId=${companyId}&limit=10000`)
-        setBanks(response.data.data.result || [])
+        const response = await axiosInstance.get(
+          `/bank?companyId=${companyId}&limit=10000`
+        );
+        setBanks(response.data.data.result || []);
       } catch (error) {
-        console.error("Error fetching Banks:", error)
+        console.error('Error fetching Banks:', error);
         toast({
-          title: "Failed to load Banks",
-          variant: "destructive",
-        })
+          title: 'Failed to load Banks',
+          variant: 'destructive'
+        });
       } finally {
-        setIsLoadingBanks(false)
+        setIsLoadingBanks(false);
       }
-    }
+    };
 
-    fetchBanks()
-  }, [companyId])
+    fetchBanks();
+  }, [companyId]);
 
   // Calculate total when items change
   useEffect(() => {
@@ -192,130 +213,135 @@ export default function EditInvoice() {
 
   // Handle adding a new row
   const handleAddRow = () => {
-    const newId = items.length > 0 ? Math.max(...items.map((item) => item.id)) + 1 : 1
-    setItems([...items, { id: newId, details: "", quantity: 1, rate: 0, amount: 0 }])
-  }
+    const newId =
+      items.length > 0 ? Math.max(...items.map((item) => item.id)) + 1 : 1;
+    setItems([
+      ...items,
+      { id: newId, details: '', quantity: 1, rate: 0, amount: 0 }
+    ]);
+  };
 
   // Handle removing a row
   const handleRemoveRow = (id: number) => {
     if (items.length === 1) {
       toast({
-        title: "Cannot remove all items",
-        description: "At least one item is required",
-        variant: "destructive",
-      })
-      return
+        title: 'Cannot remove all items',
+        description: 'At least one item is required',
+        variant: 'destructive'
+      });
+      return;
     }
 
-    setItems(items.filter((item) => item.id !== id))
-  }
+    setItems(items.filter((item) => item.id !== id));
+  };
 
   // Handle item change
   const handleItemChange = (id: number, field: string, value: any) => {
     const updatedItems = items.map((item) => {
       if (item.id === id) {
-        const updatedItem = { ...item, [field]: value }
+        const updatedItem = { ...item, [field]: value };
 
         // Handle rate validation and parsing
-        if (field === "rate") {
+        if (field === 'rate') {
           // Ensure rate is a valid number
-          const parsedRate = Number.parseFloat(value)
+          const parsedRate = Number.parseFloat(value);
           if (!isNaN(parsedRate)) {
-            updatedItem.rate = parsedRate
+            updatedItem.rate = parsedRate;
           } else {
-            updatedItem.rate = value // Keep as string for input
+            updatedItem.rate = value; // Keep as string for input
           }
         }
 
         // Recalculate amount if quantity or rate changes
-        if (field === "quantity" || field === "rate") {
-          const quantity = field === "quantity" ? Number.parseFloat(value) : item.quantity
+        if (field === 'quantity' || field === 'rate') {
+          const quantity =
+            field === 'quantity' ? Number.parseFloat(value) : item.quantity;
           const rate =
-            field === "rate"
-              ? typeof value === "string"
+            field === 'rate'
+              ? typeof value === 'string'
                 ? Number.parseFloat(value) || 0
                 : value
-              : typeof item.rate === "string"
+              : typeof item.rate === 'string'
                 ? Number.parseFloat(item.rate) || 0
-                : item.rate
+                : item.rate;
 
-          updatedItem.amount = quantity * rate
+          updatedItem.amount = quantity * rate;
         }
 
-        return updatedItem
+        return updatedItem;
       }
-      return item
-    })
+      return item;
+    });
 
-    setItems(updatedItems)
-  }
+    setItems(updatedItems);
+  };
 
   // Handle creating a new customer
   const handleCreateCustomer = async () => {
     if (!newCustomer.name) {
       toast({
-        title: "Customer name is required",
-        variant: "destructive",
-      })
-      return
+        title: 'Customer name is required',
+        variant: 'destructive'
+      });
+      return;
     }
 
     try {
-      const response = await axiosInstance.post("/customer", {
+      const response = await axiosInstance.post('/customer', {
         ...newCustomer,
-        companyId,
-      })
+        companyId
+      });
 
-      const createdCustomer = response.data.data
-      setCustomers([...customers, createdCustomer])
-      setSelectedCustomer(createdCustomer._id)
-      setIsNewCustomerDialogOpen(false)
-      setNewCustomer({ name: "", email: "", phone: "", address: "" })
+      const createdCustomer = response.data.data;
+      setCustomers([...customers, createdCustomer]);
+      setSelectedCustomer(createdCustomer._id);
+      setIsNewCustomerDialogOpen(false);
+      setNewCustomer({ name: '', email: '', phone: '', address: '' });
 
       toast({
-        title: "Customer created successfully",
-        className: "bg-theme text-white border-none",
-      })
+        title: 'Customer created successfully',
+        className: 'bg-theme text-white border-none'
+      });
     } catch (error) {
-      console.error("Error creating customer:", error)
+      console.error('Error creating customer:', error);
       toast({
-        title: "Failed to create customer",
-        variant: "destructive",
-      })
+        title: 'Failed to create customer',
+        variant: 'destructive'
+      });
     }
-  }
+  };
 
   const handleUpdateInvoice = async () => {
     if (!selectedCustomer) {
       toast({
-        title: "Please select a customer",
-        variant: "destructive",
-      })
-      return
+        title: 'Please select a customer',
+        variant: 'destructive'
+      });
+      return;
     }
 
     if (!selectedBank) {
       toast({
-        title: "Please select a bank",
-        variant: "destructive",
-      })
-      return
+        title: 'Please select a bank',
+        variant: 'destructive'
+      });
+      return;
     }
 
     if (!transactionType) {
       toast({
-        title: "Please select a transaction type",
-        variant: "destructive",
-      })
-      return
+        title: 'Please select a transaction type',
+        variant: 'destructive'
+      });
+      return;
     }
 
     if (items.some((item) => !item.details)) {
       toast({
-        title: "Please fill in all item details",
-        variant: "destructive",
-      })
-      return
+        title: 'Please fill in all item details',
+        variant: 'destructive'
+      });
+      return;
     }
 
     try {
@@ -325,10 +351,13 @@ export default function EditInvoice() {
         bank: selectedBank,
         invoiceNumber,
         invoiceDate,
-        termsAndConditions: showTermsAndConditions ? termsAndConditions : "",
+        termsAndConditions: showTermsAndConditions ? termsAndConditions : '',
         items: items.map(({ id, ...rest }) => ({
           ...rest,
-          rate: typeof rest.rate === "string" ? Number.parseFloat(rest.rate) || 0 : rest.rate,
+          rate:
+            typeof rest.rate === 'string'
+              ? Number.parseFloat(rest.rate) || 0
+              : rest.rate
         })),
         notes,
         transactionType,
@@ -338,25 +367,25 @@ export default function EditInvoice() {
         tax: Number.parseFloat(invoiceTax) || 0,
         discount: Number.parseFloat(invoiceDiscount) || 0,
         discountType: invoiceDiscountType,
-        subtotal: subtotal,
-      }
+        subtotal: subtotal
+      };
 
-      await axiosInstance.patch(`/invoice/${invoiceId}`, invoiceData)
+      await axiosInstance.patch(`/invoice/${invoiceId}`, invoiceData);
 
       toast({
-        title: "Invoice updated successfully",
-        className: "bg-theme text-white border-none",
-      })
+        title: 'Invoice updated successfully',
+        className: 'bg-theme text-white border-none'
+      });
 
-      navigate(`/admin/company/${companyId}/invoice`)
+      navigate(`/admin/company/${companyId}/invoice`);
     } catch (error) {
-      console.error("Error updating invoice:", error)
+      console.error('Error updating invoice:', error);
       toast({
-        title: "Failed to update invoice",
-        variant: "destructive",
-      })
+        title: 'Failed to update invoice',
+        variant: 'destructive'
+      });
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -374,7 +403,7 @@ export default function EditInvoice() {
           </TableRow>
         </TableBody>
       </div>
-    )
+    );
   }
 
   return (
@@ -410,7 +439,11 @@ export default function EditInvoice() {
                 placeholder="Select or add customer"
                 isLoading={isLoadingCustomers}
               />
-              <Button variant="theme" size="icon" onClick={() => setIsNewCustomerDialogOpen(true)}>
+              <Button
+                variant="theme"
+                size="icon"
+                onClick={() => setIsNewCustomerDialogOpen(true)}
+              >
                 <PlusCircle className="h-4 w-4" />
               </Button>
             </div>
@@ -562,6 +595,10 @@ export default function EditInvoice() {
 
             <div className="flex justify-between p-4">
               <div className="flex flex-col gap-2">
+                <Button variant="theme" onClick={handleAddRow}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add New Row
+                </Button>
                 <div className="mb-2 flex items-center">
                   <span className="mr-4 w-28 font-medium">VAT (%)</span>
                   <Input
@@ -614,10 +651,6 @@ export default function EditInvoice() {
                     </div>
                   </div>
                 </div>
-                <Button variant="theme" onClick={handleAddRow}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add New Row
-                </Button>
               </div>
 
               <div className="flex flex-wrap justify-between gap-4 p-4">
@@ -643,7 +676,8 @@ export default function EditInvoice() {
                         : 'Discount'}
                     </span>
                     <span className="ml-auto w-32 text-center font-medium">
-                      £{(invoiceDiscountType === 'percentage'
+                      £
+                      {(invoiceDiscountType === 'percentage'
                         ? subtotal * (Number(invoiceDiscount) / 100)
                         : Number(invoiceDiscount)
                       ).toFixed(2)}
