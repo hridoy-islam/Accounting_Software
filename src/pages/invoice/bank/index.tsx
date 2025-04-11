@@ -114,7 +114,7 @@ export default function BankPage() {
             onClick={() => navigate(`/admin/company/${id}/invoice`)}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back To Bank List
+            Back To Invoice List
           </Button>
         </div>
         {hasPermission('Invoice', 'create') &&(
