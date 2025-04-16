@@ -468,7 +468,7 @@ export default function CreateInvoice() {
                       </td>
                       <td className="max-w-[100px] p-3">
                         <Input
-                          type="text"
+                          type="number"
                           value={item.rate}
                           onChange={(e) =>
                             handleItemChange(item.id, 'rate', e.target.value)
