@@ -65,9 +65,9 @@ export default function TransactionPage() {
 
             }
           }),
-          axiosInstance.get(`/categories/company/${id}?limit=all`),
-          axiosInstance.get(`/methods/company/${id}?limit=all`),
-          axiosInstance.get(`/storages/company/${id}?limit=all`)
+          axiosInstance.get(`/categories/company/${id}?limit=10000`),
+          axiosInstance.get(`/methods/company/${id}?limit=10000`),
+          axiosInstance.get(`/storages/company/${id}?limit=10000`)
         ]);
 
       setTransactions(transactionsRes.data.data.result);
