@@ -159,7 +159,7 @@ export function Navigation() {
           to: `/admin/company/${id}/permission`,
           icon: <ShieldBan   className="h-4 w-4" />,
           label: 'Roles & Permissions',
-          roles: ['admin', 'user', 'company','manager','audit']
+          roles: ['admin']
         }
       ]
     }
