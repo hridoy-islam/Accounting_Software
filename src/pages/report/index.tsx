@@ -686,16 +686,7 @@ export default function ReportPage() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between">
             <h1 className="text-3xl font-bold">Transaction Report</h1>
-            <div className="flex justify-end gap-4">
-              <Button variant="theme" onClick={fetchData}>
-                Generate Report
-              </Button>
-              {isReportGenerated && (
-                <Button variant="theme" onClick={generatePDF}>
-                  Download PDF Report
-                </Button>
-              )}
-            </div>
+            
           </div>
 
           <div className="flex flex-col gap-4 p-4">
@@ -798,11 +789,21 @@ export default function ReportPage() {
                   Clear Filters
                 </Button>
               </div>
+              <div className="flex justify-end gap-4">
+              <Button variant="theme" onClick={fetchData}>
+                Generate Report
+              </Button>
+              {isReportGenerated && (
+                <Button variant="theme" onClick={generatePDF}>
+                  Download PDF Report
+                </Button>
+              )}
+            </div>
             </div>
           </div>
 
        
-          <div className="mt-8 w-full space-y-6">
+          <div className=" w-full space-y-6">
             {loading ? (
               <div className="flex h-40 w-full flex-col items-center justify-center">
                 <div className="flex flex-row items-center gap-4">
