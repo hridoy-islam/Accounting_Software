@@ -37,11 +37,11 @@ export function CategorySelector({
     const categoryMap = new Map<string, Category>()
     const roots: Category[] = []
 
-    categories.forEach(category => {
+    categories?.forEach(category => {
       categoryMap.set(category._id, { ...category, children: [] })
     })
 
-    categories.forEach(category => {
+    categories?.forEach(category => {
       const currentCategory = categoryMap.get(category._id)!
       if (category.parentId && category.parentId !== "none") {
         const parent = categoryMap.get(category.parentId)
@@ -70,7 +70,7 @@ export function CategorySelector({
     ])
   }
 
-  const filteredCategories = categories.filter(category => category.type === type)
+  const filteredCategories = categories?.filter(category => category.type === type)
   const hierarchicalCategories = buildHierarchy(filteredCategories)
 
   return (
