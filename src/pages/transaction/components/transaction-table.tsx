@@ -100,7 +100,7 @@ export function TransactionTable({
                     {transaction.tcid}
                   </TableCell>
                   <TableCell onClick={() => setSelectedRow(transaction)}>
-                    {moment(transaction.transactionDate).format('YYYY-MM-DD')}
+                    {moment(transaction.transactionDate).format('MM-DD-YYYY')}
                   </TableCell>
                   <TableCell onClick={() => setSelectedRow(transaction)}>
                     <Badge

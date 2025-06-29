@@ -22,101 +22,71 @@ export default function TransactionHistory() {
   const { id } = useParams();
   const [storages, setStorages] = useState<any>([]);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [transactions, setTransactions] = useState<any>([]);
   const [monthlyData, setMonthlyData] = useState<any>([]);
   const [companyData, setCompanyData] = useState<any>();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [loading, setLoading] = useState(false); // Loading state for year changes
+  const [loading, setLoading] = useState(false);
 
-  // Generate years from 2000 to 2050
-  const years = Array.from({ length: 51 }, (_, i) => 2000 + i);
+  // Generate years from 2000 to current year + 10
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 2000 + 11 }, (_, i) => 2000 + i);
 
-  const fetchData = async () => {
+  const fetchData = async (year: number) => {
     try {
-      if (initialLoading) setInitialLoading(true);
       setLoading(true);
+      
+      // Fetch storages and company data (only once)
+      if (initialLoading) {
+        const response = await axiosInstance.get(`/storages?companyId=${id}`);
+        setStorages(response.data.data.result);
+        
+        const company = await axiosInstance.get(`/users/${id}`);
+        setCompanyData(company.data.data);
+      }
 
-      const response = await axiosInstance.get(`/storages?companyId=${id}`);
-      setStorages(response.data.data.result);
-
+      // Fetch transactions for the selected year
       const transactionsResponse = await axiosInstance.get(
-        `/transactions?companyId=${id}&limit=all`
+        `/transactions/company-transaction/${id}?year=${year}`
       );
-      setTransactions(transactionsResponse.data.data.result);
-      filterDataByYear(transactionsResponse.data.data.result, selectedYear);
-
-      const company = await axiosInstance.get(`/users/${id}`);
-      setCompanyData(company.data.data);
+      
+      // Process the monthly data from the response
+      processMonthlyData(transactionsResponse.data.data);
+      
     } catch (error) {
-      console.error('Error fetching institutions:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setInitialLoading(false);
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  // Filter data when year changes
-  useEffect(() => {
-    if (transactions.length > 0) {
-      setLoading(true);
-      filterDataByYear(transactions, selectedYear);
-      setTimeout(() => setLoading(false), 500); // Small delay to show loading
-    }
-  }, [selectedYear]);
-
-  const filterDataByYear = (transactions, year) => {
-    const filtered = transactions.filter((transaction) => {
-      const date = new Date(transaction.transactionDate);
-      return date.getFullYear() === year;
-    });
-    aggregateMonthlyData(filtered);
-  };
-
-  const aggregateMonthlyData = (transactions) => {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
-
-    // Initialize all months with 0 values
-    const monthlySummary = months.map((month) => ({
-      monthYear: `${month}-${selectedYear}`,
-      month,
-      year: selectedYear,
-      inflow: 0,
-      outflow: 0
+  const processMonthlyData = (data: any[]) => {
+    // Create an array for all 12 months initialized with 0 values
+    const monthsData = Array.from({ length: 12 }, (_, i) => ({
+      month: i + 1,
+      monthName: new Date(selectedYear, i).toLocaleString('default', { month: 'short' }),
+      totalInflow: 0,
+      totalOutflow: 0
     }));
 
-    transactions.forEach((transaction) => {
-      const date = new Date(transaction.transactionDate);
-      const month = date.toLocaleString('default', { month: 'short' });
-      const monthIndex = months.indexOf(month);
-
-      if (monthIndex !== -1) {
-        if (transaction.transactionType === 'inflow') {
-          monthlySummary[monthIndex].inflow += transaction.transactionAmount;
-        } else if (transaction.transactionType === 'outflow') {
-          monthlySummary[monthIndex].outflow += transaction.transactionAmount;
-        }
+    // Fill in the data from the API response
+    data.forEach(item => {
+      const monthIndex = item.month - 1;
+      if (monthIndex >= 0 && monthIndex < 12) {
+        monthsData[monthIndex] = {
+          ...monthsData[monthIndex],
+          totalInflow: item.totalInflow,
+          totalOutflow: item.totalOutflow
+        };
       }
     });
 
-    setMonthlyData(monthlySummary);
+    setMonthlyData(monthsData);
   };
+
+  useEffect(() => {
+    fetchData(selectedYear);
+  }, [selectedYear]);
 
   const totalOpeningBalance = storages.reduce(
     (sum, Item) => sum + Number(Item.openingBalance),
@@ -128,12 +98,12 @@ export default function TransactionHistory() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="relative rounded-lg bg-white p-6 shadow-md lg:col-span-2">
           <div className="mb-8 flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">Recent Transactions</h1>
+            <h1 className="text-2xl font-semibold">Transaction Summary</h1>
             <div className="flex items-center gap-2">
               <Select
                 value={selectedYear.toString()}
                 onValueChange={(value) => setSelectedYear(parseInt(value))}
-                disabled={initialLoading}
+                disabled={loading}
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Select year" />
@@ -149,13 +119,11 @@ export default function TransactionHistory() {
             </div>
           </div>
 
-          {loading || initialLoading ? (
-            <div className="space-y-4">
-              <div className="flex h-10 w-full flex-col items-center justify-center">
-                <div className="flex flex-row items-center gap-4">
-                  <p className="font-semibold">Please Wait..</p>
-                  <div className="h-5 w-5 animate-spin rounded-full border-4 border-dashed border-theme"></div>
-                </div>
+          {loading ? (
+            <div className="flex h-40 items-center justify-center">
+              <div className="flex flex-row items-center gap-4">
+                <p className="font-semibold">Loading data...</p>
+                <div className="h-5 w-5 animate-spin rounded-full border-4 border-dashed border-theme"></div>
               </div>
             </div>
           ) : (
@@ -163,21 +131,21 @@ export default function TransactionHistory() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="font-bold">Month</TableHead>
-                  <TableHead className="font-bold ">Inflow</TableHead>
-                  <TableHead className="font-bold ">Outflow</TableHead>
+                  <TableHead className="font-bold text-right">Inflow</TableHead>
+                  <TableHead className="font-bold text-right">Outflow</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {monthlyData.map((data, index) => (
                   <TableRow key={index}>
-                    <TableCell className="font-bold">
-                      {data.monthYear}
+                    <TableCell className="font-medium">
+                      {data.monthName} {selectedYear}
                     </TableCell>
-                    <TableCell className="font-bold ">
-                      £{data.inflow.toFixed(2)}
+                    <TableCell className="text-right">
+                      £{data.totalInflow.toFixed(2)}
                     </TableCell>
-                    <TableCell className="font-bold ">
-                      £{data.outflow.toFixed(2)}
+                    <TableCell className="text-right">
+                      £{data.totalOutflow.toFixed(2)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -188,32 +156,26 @@ export default function TransactionHistory() {
 
         <div className="space-y-6">
           <div className="flex justify-between rounded-lg bg-white p-6 shadow-md">
-            <h2 className="mb-2 text-xl font-semibold">Balance</h2>
-
+            <h2 className="text-xl font-semibold">Balance</h2>
             <p className="text-2xl font-bold">
               £{totalOpeningBalance.toFixed(2)}
             </p>
           </div>
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-xl font-semibold">Storage</h2>
-            {
-              storages.map((Item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between py-2"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="flex h-10 w-10 items-center justify-center font-bold">
-                      <Landmark className="h-5 w-5" />
-                    </div>
-                    <span className="font-medium">{Item.storageName}</span>
+            {storages.map((Item, index) => (
+              <div key={index} className="flex items-center justify-between py-2">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-10 w-10 items-center justify-center font-bold">
+                    <Landmark className="h-5 w-5" />
                   </div>
-                  <span className="font-bold">
-                    £{Item.openingBalance.toFixed(2)}
-                  </span>
+                  <span className="font-medium">{Item.storageName}</span>
                 </div>
-              )
-            )}
+                <span className="font-bold">
+                  £{Item.openingBalance.toFixed(2)}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -63,78 +63,155 @@ export default function AppRouter() {
         },
         {
           path: 'company/:id',
-          element: <CompanyLayout><TransactionHistory /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <TransactionHistory />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/categories',
-          element: <CompanyLayout><CategoriesPage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <CategoriesPage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/storages',
-          element: <CompanyLayout><StoragePage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <StoragePage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/methods',
-          element: <CompanyLayout><Method /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <Method />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/transactions',
-          element: <CompanyLayout><TransactionPage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <TransactionPage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/report',
-          element: <CompanyLayout><ReportPage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <ReportPage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/csv',
-          element: <CompanyLayout><CsvUploadPage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <CsvUploadPage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/users',
-          element: <CompanyLayout><UserPage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <UserPage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/archive',
-          element: <CompanyLayout><ArchivePage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <ArchivePage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/invoice',
-          element: <CompanyLayout><InvoicePage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <InvoicePage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/invoice/bank-list',
-          element: <CompanyLayout><BankPage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <BankPage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/invoice/bank-list/:bankId',
-          element: <CompanyLayout><BankDetailsPage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <BankDetailsPage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/invoice/new',
-          element: <CompanyLayout><CreateInvoice /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <CreateInvoice />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/invoice/:invoiceId',
-          element: <CompanyLayout><EditInvoice /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <EditInvoice />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/invoice/customer',
-          element: <CompanyLayout><CustomerPage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <CustomerPage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'company/:id/invoice/customer/:cid',
-          element: <CompanyLayout><CustomerDetailsPage /></CompanyLayout>,
-        }, {
+          element: (
+            <CompanyLayout>
+              <CustomerDetailsPage />
+            </CompanyLayout>
+          )
+        },
+        {
           path: 'company/:id/pending',
-          element: <CompanyLayout><PendingTransactionPage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <PendingTransactionPage />
+            </CompanyLayout>
+          )
         },
-       {
+        {
           path: 'company/:id/company-details',
-          element: <CompanyLayout><CompanyDetailsPage /></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <CompanyDetailsPage />
+            </CompanyLayout>
+          )
         },
-       {
+        {
           path: 'company/:id/permission',
-          element: <CompanyLayout>< PermissionPage/></CompanyLayout>,
+          element: (
+            <CompanyLayout>
+              <PermissionPage />
+            </CompanyLayout>
+          )
         },
         {
           path: 'profile',
@@ -143,9 +220,7 @@ export default function AppRouter() {
         {
           path: 'reset',
           element: <ResetPassword />
-
         }
-
       ]
     }
   ];
