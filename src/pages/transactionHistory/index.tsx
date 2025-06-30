@@ -139,10 +139,10 @@ export default function TransactionHistory() {
                       {data.monthName} {selectedYear}
                     </TableCell>
                     <TableCell className="text-right">
-                      £{data.totalInflow.toFixed(2)}
+                      £{data?.totalInflow?.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
-                      £{data.totalOutflow.toFixed(2)}
+                      £{data?.totalOutflow?.toFixed(2)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -164,7 +164,7 @@ export default function TransactionHistory() {
                   <span className="font-medium">{Item.storageName}</span>
                 </div>
                 <span className="font-bold">
-                  £{Item?.currentBalance.toFixed(2)}
+                  £{Item?.currentBalance?.toFixed(2)}
                 </span>
               </div>
             ))}
