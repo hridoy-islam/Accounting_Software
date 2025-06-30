@@ -29,7 +29,6 @@ const PendingTransactionPage = () => {
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-
   const form = useForm({
     defaultValues: {
       invoiceDate: '',
@@ -41,7 +40,6 @@ const PendingTransactionPage = () => {
     }
   });
 
-  
   const refreshTransactions = () => {
     setRefreshKey((prevKey) => prevKey + 1);
   };
@@ -78,9 +76,7 @@ const PendingTransactionPage = () => {
 
   useEffect(() => {
     fetchInvoices(currentPage, entriesPerPage, searchTerm);
-  }, [id,refreshKey,currentPage, entriesPerPage]);
-
-
+  }, [id, refreshKey, currentPage, entriesPerPage]);
 
   const handleEdit = (invoice: Invoice) => {
     form.reset({
@@ -129,12 +125,12 @@ const PendingTransactionPage = () => {
       <div className="mb-2 flex flex-col justify-between ">
         <div className="flex flex-row items-center justify-between">
           <h1 className="mb-2 text-3xl font-bold">Pending Transaction</h1>
-           <Button variant="theme" onClick={() => refreshTransactions()}>
-                        <div className='flex flex-row items-center justify-center gap-2'>
-                          <RefreshCcw size='18' />
-                          Refresh
-                        </div>
-                      </Button>
+          <Button variant="theme" onClick={() => refreshTransactions()}>
+            <div className="flex flex-row items-center justify-center gap-2">
+              <RefreshCcw size="18" />
+              Refresh
+            </div>
+          </Button>
         </div>
 
         <div className=" flex flex-row items-center justify-between gap-8 space-x-4">
@@ -152,7 +148,6 @@ const PendingTransactionPage = () => {
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
                 type="date"
-                
               />
             </div>
 
@@ -162,7 +157,6 @@ const PendingTransactionPage = () => {
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
                 type="date"
-               
               />
             </div>
           </div>

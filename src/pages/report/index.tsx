@@ -613,9 +613,9 @@ export default function ReportPage() {
                                     className="bg-gray-200"
                                   >
                                     <TableCell className="text-right">
-                                      {new Date(
+                                      {moment(
                                         transaction.transactionDate
-                                      ).toLocaleDateString()}
+                                      ).format("DD MMM YYYY")}
                                     </TableCell>
                                     <TableCell className="text-right">
                                       {transaction.tcid}

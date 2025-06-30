@@ -158,7 +158,7 @@ export default function ArchivePage() {
               <TableRow key={transaction.tcid} className="text-left">
                 <TableCell>{transaction.tcid}</TableCell>
                 <TableCell>
-                  {moment(transaction.transactionDate).format('YYYY-MM-DD')}
+                  {moment(transaction.transactionDate).format('DD MMM YYYY')}
                 </TableCell>
                 <TableCell>
                   <Badge

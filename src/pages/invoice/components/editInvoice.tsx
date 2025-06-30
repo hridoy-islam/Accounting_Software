@@ -80,7 +80,7 @@ export default function EditInvoice() {
         setInvoiceNumber(invoice.invoiceNumber || '');
         setInvoiceDate(
           invoice.invoiceDate
-            ? moment(invoice.invoiceDate).format('YYYY-MM-DD')
+            ? moment(invoice.invoiceDate).format('DD MMM YYYY')
             : ''
         );
         setTransactionType(invoice.transactionType || '');

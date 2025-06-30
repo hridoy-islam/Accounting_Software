@@ -133,7 +133,7 @@ const StoragePage = () => {
                 <TableRow key={storage._id}>
                   <TableCell>{storage.storageName}</TableCell>
                   <TableCell className='font-semibold'>£{Number(storage.openingBalance.toFixed(2))}</TableCell>
-                  <TableCell>{moment(storage.openingDate).format('DD-MM-YYYY')}</TableCell>
+                  <TableCell>{moment(storage.openingDate).format('DD MMM YYYY')}</TableCell>
                   <TableCell>{storage.status ? 'Yes' : 'No'}</TableCell>
                   <TableCell>{storage.auditStatus ? 'Yes' : 'No'}</TableCell>
                   <TableCell className="space-x-4">

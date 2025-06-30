@@ -87,7 +87,7 @@ export default function InvoiceDetailsDialog({
                 <p className="text-sm text-gray-500">Invoice Date</p>
                 <div className="flex items-center gap-2">
                   <p className="font-medium">
-                    {moment(invoice.invoiceDate).format('MMM DD YYYY')}
+                    {moment(invoice.invoiceDate).format('DD MMM YYYY')}
                   </p>
                 </div>
               </div>
@@ -95,7 +95,7 @@ export default function InvoiceDetailsDialog({
               <div className="space-y-2">
                 <p className="text-sm text-gray-500">Created At</p>
                 <p className="font-medium">
-                  {moment(invoice.createdAt).format('MMM DD YYYY')}
+                  {moment(invoice.createdAt).format('DD MMM YYYY')}
                 </p>
               </div>
 

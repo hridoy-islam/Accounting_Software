@@ -165,7 +165,7 @@ const StoragePage = () => {
                     £{storage.currentBalance.toFixed(2)}
                   </TableCell>
                   <TableCell>
-                    {moment(storage.openingDate).format('DD-MM-YYYY')}
+                    {moment(storage.openingDate).format('DD MMM YYYY')}
                   </TableCell>
                   <TableCell>{storage.status ? 'Yes' : 'No'}</TableCell>
                   <TableCell>{storage.auditStatus ? 'Yes' : 'No'}</TableCell>

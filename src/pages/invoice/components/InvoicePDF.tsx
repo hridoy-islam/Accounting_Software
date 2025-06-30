@@ -150,12 +150,12 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
               { label: 'Invoice:', value: invoice.invId || '' },
               {
                 label: 'Invoice Date:',
-                value: moment(invoice.invoiceDate).format('DD/MM/YYYY')
+                value: moment(invoice.invoiceDate).format('DD MMM YYYY')
               },
               { label: 'Terms:', value: 'Due On Receipt' },
               {
                 label: 'Due Date:',
-                value: moment(invoice.createdAt).format('DD/MM/YYYY')
+                value: moment(invoice.createdAt).format('DD MMM YYYY')
               }
             ].map((item, index) => (
               <View

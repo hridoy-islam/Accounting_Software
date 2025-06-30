@@ -128,13 +128,13 @@ export function InvoiceList({
                     onClick={() => handleRowClick(invoice)}
                     className="text-left"
                   >
-                    {moment(invoice?.createdAt).format('MM/DD/YYYY')}
+                    {moment(invoice?.createdAt).format('DD MMM YYYY')}
                   </TableCell>
                   <TableCell
                     onClick={() => handleRowClick(invoice)}
                     className="text-left"
                   >
-                    {moment(invoice.invoiceDate).format('MM/DD/YYYY')}
+                    {moment(invoice.invoiceDate).format('DD MMM YYYY')}
                   </TableCell>
 
                   <TableCell

@@ -88,7 +88,7 @@ export function TransactionDetailsDialog({
                 <p className="text-sm text-gray-500">Transaction Date</p>
                 <div className="flex items-center gap-2">
                   <p className="font-medium">
-                    {moment(transaction.transactionDate).format('MM/DD/YYYY')}
+                    {moment(transaction.transactionDate).format('DD MMM YYYY')}
                   </p>
                 </div>
               </div>
@@ -138,7 +138,7 @@ export function TransactionDetailsDialog({
                       <div>
                         <p className="text-sm text-gray-500">Invoice Date</p>
                         <p className="font-medium">
-                          {moment(transaction.invoiceDate).format('MM/DD/YYYY')}
+                          {moment(transaction.invoiceDate).format('DD MMM YYYY')}
                         </p>
                       </div>
                     )}

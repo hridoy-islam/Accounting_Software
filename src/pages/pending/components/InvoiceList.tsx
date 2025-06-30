@@ -92,10 +92,10 @@ export function InvoiceList({
             invoices.map((invoice) => (
               <TableRow  key={invoice._id} className="group">
                 <TableCell  onClick={() => handleRowClick(invoice)} className="text-left">
-                  {moment(invoice.createdAt).format('MM/DD/YY')}
+                  {moment(invoice.createdAt).format('DD MMM YYYY')}
                 </TableCell>
                 <TableCell  onClick={() => handleRowClick(invoice)} className="text-left">
-                  {moment(invoice.invoiceDate).format('MM/DD/YY')}
+                  {moment(invoice.invoiceDate).format('DD MMM YYYY')}
                 </TableCell>
                 <TableCell  onClick={() => handleRowClick(invoice)} className="text-left">
                   {invoice.invoiceNumber}
