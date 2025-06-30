@@ -25,6 +25,7 @@ import { Pen } from 'lucide-react';
 import { usePermission } from '@/hooks/usePermission';
 
 import { useSelector } from 'react-redux';
+import { useToast } from '@/components/ui/use-toast';
 
 const StoragePage = () => {
   const [storages, setStorages] = useState<any>([]);
@@ -33,7 +34,7 @@ const StoragePage = () => {
   const { id } = useParams();
   const [initialLoading, setInitialLoading] = useState(true);
   const {hasPermission} = usePermission();
-
+  const {toast} = useToast()
   const { register, handleSubmit, setValue, reset } = useForm({
     defaultValues: {
       storageName: '',
@@ -47,8 +48,15 @@ const StoragePage = () => {
   const fetchData = async () => {
     try {
       if (initialLoading) setInitialLoading(true);
-      const response = await axiosInstance.get(`/storages?companyId=${id}`);
-      setStorages(response.data.data.result);
+      const response = await axiosInstance.get(`/storages/company/${id}?limit=all`);
+      const fetchedStorages = response.data?.data.result;
+
+    if (Array.isArray(fetchedStorages)) {
+      setStorages(fetchedStorages);
+    } else {
+      console.warn('Expected an array for storages, got:', fetchedStorages);
+      setStorages([]); // fallback to empty array
+    }
     } catch (error) {
       console.error('Error fetching storages:', error);
     } finally {
@@ -84,8 +92,17 @@ const StoragePage = () => {
       fetchData(); // Refresh data
       setIsDialogOpen(false); // Close dialog
       reset(); // Reset form
+      toast({
+        title: storageToEdit ? 'Storage updated successfully' : 'Storage added successfully',
+        className: 'bg-theme text-white border-none',
+      })
     } catch (error) {
       console.error('Error submitting storage:', error);
+      toast({
+        
+        title: error.response?.data?.message || 'Failed to submitting the storage.',
+        className: 'bg-destructive text-white border-none',
+      })
     }
   };
 
@@ -128,12 +145,13 @@ const StoragePage = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Balance</TableHead>
+                <TableHead>Opening Balance</TableHead>
+                <TableHead>Current Balance</TableHead>
                 <TableHead>Opening Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Audit Status</TableHead>
                 {hasPermission('Storage', 'edit') && (
-                <TableHead>Actions</TableHead>)}
+                <TableHead className='text-right'>Actions</TableHead>)}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -143,13 +161,16 @@ const StoragePage = () => {
                   <TableCell className="font-semibold">
                     £{storage.openingBalance.toFixed(2)}
                   </TableCell>
+                  <TableCell className="font-semibold">
+                    £{storage.currentBalance.toFixed(2)}
+                  </TableCell>
                   <TableCell>
                     {moment(storage.openingDate).format('DD-MM-YYYY')}
                   </TableCell>
                   <TableCell>{storage.status ? 'Yes' : 'No'}</TableCell>
                   <TableCell>{storage.auditStatus ? 'Yes' : 'No'}</TableCell>
                   {hasPermission('Storage', 'edit') && (
-                  <TableCell className="space-x-4">
+                  <TableCell className="text-right">
                     <Button
                       variant="ghost"
                       className="hover:bg-theme/80 bg-theme text-white"
@@ -180,6 +201,7 @@ const StoragePage = () => {
               <Label htmlFor="openingBalance">Opening Balance</Label>
               <Input
                 type="number"
+                 disabled={!!storageToEdit}
                 {...register('openingBalance', { required: true })}
               />
 

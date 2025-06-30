@@ -147,14 +147,14 @@ export default function ReportPage() {
     const fetchData = async () => {
       try {
         const [methodsRes, storagesRes, categoriesRes] = await Promise.all([
-          axiosInstance.get(`/methods/company/${id}?limit=10000`),
-          axiosInstance.get(`/storages/company/${id}?limit=10000`),
-          axiosInstance.get(`/categories/company/${id}?limit=10000`)
+          axiosInstance.get(`/methods/company/${id}?limit=all`),
+          axiosInstance.get(`/storages/company/${id}?limit=all`),
+          axiosInstance.get(`/categories/company/${id}?limit=all`)
         ]);
 
-        let methodsData = methodsRes.data.data.result;
-        let storagesData = storagesRes.data.data.result;
-        let categoriesData = categoriesRes.data.data.result;
+        let methodsData = methodsRes?.data?.data?.result;
+        let storagesData = storagesRes?.data?.data?.result;
+        let categoriesData = categoriesRes?.data?.data?.result;
 
         // Filter methods if user is audit
         if (auditAccessMethods) {
@@ -179,7 +179,7 @@ export default function ReportPage() {
   const CompanyDetails = async () => {
     try {
       const response = await axiosInstance.get(`/users/${id}`);
-      const companyData = response.data.data;
+      const companyData = response?.data?.data;
       setCompanyDetail(companyData);
     } catch (error) {
       console.error('Error fetching company details:', error);
@@ -418,12 +418,12 @@ export default function ReportPage() {
           // Apply filters
           const methodMatch =
             !filters.method ||
-            transaction.transactionMethod._id === filters.method;
+            transaction?.transactionMethod?._id === filters.method;
           const categoryMatch =
             !filters.category ||
-            transaction.transactionCategory._id === filters.category;
+            transaction?.transactionCategory?._id === filters.category;
           const storageMatch =
-            !filters.storage || transaction.storage._id === filters.storage;
+            !filters?.storage || transaction?.storage?._id === filters.storage;
 
           return methodMatch && categoryMatch && storageMatch;
         })

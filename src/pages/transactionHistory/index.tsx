@@ -37,8 +37,8 @@ export default function TransactionHistory() {
       
       // Fetch storages and company data (only once)
       if (initialLoading) {
-        const response = await axiosInstance.get(`/storages?companyId=${id}`);
-        setStorages(response.data.data.result);
+       const response = await axiosInstance.get(`/storages/company/${id}?limit=all`);
+        setStorages(response?.data?.data.result);
         
         const company = await axiosInstance.get(`/users/${id}`);
         setCompanyData(company.data.data);
@@ -88,10 +88,7 @@ export default function TransactionHistory() {
     fetchData(selectedYear);
   }, [selectedYear]);
 
-  const totalOpeningBalance = storages.reduce(
-    (sum, Item) => sum + Number(Item.openingBalance),
-    0
-  );
+  
 
   return (
     <div className="flex flex-col gap-4">
@@ -155,12 +152,7 @@ export default function TransactionHistory() {
         </div>
 
         <div className="space-y-6">
-          <div className="flex justify-between rounded-lg bg-white p-6 shadow-md">
-            <h2 className="text-xl font-semibold">Balance</h2>
-            <p className="text-2xl font-bold">
-              £{totalOpeningBalance.toFixed(2)}
-            </p>
-          </div>
+          
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="mb-4 text-xl font-semibold">Storage</h2>
             {storages.map((Item, index) => (
@@ -172,7 +164,7 @@ export default function TransactionHistory() {
                   <span className="font-medium">{Item.storageName}</span>
                 </div>
                 <span className="font-bold">
-                  £{Item.openingBalance.toFixed(2)}
+                  £{Item?.currentBalance.toFixed(2)}
                 </span>
               </div>
             ))}
