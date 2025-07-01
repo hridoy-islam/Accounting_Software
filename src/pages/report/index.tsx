@@ -142,6 +142,15 @@ export default function ReportPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
 
+  // Get filtered payment methods based on current filter
+  const getFilteredPaymentMethods = () => {
+    if (filters.method) {
+      const selectedMethod = methods.find((m) => m._id === filters.method);
+      return selectedMethod ? [selectedMethod.name] : [];
+    }
+    return paymentMethods;
+  };
+
   // Fetch payment methods, storages, and categories when the component mounts
   useEffect(() => {
     const fetchData = async () => {
@@ -188,6 +197,7 @@ export default function ReportPage() {
 
   const generatePDF = () => {
     const doc = new jsPDF();
+    const filteredPaymentMethods = getFilteredPaymentMethods();
 
     let yPos = 15;
 
@@ -249,9 +259,15 @@ export default function ReportPage() {
         0: { halign: 'left' },
         1: { halign: 'center' },
         ...Object.fromEntries(
-          paymentMethods.map((_, index) => [index + 2, { halign: 'right' }])
+          filteredPaymentMethods.map((_, index) => [
+            index + 2,
+            { halign: 'right' }
+          ])
         ),
-        [paymentMethods.length + 2]: { halign: 'right', fontStyle: 'bold' }
+        [filteredPaymentMethods.length + 2]: {
+          halign: 'right',
+          fontStyle: 'bold'
+        }
       },
       footStyles: {
         font: 'times',
@@ -276,7 +292,7 @@ export default function ReportPage() {
       const inflowTableData = filteredInflowData.map((category) => [
         category.categoryName,
         category.transactions.length.toString(),
-        ...paymentMethods.map(
+        ...filteredPaymentMethods.map(
           (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
         ),
         `£${category.total.toFixed(2)}`
@@ -288,7 +304,7 @@ export default function ReportPage() {
         filteredInflowData
           .reduce((acc, cat) => acc + cat.transactions.length, 0)
           .toString(),
-        ...paymentMethods.map(
+        ...filteredPaymentMethods.map(
           (method) =>
             `£${filteredInflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
         ),
@@ -297,7 +313,9 @@ export default function ReportPage() {
 
       autoTable(doc, {
         startY: yPos,
-        head: [['Category', 'Transactions', ...paymentMethods, 'Total']],
+        head: [
+          ['Category', 'Transactions', ...filteredPaymentMethods, 'Total']
+        ],
         body: inflowTableData,
         ...tableConfig
       });
@@ -318,7 +336,7 @@ export default function ReportPage() {
       const outflowTableData = filteredOutflowData.map((category) => [
         category.categoryName,
         category.transactions.length.toString(),
-        ...paymentMethods.map(
+        ...filteredPaymentMethods.map(
           (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
         ),
         `£${category.total.toFixed(2)}`
@@ -330,7 +348,7 @@ export default function ReportPage() {
         filteredOutflowData
           .reduce((acc, cat) => acc + cat.transactions.length, 0)
           .toString(),
-        ...paymentMethods.map(
+        ...filteredPaymentMethods.map(
           (method) =>
             `£${filteredOutflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
         ),
@@ -339,7 +357,9 @@ export default function ReportPage() {
 
       autoTable(doc, {
         startY: yPos,
-        head: [['Category', 'Transactions', ...paymentMethods, 'Total']],
+        head: [
+          ['Category', 'Transactions', ...filteredPaymentMethods, 'Total']
+        ],
         body: outflowTableData,
         ...tableConfig
       });
@@ -411,25 +431,47 @@ export default function ReportPage() {
   };
 
   const filterData = (data: CategorySummary[]) => {
-    return data
-      .map((category) => ({
-        ...category,
-        transactions: category.transactions.filter((transaction) => {
-          // Apply filters
-          const methodMatch =
-            !filters.method ||
-            transaction?.transactionMethod?._id === filters.method;
-          const categoryMatch =
-            !filters.category ||
-            transaction?.transactionCategory?._id === filters.category;
-          const storageMatch =
-            !filters?.storage || transaction?.storage?._id === filters.storage;
+  return data
+    .map((category) => {
+      const filteredTransactions = category.transactions.filter((transaction) => {
+        // Apply filters
+        const methodMatch =
+          !filters.method ||
+          transaction?.transactionMethod?._id === filters.method;
+        const categoryMatch =
+          !filters.category ||
+          transaction?.transactionCategory?._id === filters.category;
+        const storageMatch =
+          !filters.storage || // This now correctly handles empty string from "All Storages"
+          transaction?.storage?._id === filters.storage;
 
-          return methodMatch && categoryMatch && storageMatch;
-        })
-      }))
-      .filter((category) => category.transactions.length > 0);
-  };
+        return methodMatch && categoryMatch && storageMatch;
+      });
+
+      // Recalculate methodTotals and total based on filtered transactions
+      const filteredPaymentMethods = getFilteredPaymentMethods();
+      const newMethodTotals = Object.fromEntries(
+        filteredPaymentMethods.map((method) => [method, 0])
+      );
+      
+      let newTotal = 0;
+      filteredTransactions.forEach((transaction) => {
+        const methodName = transaction.transactionMethod.name;
+        if (newMethodTotals[methodName] !== undefined) {
+          newMethodTotals[methodName] += transaction.transactionAmount;
+        }
+        newTotal += transaction.transactionAmount;
+      });
+
+      return {
+        ...category,
+        transactions: filteredTransactions,
+        methodTotals: newMethodTotals,
+        total: newTotal
+      };
+    })
+    .filter((category) => category.transactions.length > 0);
+};
 
   const fetchData = async () => {
     if (!fromDate || !toDate) {
@@ -492,6 +534,7 @@ export default function ReportPage() {
   ) => {
     // Apply filters to the data
     const filteredData = filterData(data);
+    const filteredPaymentMethods = getFilteredPaymentMethods();
 
     if (filteredData.length === 0) return null;
 
@@ -511,7 +554,7 @@ export default function ReportPage() {
                   <TableHead className="w-[150px] text-right">
                     Transaction Count
                   </TableHead>
-                  {paymentMethods.map((method) => (
+                  {filteredPaymentMethods.map((method) => (
                     <TableHead key={method} className="text-right">
                       {method}
                     </TableHead>
@@ -548,10 +591,10 @@ export default function ReportPage() {
                       <TableCell className="text-right">
                         {category.transactions.length}
                       </TableCell>
-                      {paymentMethods.map((method) => (
+                      {filteredPaymentMethods.map((method) => (
                         <TableCell key={method} className="text-right">
                           £
-                          {category.methodTotals[method]
+                          {(category.methodTotals[method] || 0)
                             .toFixed(2)
                             .toLocaleString()}
                         </TableCell>
@@ -563,7 +606,7 @@ export default function ReportPage() {
 
                     {expandedCategory === category.categoryName && (
                       <TableRow>
-                        <TableCell colSpan={paymentMethods.length + 3}>
+                        <TableCell colSpan={filteredPaymentMethods.length + 3}>
                           <Table>
                             <TableHeader>
                               <TableRow className="hover:bg-theme/80 bg-theme text-white">
@@ -615,7 +658,7 @@ export default function ReportPage() {
                                     <TableCell className="text-right">
                                       {moment(
                                         transaction.transactionDate
-                                      ).format("DD MMM YYYY")}
+                                      ).format('DD MMM YYYY')}
                                     </TableCell>
                                     <TableCell className="text-right">
                                       {transaction.tcid}
@@ -655,11 +698,14 @@ export default function ReportPage() {
                       0
                     )}
                   </TableCell>
-                  {paymentMethods.map((method) => (
+                  {filteredPaymentMethods.map((method) => (
                     <TableCell key={method} className="text-right">
                       £
                       {filteredData
-                        .reduce((acc, cat) => acc + cat.methodTotals[method], 0)
+                        .reduce(
+                          (acc, cat) => acc + (cat.methodTotals[method] || 0),
+                          0
+                        )
                         .toFixed(2)
                         .toLocaleString()}
                     </TableCell>
@@ -686,12 +732,10 @@ export default function ReportPage() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between">
             <h1 className="text-3xl font-bold">Transaction Report</h1>
-            
           </div>
 
           <div className="flex flex-col gap-4 p-4">
             <div className="flex flex-wrap  gap-4">
-              
               <div className="flex min-w-[200px] items-center gap-2">
                 <label className="whitespace-nowrap text-sm font-medium">
                   From Date
@@ -756,7 +800,10 @@ export default function ReportPage() {
                 <Select
                   value={filters.storage}
                   onValueChange={(value) =>
-                    setFilters({ ...filters, storage: value })
+                    setFilters({
+                      ...filters,
+                      storage: value === 'all' ? '' : value
+                    })
                   }
                 >
                   <SelectTrigger className="w-full">
@@ -790,19 +837,18 @@ export default function ReportPage() {
                 </Button>
               </div>
               <div className="flex justify-end gap-4">
-              <Button variant="theme" onClick={fetchData}>
-                Generate Report
-              </Button>
-              {isReportGenerated && (
-                <Button variant="theme" onClick={generatePDF}>
-                  Download PDF Report
+                <Button variant="theme" onClick={fetchData}>
+                  Generate Report
                 </Button>
-              )}
-            </div>
+                {isReportGenerated && (
+                  <Button variant="theme" onClick={generatePDF}>
+                    Download PDF Report
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
-       
           <div className=" w-full space-y-6">
             {loading ? (
               <div className="flex h-40 w-full flex-col items-center justify-center">
