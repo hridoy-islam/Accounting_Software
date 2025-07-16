@@ -52,10 +52,12 @@ export function InvoiceDialog({
       method: '',
       category: '',
       storage: '',
-      transactionDate: new Date(),
+      transactionDate: undefined,
       details: ''
     }
   });
+
+  const { isSubmitting } = form.formState;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -151,7 +153,7 @@ export function InvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="sm:max-w-[650px] h-[85vh] overflow-y-auto">
+      <DialogContent className="h-[85vh] overflow-y-auto sm:max-w-[650px]">
         <div>
           <DialogTitle>Complete Transaction</DialogTitle>
           <DialogDescription>
@@ -177,19 +179,16 @@ export function InvoiceDialog({
                     <span className="font-medium">Imported From:</span>{' '}
                     {invoice.companyId?.name}
                   </p>
-
-                  
                 </div>
               </div>
 
-              <div className="space-y-4 mt-6">
-                
+              <div className="mt-6 space-y-4">
                 <div className="space-y-2">
                   <p className="text-sm text-black">
                     <span className="font-medium">Transaction Type:</span>{' '}
                     {capitalizeFirst(invoice.transactionType)}
                   </p>
-                 
+
                   <p className="text-sm text-black">
                     <span className="font-medium">Amount:</span> £
                     {invoice.amount.toFixed(2)}
@@ -198,13 +197,13 @@ export function InvoiceDialog({
               </div>
             </div>
             {invoice.description && (
-                  <div className="space-y-1 my-1">
-                    <p className="text-sm text-black">
-                      <span className="font-medium">Description:</span>{' '}
-                      {invoice.description}
-                    </p>
-                  </div>
-                )}
+              <div className="my-1 space-y-1">
+                <p className="text-sm text-black">
+                  <span className="font-medium">Description:</span>{' '}
+                  {invoice.description}
+                </p>
+              </div>
+            )}
 
             <Form {...form}>
               <form
@@ -321,12 +320,12 @@ export function InvoiceDialog({
                           type="date"
                           value={
                             field.value
-                              ? moment(field.value).format('DD MMM YYYY')
+                              ? moment(field.value).format('YYYY-MM-DD')
                               : ''
                           }
                           onChange={(e) =>
                             field.onChange(
-                              moment(e.target.value, 'DD MMM YYYY').toDate()
+                              moment(e.target.value, 'YYYY-MM-DD').toDate()
                             )
                           }
                         />
@@ -357,8 +356,8 @@ export function InvoiceDialog({
                   <Button variant="outline" onClick={onClose} type="button">
                     Cancel
                   </Button>
-                  <Button type="submit" variant="theme">
-                    Complete Transaction
+                  <Button type="submit" variant="theme" disabled={isSubmitting}>
+                    {isSubmitting ? 'Submitting...' : 'Complete Transaction'}
                   </Button>
                 </div>
               </form>
