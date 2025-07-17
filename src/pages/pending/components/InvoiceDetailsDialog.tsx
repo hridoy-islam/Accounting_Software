@@ -93,7 +93,7 @@ export default function InvoiceDetailsDialog({
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-gray-500">Created At</p>
+                <p className="text-sm text-gray-500">Imported Date</p>
                 <p className="font-medium">
                   {moment(invoice.createdAt).format('DD MMM YYYY')}
                 </p>
