@@ -24,7 +24,7 @@ export function TransactionDetailsDialog({
   const getDisplayValue = (field: any): string => {
     if (field === null || field === undefined) return 'N/A';
     if (typeof field === 'string') return field;
-    if (typeof field === 'number') return field.toString();
+    if (typeof field === 'number') return field.toFixed(2);
     if (typeof field === 'boolean') return field ? 'Yes' : 'No';
 
     if (typeof field === 'object') {
@@ -45,7 +45,7 @@ export function TransactionDetailsDialog({
 
   return (
     <Dialog open={!!transaction} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] lg:max-w-[900px] h-[60vh] overflow-y-auto">
+      <DialogContent className="h-[60vh] overflow-y-auto sm:max-w-[700px] lg:max-w-[900px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             Transaction Details
@@ -65,25 +65,22 @@ export function TransactionDetailsDialog({
                 {getDisplayValue(transaction.transactionType)}
               </Badge>
             )}
-            
           </DialogTitle>
           {/* Amount Section */}
-        <div className="border-b pb-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold">
-              £ {getDisplayValue(transaction.transactionAmount)}
-            </span>
+          <div className="border-b pb-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold">
+                £ {getDisplayValue(transaction.transactionAmount)}
+              </span>
+            </div>
           </div>
-        </div>
         </DialogHeader>
 
-        
-
-        <div className="space-y-3 ">
+        <div className="space-y-2">
           {/* Main Grid - 3 Columns */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            {/* Left Grid - Basic Info */}
-            <div className="space-y-3">
+            {/* Column 1 - Basic Info */}
+            <div className="space-y-2">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Transaction Date</p>
                 <div className="flex items-center gap-2">
@@ -110,7 +107,7 @@ export function TransactionDetailsDialog({
               )}
 
               {transaction.details && (
-                <div className="space-y12">
+                <div className="space-y-1">
                   <p className="text-sm text-gray-500">Details</p>
                   <p className="text-sm">
                     {getDisplayValue(transaction.details)}
@@ -119,13 +116,14 @@ export function TransactionDetailsDialog({
               )}
             </div>
 
-            <div className="space-y-1">
+            {/* Column 2 - Invoice & Payment */}
+            <div className="space-y-2">
               {(transaction.invoiceNumber || transaction.invoiceDate) && (
-                <div className="space-y-1">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium">Invoice Information</h3>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-3">
                     {transaction.invoiceNumber && (
                       <div>
                         <p className="text-sm text-gray-500">Invoice Number</p>
@@ -138,7 +136,9 @@ export function TransactionDetailsDialog({
                       <div>
                         <p className="text-sm text-gray-500">Invoice Date</p>
                         <p className="font-medium">
-                          {moment(transaction.invoiceDate).format('DD MMM YYYY')}
+                          {moment(transaction.invoiceDate).format(
+                            'DD MMM YYYY'
+                          )}
                         </p>
                       </div>
                     )}
@@ -146,7 +146,7 @@ export function TransactionDetailsDialog({
                 </div>
               )}
 
-              {(transaction.description || transaction.details) && (
+              {transaction.transactionMethod && (
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <p className="text-sm text-gray-500">Payment Method</p>
@@ -154,21 +154,11 @@ export function TransactionDetailsDialog({
                       {getDisplayValue(transaction.transactionMethod)}
                     </p>
                   </div>
-
-                  {transaction.description && (
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-500">Description</p>
-                      <p className="text-sm">
-                        {getDisplayValue(transaction.description)}
-                      </p>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
 
-            {/* Right Grid - Document Link */}
-
+            {/* Column 3 - Document */}
             <div className="space-y-6">
               <div className="space-y-1">
                 <h3 className="font-medium">Transaction Document</h3>
@@ -182,7 +172,7 @@ export function TransactionDetailsDialog({
                         'noopener,noreferrer'
                       )
                     }
-                    className="inline-flex items-center gap-2 text-primary "
+                    className="inline-flex items-center gap-2 text-primary"
                   >
                     <FileIcon className="h-4 w-4" />
                     <span className="text-xs">View Document</span>
@@ -192,6 +182,16 @@ export function TransactionDetailsDialog({
                 )}
               </div>
             </div>
+
+            {/* Full-width Description (spans 2 columns) */}
+            {transaction.description && (
+              <div className="space-y-1 -mt-3 sm:col-span-2">
+                <p className="text-sm text-gray-500">Description</p>
+                <p className="text-sm">
+                  {getDisplayValue(transaction.description)}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>

@@ -105,7 +105,8 @@ export function InvoiceDialog({
       storage: selectedStorage._id, // Use _id of the selected storage
       transactionType: invoice?.transactionType, // Assuming this is already an _id or string
       details: payload.details,
-      companyId: id
+      companyId: id,
+      description:invoice?.description
     };
 
     try {
