@@ -104,7 +104,7 @@ const InvoicePage = () => {
       const response = await axiosInstance.get(
         `/customer?companyId=${id}&limit=all`
       );
-      setCustomers(response.data.data.result || []);
+      setCustomers(response?.data.data.result || []);
     } catch (error) {
       console.error('Error fetching customers:', error);
     } finally {
@@ -124,7 +124,7 @@ const InvoicePage = () => {
   const handleEdit = (invoice: Invoice) => {
     form.reset({
       ...invoice,
-      customer: invoice.customer?._id || '',
+      customer: invoice?.customer?._id || '',
       invoiceDate: invoice.invoiceDate
         ? new Date(invoice.invoiceDate).toISOString().split('T')[0]
         : ''
@@ -136,7 +136,7 @@ const InvoicePage = () => {
   const handleDelete = async (id: string) => {
     try {
       await axiosInstance.patch(`/invoice/${id}`, { isDeleted: true });
-      setInvoices((prev) => prev.filter((invoice) => invoice._id !== id));
+      setInvoices((prev) => prev.filter((invoice) => invoice?._id !== id));
     } catch (error) {
       console.error('Error deleting invoice:', error);
     }
@@ -179,7 +179,7 @@ const InvoicePage = () => {
           if (invoice._id === currentInvoice._id) {
             return {
               ...response.data.data,
-              customer: invoice.customer || response.data.data.customer
+              customer: invoice?.customer || response.data.data.customer
             };
           }
           return invoice;
@@ -327,7 +327,7 @@ const InvoicePage = () => {
               <SelectContent>
                 {customers.map((customer) => (
                   <SelectItem key={customer._id} value={customer._id}>
-                    {customer.name}
+                    {customer?.name}
                   </SelectItem>
                 ))}
               </SelectContent>

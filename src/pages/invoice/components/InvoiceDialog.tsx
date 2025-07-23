@@ -347,12 +347,12 @@ export function InvoiceDialog({
                           type="date"
                           value={
                             field.value
-                              ? moment(field.value).format('DD MMM YYYY')
+                              ? moment(field.value).format('YYYY-MM-DD')
                               : ''
                           }
                           onChange={(e) =>
                             field.onChange(
-                              moment(e.target.value, 'DD MMM YYYY').toDate()
+                              moment(e.target.value, 'YYYY-MM-DD').toDate()
                             )
                           }
                         />
