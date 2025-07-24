@@ -187,10 +187,10 @@ export function InvoiceDialog({
                     </span>{' '}
                     {invoice.invoiceNumber}
                   </p>
-                  <p className="text-sm text-black">
+                  {/* <p className="text-sm text-black">
                     <span className="font-medium">Reference Invoice Date:</span>{' '}
-                    {format(invoice.invoiceDate, 'PPP')}
-                  </p>
+                    {format(invoice?.invoiceDate, 'PPP')}
+                  </p> */}
 
                   {invoice.details && (
                     <div className="space-y-1">
