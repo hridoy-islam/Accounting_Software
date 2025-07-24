@@ -49,7 +49,11 @@ export default function CreateInvoice() {
     name: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
+    bankName: '',
+    accountNo: '',
+    sortCode: '',
+    beneficiary: ''
   });
 
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -230,7 +234,16 @@ export default function CreateInvoice() {
       setCustomers([...customers, createdCustomer]);
       setSelectedCustomer(createdCustomer._id);
       setIsNewCustomerDialogOpen(false);
-      setNewCustomer({ name: '', email: '', phone: '', address: '' });
+      setNewCustomer({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        bankName: '',
+        accountNo: '',
+        sortCode: '',
+        beneficiary: ''
+      });
 
       toast({
         title: 'Customer created successfully',
@@ -255,7 +268,7 @@ export default function CreateInvoice() {
       return;
     }
 
-    if (!selectedBank) {
+    if (transactionType !== 'outflow' && !selectedBank) {
       toast({
         title: 'Please select a bank',
         variant: 'destructive'
@@ -283,7 +296,7 @@ export default function CreateInvoice() {
       const invoiceData = {
         companyId,
         customer: selectedCustomer,
-        bank: selectedBank,
+        // bank: selectedBank,
         invoiceNumber,
         invoiceDate,
         termsAndConditions,
@@ -304,6 +317,10 @@ export default function CreateInvoice() {
         discountType: invoiceDiscountType,
         subtotal: subtotal
       };
+
+      if (transactionType !== 'outflow') {
+        invoiceData.bank = selectedBank;
+      }
 
       await axiosInstance.post('/invoice', invoiceData);
 
@@ -337,6 +354,26 @@ export default function CreateInvoice() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+        {/* Transaction Type */}
+        <div className="space-y-2">
+          <Label htmlFor="transactionType">Transaction Type*</Label>
+          <Select
+            id="transactionType"
+            className="w-full"
+            value={[
+              { label: 'Inflow', value: 'inflow' },
+              { label: 'Outflow', value: 'outflow' }
+            ].find((opt) => opt.value === transactionType)}
+            onChange={(selectedOption) =>
+              setTransactionType(selectedOption?.value || '')
+            }
+            options={[
+              { label: 'Inflow', value: 'inflow' },
+              { label: 'Outflow', value: 'outflow' }
+            ]}
+            placeholder="Select type"
+          />
+        </div>
         <div className="space-y-2">
           <div className="space-y-2">
             <Label htmlFor="customer">Customer Name*</Label>
@@ -358,7 +395,7 @@ export default function CreateInvoice() {
             </div>
           </div>
         </div>
-        <div className="space-y-2">
+        {transactionType !== 'outflow' && (
           <div className="space-y-2">
             <Label htmlFor="bank">Bank*</Label>
             <div className="flex items-center gap-2">
@@ -378,7 +415,7 @@ export default function CreateInvoice() {
               />
             </div>
           </div>
-        </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="invoiceNumber">Reference Invoice Number</Label>
@@ -400,26 +437,6 @@ export default function CreateInvoice() {
             type="date"
             value={invoiceDate}
             onChange={(e) => setInvoiceDate(e.target.value)}
-          />
-        </div>
-        {/* Transaction Type */}
-        <div className="space-y-2">
-          <Label htmlFor="transactionType">Transaction Type*</Label>
-          <Select
-            id="transactionType"
-            className="w-full"
-            value={[
-              { label: 'Inflow', value: 'inflow' },
-              { label: 'Outflow', value: 'outflow' }
-            ].find((opt) => opt.value === transactionType)}
-            onChange={(selectedOption) =>
-              setTransactionType(selectedOption?.value || '')
-            }
-            options={[
-              { label: 'Inflow', value: 'inflow' },
-              { label: 'Outflow', value: 'outflow' }
-            ]}
-            placeholder="Select type"
           />
         </div>
       </div>
@@ -505,7 +522,7 @@ export default function CreateInvoice() {
 
             <div className="flex justify-between p-4">
               <div className="flex flex-col gap-2">
-              <Button variant="theme" onClick={handleAddRow}>
+                <Button variant="theme" onClick={handleAddRow}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add New Row
                 </Button>
@@ -529,7 +546,6 @@ export default function CreateInvoice() {
                 </div>
 
                 <div className="mb-2 flex items-center">
-                  
                   <span className="mr-4 w-28 font-medium">Discount</span>
                   <div className="flex w-full items-center gap-2">
                     <Select
@@ -566,7 +582,6 @@ export default function CreateInvoice() {
                     </div>
                   </div>
                 </div>
-                
               </div>
 
               <div className="flex flex-wrap justify-between gap-4 p-4">
@@ -582,7 +597,7 @@ export default function CreateInvoice() {
                       VAT ({Number(invoiceTax) || 0}%)
                     </span>
                     <span className="ml-auto w-32 text-center font-medium">
-                    +{(subtotal * (Number(invoiceTax) / 100)).toFixed(2)}
+                      +{(subtotal * (Number(invoiceTax) / 100)).toFixed(2)}
                     </span>
                   </div>
                   <div className="mb-2 flex items-center">
@@ -592,8 +607,8 @@ export default function CreateInvoice() {
                         : 'Discount'}
                     </span>
                     <span className="ml-auto w-32 text-center font-medium">
-                      
-                      -{(invoiceDiscountType === 'percentage'
+                      -
+                      {(invoiceDiscountType === 'percentage'
                         ? subtotal * (Number(invoiceDiscount) / 100)
                         : Number(invoiceDiscount)
                       ).toFixed(2)}
@@ -716,6 +731,46 @@ export default function CreateInvoice() {
                 value={newCustomer.address}
                 onChange={(e) =>
                   setNewCustomer({ ...newCustomer, address: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bankName">Bank Name</Label>
+              <Textarea
+                id="bankName"
+                value={newCustomer.bankName}
+                onChange={(e) =>
+                  setNewCustomer({ ...newCustomer, bankName: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="accountNo">Account No:</Label>
+              <Textarea
+                id="accountNo"
+                value={newCustomer.accountNo}
+                onChange={(e) =>
+                  setNewCustomer({ ...newCustomer, accountNo: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sortCode">Sort Code:</Label>
+              <Textarea
+                id="sortCode"
+                value={newCustomer.sortCode}
+                onChange={(e) =>
+                  setNewCustomer({ ...newCustomer, sortCode: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="beneficiary">Beneficiary:</Label>
+              <Textarea
+                id="beneficiary"
+                value={newCustomer.beneficiary}
+                onChange={(e) =>
+                  setNewCustomer({ ...newCustomer, beneficiary: e.target.value })
                 }
               />
             </div>

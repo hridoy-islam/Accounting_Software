@@ -75,7 +75,7 @@ export function InvoiceDialog({
       method: '',
       category: '',
       storage: '',
-      transactionDate: new Date()
+      transactionDate: null
     }
   });
 
@@ -118,7 +118,7 @@ export function InvoiceDialog({
     // Build the transaction payload
     const transactionPayload = {
       transactionDate: format(payload.transactionDate, 'yyyy-MM-dd'),
-      invoiceNumber: invoice?.invoiceNumber,
+      invoiceNumber: invoice?.invId,
       invoiceDate: invoice?.invoiceDate,
       transactionAmount: invoice?.amount ?? 0,
       transactionCategory: selectedCategory._id, // Use _id of the selected category
@@ -175,6 +175,12 @@ export function InvoiceDialog({
               <div className="space-y-2">
                 <p className="mb-2 text-sm font-semibold">Invoice Details</p>
                 <div className="space-y-1">
+                  <p className="text-sm text-black">
+                    <span className="font-medium">
+                      Invoice Number:
+                    </span>{' '}
+                    {invoice?.invId}
+                  </p>
                   <p className="text-sm text-black">
                     <span className="font-medium">
                       Reference Invoice Number:
@@ -235,7 +241,7 @@ export function InvoiceDialog({
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-1"
+                className="space-y-4"
               >
                 <FormField
                   control={form.control}

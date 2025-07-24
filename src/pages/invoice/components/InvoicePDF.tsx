@@ -113,23 +113,42 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
               <Text style={[styles.title, { marginBottom: 5 }]}>
                 Payment Information
               </Text>
-              {invoice.bank && (
+              {invoice.transactionType === 'outflow' ? (
                 <>
                   <Text style={{ marginBottom: 4 }}>
-                    Bank: {invoice.bank.name}
+                    Bank: {invoice.customer?.bankName}
                   </Text>
                   <Text style={{ marginBottom: 4 }}>
-                    Account No: {invoice.bank.accountNo}
+                    Account No: {invoice.customer?.accountNo}
                   </Text>
                   <Text style={{ marginBottom: 4 }}>
-                    Sort Code: {invoice.bank.sortCode}
+                    Sort Code: {invoice.customer?.sortCode}
                   </Text>
-                  {invoice.bank.beneficiary && (
+                  {invoice.customer?.beneficiary && (
                     <Text style={{ marginBottom: 4 }}>
-                      Beneficiary: {invoice.bank.beneficiary}
+                      Beneficiary: {invoice.customer.beneficiary}
                     </Text>
                   )}
                 </>
+              ) : (
+                invoice.bank && (
+                  <>
+                    <Text style={{ marginBottom: 4 }}>
+                      Bank: {invoice.bank.name}
+                    </Text>
+                    <Text style={{ marginBottom: 4 }}>
+                      Account No: {invoice.bank.accountNo}
+                    </Text>
+                    <Text style={{ marginBottom: 4 }}>
+                      Sort Code: {invoice.bank.sortCode}
+                    </Text>
+                    {invoice.bank.beneficiary && (
+                      <Text style={{ marginBottom: 4 }}>
+                        Beneficiary: {invoice.bank.beneficiary}
+                      </Text>
+                    )}
+                  </>
+                )
               )}
             </View>
           </View>
@@ -144,12 +163,20 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
                 textAlign: 'right'
               }}
             >
-              INVOICE
+              {invoice.transactionType === 'outflow' ? 'REMIT' : 'INVOICE'}
             </Text>
             {[
-              { label: 'Invoice:', value: invoice.invId || '' },
               {
-                label: 'Invoice Date:',
+                label:
+                  invoice.transactionType === 'outflow'
+                    ? 'Remit ID:'
+                    : 'Invoice:',
+                value: invoice.invId || ''
+              },
+              {
+                label: invoice.transactionType === 'outflow'
+                    ? 'Remit Date:'
+                    : 'Invoice Date:',
                 value: moment(invoice.invoiceDate).format('DD MMM YYYY')
               },
               { label: 'Terms:', value: 'Due On Receipt' },
@@ -181,7 +208,9 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
 
         {/* Bill To */}
         <View style={styles.section}>
-          <Text style={styles.subtitle}>Bill To</Text>
+          <Text style={styles.subtitle}>
+            {invoice.transactionType === 'outflow' ? 'Remit To' : 'Bill To'}
+          </Text>
           <Text style={[styles.boldText, { marginBottom: 5 }]}>
             {typeof invoice.customer === 'object' ? invoice.customer.name : ''}
           </Text>
@@ -189,7 +218,11 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
 
         {/* Invoice Details Table */}
         <View style={styles.section}>
-          <Text style={styles.subtitle}>Invoice Details</Text>
+          <Text style={styles.subtitle}>
+            {invoice.transactionType === 'outflow'
+              ? 'Remit Details'
+              : 'Invoice Details'}
+          </Text>
           <View style={styles.table}>
             <View style={[styles.tableRow, { backgroundColor: '#f2f2f2' }]}>
               <Text style={styles.tableColNum}>#</Text>
@@ -228,7 +261,7 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
                 £{invoice.subtotal?.toFixed(2) || '0.00'}
               </Text>
             </View>
-            
+
             {invoice.tax > 0 && (
               <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
                 <Text

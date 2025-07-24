@@ -55,7 +55,7 @@ export function InvoiceList({
   const [uploadOpen, setUploadOpen] = useState(false);
   const { id: companyId } = useParams();
   const permission = useSelector((state: any) => state.permission.permissions);
-  
+
   const handleRowClick = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setDialogOpen(true);
@@ -67,8 +67,7 @@ export function InvoiceList({
   };
 
   const navigate = useNavigate();
-  const {hasPermission} = usePermission();
-
+  const { hasPermission } = usePermission();
 
   return (
     <div className="  shadow-sm">
@@ -85,8 +84,9 @@ export function InvoiceList({
             <TableHead className="text-left">Amount</TableHead>
             <TableHead className="text-left">Status</TableHead>
             <TableHead className="text-left">Type</TableHead>
-            {hasPermission('TransactionList', 'create') &&(
-            <TableHead className="text-left">Payment</TableHead>)}
+            {hasPermission('TransactionList', 'create') && (
+              <TableHead className="text-left">Payment</TableHead>
+            )}
 
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
@@ -189,49 +189,54 @@ export function InvoiceList({
                         : 'Outflow'}
                     </Badge>
                   </TableCell>
-                  {hasPermission('TransactionList', 'create') &&(
-                  <TableCell className="text-left">
-                    {invoice.status === 'paid' ? (
-                      <div className=" text-xs text-gray-600 hover:text-gray-800">
-                        Completed
-                      </div>
-                    ) : (
+                  {hasPermission('TransactionList', 'create') && (
+                    <TableCell className="text-left">
+                      {invoice.status === 'paid' ? (
+                        <div className=" text-xs text-gray-600 hover:text-gray-800">
+                          Completed
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => onMarkAsPaid(invoice)}
+                          variant="theme"
+                          size="sm"
+                        >
+                          Mark as Paid
+                        </Button>
+                      )}
+                    </TableCell>
+                  )}
+
+                  <TableCell className="flex flex-row items-center justify-end gap-2 text-right">
+                    {hasPermission('Invoice', 'edit') && (
                       <Button
-                        onClick={() => onMarkAsPaid(invoice)}
                         variant="theme"
-                        size="sm"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          setSelectedInvoice(invoice);
+                          setUploadOpen(true);
+                        }}
                       >
-                        Mark as Paid
+                        <Upload />
                       </Button>
                     )}
-                  </TableCell>)}
 
-                  
-                  <TableCell className="flex flex-row items-center justify-end gap-2 text-right">
-                  {hasPermission('Invoice', 'edit') &&(
-                    <Button
-                      variant="theme"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => {
-                        setSelectedInvoice(invoice);
-                        setUploadOpen(true);
-                      }}
-                    >
-                      <Upload />
-                    </Button>)}
-
-                    {hasPermission('Invoice', 'edit') &&(<Button
-                      variant="theme"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() =>
-                        navigate(`/admin/company/${companyId}/invoice/${invoice._id}`)
-                      }
-                    >
-                      <Pen />
-                    </Button>) }
-                    
+                    {hasPermission('Invoice', 'edit') &&
+                      invoice.status !== 'paid' && (
+                        <Button
+                          variant="theme"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            navigate(
+                              `/admin/company/${companyId}/invoice/${invoice._id}`
+                            )
+                          }
+                        >
+                          <Pen />
+                        </Button>
+                      )}
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -241,18 +246,18 @@ export function InvoiceList({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-[160px]">
                         <DropdownMenuItem>
-                          
                           <InvoicePDFDownload invoice={invoice} />
                         </DropdownMenuItem>
 
-                        {hasPermission('Invoice', 'delete') &&(<DropdownMenuItem
-                          className="text-red-500 focus:bg-red-800 focus:text-white"
-                          onClick={() => onDelete(invoice._id)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete Invoice
-                        </DropdownMenuItem>)}
-                        
+                        {hasPermission('Invoice', 'delete') && (
+                          <DropdownMenuItem
+                            className="text-red-500 focus:bg-red-800 focus:text-white"
+                            onClick={() => onDelete(invoice._id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Invoice
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
