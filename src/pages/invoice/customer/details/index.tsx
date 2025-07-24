@@ -13,7 +13,7 @@ const CustomerDetailsPage = () => {
   const [formData, setFormData] = useState({});
   const [isModified, setIsModified] = useState(false);
   const navigate = useNavigate();
-  const {hasPermission} = usePermission();
+  const { hasPermission } = usePermission();
 
   const fetchData = async () => {
     try {
@@ -31,38 +31,35 @@ const CustomerDetailsPage = () => {
     }
   }, [cid]);
 
-  // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
-    setIsModified(true); // Set modified state to true
+    setIsModified(true);
   };
 
-  // Handle form submission
   const handleSubmit = async () => {
     try {
       const response = await axiosInstance.patch(`/customer/${cid}`, formData);
       if (response.data.success) {
         setIsModified(false);
         fetchData();
-
         toast({
           title: 'Record Updated successfully',
-          className: 'bg-theme border-none text-white'
+          className: 'bg-theme border-none text-white',
         });
       } else {
         toast({
-          title: 'Error updating Customer ',
-          className: 'bg-destructive border-none text-white'
+          title: 'Error updating Customer',
+          className: 'bg-destructive border-none text-white',
         });
       }
     } catch (error) {
       toast({
-        title: 'Error updating Customer ',
-        className: 'bg-destructive border-none text-white'
+        title: 'Error updating Customer',
+        className: 'bg-destructive border-none text-white',
       });
     }
   };
@@ -71,27 +68,21 @@ const CustomerDetailsPage = () => {
     <div>
       <div className="rounded-lg bg-white p-8 shadow-lg">
         <div className="flex flex-row items-start justify-end">
-          <div>
-            <Button
-              className="bg-theme text-white"
-              size={'sm'}
-              onClick={() => navigate(`/admin/company/${id}/invoice/customer`)}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back To Customer List
-            </Button>
-          </div>
+          <Button
+            className="bg-theme text-white"
+            size="sm"
+            onClick={() => navigate(`/admin/company/${id}/invoice/customer`)}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back To Customer List
+          </Button>
         </div>
 
         <div className="space-y-6">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {/* Name */}
-            <div className="flex flex-col   rounded-lg p-2   transition">
-              <div className="flex items-center   ">
-                <span className="text-lg font-semibold text-gray-700">
-                  Name
-                </span>
-              </div>
+            <div className="flex flex-col p-2 rounded-lg">
+              <label className="text-lg font-semibold text-gray-700">Name</label>
               <input
                 type="text"
                 name="name"
@@ -102,12 +93,8 @@ const CustomerDetailsPage = () => {
             </div>
 
             {/* Email */}
-            <div className="flex flex-col   rounded-lg p-2  ">
-              <div className="flex items-center   ">
-                <span className="text-lg font-semibold text-gray-700">
-                  Email
-                </span>
-              </div>
+            <div className="flex flex-col p-2 rounded-lg">
+              <label className="text-lg font-semibold text-gray-700">Email</label>
               <input
                 type="email"
                 name="email"
@@ -117,12 +104,9 @@ const CustomerDetailsPage = () => {
               />
             </div>
 
-            <div className="flex flex-col   rounded-lg p-2  ">
-              <div className="flex items-center   ">
-                <span className="text-lg font-semibold text-gray-700">
-                  Phone
-                </span>
-              </div>
+            {/* Phone */}
+            <div className="flex flex-col p-2 rounded-lg">
+              <label className="text-lg font-semibold text-gray-700">Phone</label>
               <input
                 type="tel"
                 name="phone"
@@ -133,16 +117,60 @@ const CustomerDetailsPage = () => {
             </div>
 
             {/* Address */}
-            <div className="flex flex-col   rounded-lg p-2  ">
-              <div className="flex items-center   ">
-                <span className="text-lg font-semibold text-gray-700">
-                  Address
-                </span>
-              </div>
+            <div className="flex flex-col p-2 rounded-lg">
+              <label className="text-lg font-semibold text-gray-700">Address</label>
               <input
                 type="text"
                 name="address"
                 value={formData?.address || ''}
+                onChange={handleInputChange}
+                className="rounded border border-gray-300 p-2 text-gray-800"
+              />
+            </div>
+
+            {/* Bank Name */}
+            <div className="flex flex-col p-2 rounded-lg">
+              <label className="text-lg font-semibold text-gray-700">Bank Name</label>
+              <input
+                type="text"
+                name="bankName"
+                value={formData?.bankName || ''}
+                onChange={handleInputChange}
+                className="rounded border border-gray-300 p-2 text-gray-800"
+              />
+            </div>
+
+            {/* Account No */}
+            <div className="flex flex-col p-2 rounded-lg">
+              <label className="text-lg font-semibold text-gray-700">Account No</label>
+              <input
+                type="text"
+                name="accountNo"
+                value={formData?.accountNo || ''}
+                onChange={handleInputChange}
+                className="rounded border border-gray-300 p-2 text-gray-800"
+              />
+            </div>
+
+            {/* Sort Code */}
+            <div className="flex flex-col p-2 rounded-lg">
+              <label className="text-lg font-semibold text-gray-700">Sort Code</label>
+              <input
+                type="text"
+                name="sortCode"
+                value={formData?.sortCode || ''}
+                onChange={handleInputChange}
+                className="rounded border border-gray-300 p-2 text-gray-800"
+              />
+            </div>
+
+            {/* Beneficiary */}
+            <div className="flex flex-col p-2 rounded-lg">
+              <label className="text-lg font-semibold text-gray-700">Beneficiary</label>
+              <input
+                type="text"
+                name="beneficiary"
+                value={formData?.beneficiary || ''}
                 onChange={handleInputChange}
                 className="rounded border border-gray-300 p-2 text-gray-800"
               />

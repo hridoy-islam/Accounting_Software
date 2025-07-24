@@ -80,7 +80,7 @@ export default function EditInvoice() {
         setInvoiceNumber(invoice.invoiceNumber || '');
         setInvoiceDate(
           invoice.invoiceDate
-            ? moment(invoice.invoiceDate).format('DD MMM YYYY')
+            ? moment(invoice.invoiceDate).format('YYYY-MM-DD') // Corrected format
             : ''
         );
         setTransactionType(invoice.transactionType || '');
@@ -320,7 +320,7 @@ export default function EditInvoice() {
       return;
     }
 
-    if (!selectedBank) {
+    if (transactionType !== 'outflow' && !selectedBank) {
       toast({
         title: 'Please select a bank',
         variant: 'destructive'
@@ -348,7 +348,7 @@ export default function EditInvoice() {
       const invoiceData = {
         companyId,
         customer: selectedCustomer,
-        bank: selectedBank,
+        // bank: selectedBank,
         invoiceNumber,
         invoiceDate,
         termsAndConditions: showTermsAndConditions ? termsAndConditions : '',
@@ -370,6 +370,9 @@ export default function EditInvoice() {
         subtotal: subtotal
       };
 
+      if (transactionType !== 'outflow') {
+        invoiceData.bank = selectedBank;
+      }
       await axiosInstance.patch(`/invoice/${invoiceId}`, invoiceData);
 
       toast({
@@ -422,6 +425,25 @@ export default function EditInvoice() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
         <div className="space-y-2">
+          <Label htmlFor="transactionType">Transaction Type*</Label>
+          <Select
+            id="transactionType"
+            className="w-full"
+            value={[
+              { label: 'Inflow', value: 'inflow' },
+              { label: 'Outflow', value: 'outflow' }
+            ].find((opt) => opt.value === transactionType)}
+            onChange={(selectedOption) =>
+              setTransactionType(selectedOption?.value || '')
+            }
+            options={[
+              { label: 'Inflow', value: 'inflow' },
+              { label: 'Outflow', value: 'outflow' }
+            ]}
+            placeholder="Select type"
+          />
+        </div>
+        <div className="space-y-2">
           <div className="space-y-2">
             <Label htmlFor="customer">Customer Name*</Label>
             <div className="flex items-center gap-2">
@@ -450,27 +472,29 @@ export default function EditInvoice() {
           </div>
         </div>
 
-        <div className="space-y-2">
+        {transactionType !== 'outflow' && (
           <div className="space-y-2">
-            <Label htmlFor="bank">Bank*</Label>
-            <div className="flex items-center gap-2">
-              <Select
-                id="bank"
-                className="w-full"
-                value={banks.find((b) => b._id === selectedBank)}
-                onChange={(selectedOption) =>
-                  setSelectedBank(selectedOption?._id || '')
-                }
-                options={banks}
-                getOptionLabel={(option) => option.name}
-                getOptionValue={(option) => option._id}
-                isDisabled={isLoadingBanks}
-                placeholder="Select Bank Account"
-                isLoading={isLoadingBanks}
-              />
+            <div className="space-y-2">
+              <Label htmlFor="bank">Bank*</Label>
+              <div className="flex items-center gap-2">
+                <Select
+                  id="bank"
+                  className="w-full"
+                  value={banks.find((b) => b._id === selectedBank)}
+                  onChange={(selectedOption) =>
+                    setSelectedBank(selectedOption?._id || '')
+                  }
+                  options={banks}
+                  getOptionLabel={(option) => option.name}
+                  getOptionValue={(option) => option._id}
+                  isDisabled={isLoadingBanks}
+                  placeholder="Select Bank Account"
+                  isLoading={isLoadingBanks}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="invoiceNumber">Reference Invoice Number</Label>
@@ -490,26 +514,6 @@ export default function EditInvoice() {
             type="date"
             value={invoiceDate}
             onChange={(e) => setInvoiceDate(e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="transactionType">Transaction Type*</Label>
-          <Select
-            id="transactionType"
-            className="w-full"
-            value={[
-              { label: 'Inflow', value: 'inflow' },
-              { label: 'Outflow', value: 'outflow' }
-            ].find((opt) => opt.value === transactionType)}
-            onChange={(selectedOption) =>
-              setTransactionType(selectedOption?.value || '')
-            }
-            options={[
-              { label: 'Inflow', value: 'inflow' },
-              { label: 'Outflow', value: 'outflow' }
-            ]}
-            placeholder="Select type"
           />
         </div>
       </div>
