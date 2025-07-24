@@ -174,7 +174,9 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
                 value: invoice.invId || ''
               },
               {
-                label: 'Invoice Date:',
+                label: invoice.transactionType === 'outflow'
+                    ? 'Remit Date:'
+                    : 'Invoice Date:',
                 value: moment(invoice.invoiceDate).format('DD MMM YYYY')
               },
               { label: 'Terms:', value: 'Due On Receipt' },
@@ -207,9 +209,8 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
         {/* Bill To */}
         <View style={styles.section}>
           <Text style={styles.subtitle}>
-                          {invoice.transactionType === 'outflow' ? 'Remit To' : 'Bill To'}
-
-            </Text>
+            {invoice.transactionType === 'outflow' ? 'Remit To' : 'Bill To'}
+          </Text>
           <Text style={[styles.boldText, { marginBottom: 5 }]}>
             {typeof invoice.customer === 'object' ? invoice.customer.name : ''}
           </Text>
@@ -218,8 +219,10 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
         {/* Invoice Details Table */}
         <View style={styles.section}>
           <Text style={styles.subtitle}>
-                          {invoice.transactionType === 'outflow' ? 'Remit Details' : 'Invoice Details'}
-            </Text>
+            {invoice.transactionType === 'outflow'
+              ? 'Remit Details'
+              : 'Invoice Details'}
+          </Text>
           <View style={styles.table}>
             <View style={[styles.tableRow, { backgroundColor: '#f2f2f2' }]}>
               <Text style={styles.tableColNum}>#</Text>

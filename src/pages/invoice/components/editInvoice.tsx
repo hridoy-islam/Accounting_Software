@@ -461,13 +461,13 @@ export default function EditInvoice() {
                 placeholder="Select or add customer"
                 isLoading={isLoadingCustomers}
               />
-              <Button
+              {/* <Button
                 variant="theme"
                 size="icon"
                 onClick={() => setIsNewCustomerDialogOpen(true)}
               >
                 <PlusCircle className="h-4 w-4" />
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>

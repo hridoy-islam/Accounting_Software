@@ -49,7 +49,11 @@ export default function CreateInvoice() {
     name: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
+    bankName: '',
+    accountNo: '',
+    sortCode: '',
+    beneficiary: ''
   });
 
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -230,7 +234,16 @@ export default function CreateInvoice() {
       setCustomers([...customers, createdCustomer]);
       setSelectedCustomer(createdCustomer._id);
       setIsNewCustomerDialogOpen(false);
-      setNewCustomer({ name: '', email: '', phone: '', address: '' });
+      setNewCustomer({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        bankName: '',
+        accountNo: '',
+        sortCode: '',
+        beneficiary: ''
+      });
 
       toast({
         title: 'Customer created successfully',
@@ -255,13 +268,13 @@ export default function CreateInvoice() {
       return;
     }
 
-   if (transactionType !== 'outflow' && !selectedBank) {
-    toast({
-      title: 'Please select a bank',
-      variant: 'destructive'
-    });
-    return;
-  }
+    if (transactionType !== 'outflow' && !selectedBank) {
+      toast({
+        title: 'Please select a bank',
+        variant: 'destructive'
+      });
+      return;
+    }
 
     if (!transactionType) {
       toast({
@@ -305,9 +318,9 @@ export default function CreateInvoice() {
         subtotal: subtotal
       };
 
-       if (transactionType !== 'outflow') {
-      invoiceData.bank = selectedBank;
-    }
+      if (transactionType !== 'outflow') {
+        invoiceData.bank = selectedBank;
+      }
 
       await axiosInstance.post('/invoice', invoiceData);
 
@@ -718,6 +731,46 @@ export default function CreateInvoice() {
                 value={newCustomer.address}
                 onChange={(e) =>
                   setNewCustomer({ ...newCustomer, address: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bankName">Bank Name</Label>
+              <Textarea
+                id="bankName"
+                value={newCustomer.bankName}
+                onChange={(e) =>
+                  setNewCustomer({ ...newCustomer, bankName: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="accountNo">Account No:</Label>
+              <Textarea
+                id="accountNo"
+                value={newCustomer.accountNo}
+                onChange={(e) =>
+                  setNewCustomer({ ...newCustomer, accountNo: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sortCode">Sort Code:</Label>
+              <Textarea
+                id="sortCode"
+                value={newCustomer.sortCode}
+                onChange={(e) =>
+                  setNewCustomer({ ...newCustomer, sortCode: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="beneficiary">Beneficiary:</Label>
+              <Textarea
+                id="beneficiary"
+                value={newCustomer.beneficiary}
+                onChange={(e) =>
+                  setNewCustomer({ ...newCustomer, beneficiary: e.target.value })
                 }
               />
             </div>
