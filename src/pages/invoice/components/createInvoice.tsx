@@ -57,7 +57,7 @@ export default function CreateInvoice() {
   });
 
   const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [invoiceDate, setInvoiceDate] = useState('');
+  const [invoiceDate, setInvoiceDate] = useState(undefined);
 
   const [notes, setNotes] = useState('');
   const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
