@@ -134,7 +134,9 @@ export function InvoiceList({
                     onClick={() => handleRowClick(invoice)}
                     className="text-left"
                   >
-                    {moment(invoice.invoiceDate).format('DD MMM YYYY')}
+                    {invoice?.invoiceDate
+                      ? moment(invoice.invoiceDate).format('DD MMM YYYY')
+                      : '—'}
                   </TableCell>
 
                   <TableCell

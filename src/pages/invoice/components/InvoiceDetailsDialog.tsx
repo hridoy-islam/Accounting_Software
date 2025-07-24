@@ -24,7 +24,7 @@ export default function InvoiceDetailsDialog({
   if (!invoice) return null;
 
   const getDisplayValue = (field: any): string => {
-    if (field === null|| field === "" || field === undefined) return 'N/A';
+    if (field === null || field === '' || field === undefined) return 'N/A';
     if (typeof field === 'string')
       return field.charAt(0).toUpperCase() + field.slice(1);
     if (typeof field === 'number') return field.toString();
@@ -46,7 +46,7 @@ export default function InvoiceDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] h-[48vh] overflow-y-auto">
+      <DialogContent className="h-[48vh] overflow-y-auto sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             Invoice Details
@@ -68,42 +68,44 @@ export default function InvoiceDetailsDialog({
             )}
           </DialogTitle>
           {/* Amount Section */}
-        <div className="border-b pb-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold">
-              £ {invoice.amount.toFixed(2)}
-            </span>
+          <div className="border-b pb-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold">
+                £ {invoice.amount.toFixed(2)}
+              </span>
+            </div>
           </div>
-        </div>
         </DialogHeader>
 
-        
-
-        <div className="space-y-6 py-4 overflow-y-auto">
+        <div className="space-y-6 overflow-y-auto py-4">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             <div className="space-y-3">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Invoice Date</p>
                 <div className="flex items-center gap-2">
                   <p className="font-medium">
-                    {moment(invoice.invoiceDate).format('MMM DD YYYY')}
+                    {invoice?.invoiceDate
+                      ? moment(invoice.invoiceDate).format('DD MMM YYYY')
+                      : '—'}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <p className="text-sm text-gray-500">Reference Invoice Number</p>
-                <p className="font-medium">{getDisplayValue(invoice.invoiceNumber)}</p>
+                <p className="text-sm text-gray-500">
+                  Reference Invoice Number
+                </p>
+                <p className="font-medium">
+                  {getDisplayValue(invoice.invoiceNumber)}
+                </p>
               </div>
 
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Created At</p>
                 <p className="font-medium">
-                  {moment(invoice.createdAt).format('DD MMM YYYY')}
+                  {moment(invoice?.createdAt).format('DD MMM YYYY')}
                 </p>
               </div>
-             
-              
             </div>
 
             {/* Middle Grid - Invoice Details */}
@@ -125,9 +127,6 @@ export default function InvoiceDetailsDialog({
                   {getDisplayValue(invoice.customer?.name)}
                 </p>
               </div>
-
-              
-              
             </div>
 
             <div className="space-y-6">
