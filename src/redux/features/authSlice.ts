@@ -114,10 +114,10 @@ export const loginUser = createAsyncThunk<UserResponse, UserCredentials>(
       'accounting',
       JSON.stringify(response.data.accessToken)
     );
-    localStorage.setItem(
-      'accountingRefresh',
-      JSON.stringify(response.data.refreshToken)
-    );
+    // localStorage.setItem(
+    //   'accountingRefresh',
+    //   JSON.stringify(response.data.refreshToken)
+    // );
     return response;
   }
 );
@@ -207,7 +207,7 @@ export const changePassword = createAsyncThunk<
 
 export const logout = createAsyncThunk<void>('user/logout', async () => {
   localStorage.removeItem('accounting');
-  localStorage.removeItem('accountingRefresh');
+  // localStorage.removeItem('accountingRefresh');
 });
 
 const authSlice = createSlice({

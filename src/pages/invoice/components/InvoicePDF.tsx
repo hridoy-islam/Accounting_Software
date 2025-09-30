@@ -237,9 +237,9 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
                 <Text style={styles.tableColNum}>{index + 1}</Text>
                 <Text style={styles.tableColDesc}>{item.details}</Text>
                 <Text style={styles.tableColQty}>{item.quantity}</Text>
-                <Text style={styles.tableColRate}>{item.rate.toFixed(2)}</Text>
+                <Text style={styles.tableColRate}>£{item.rate.toFixed(2)}</Text>
                 <Text style={styles.tableColAmount}>
-                  {item.amount.toFixed(2)}
+                  £{item.amount.toFixed(2)}
                 </Text>
               </View>
             ))}
