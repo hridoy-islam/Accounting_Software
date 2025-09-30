@@ -18,7 +18,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
-      <AutoLogout inactivityLimit={30 * 60 * 1000} />
+      {/* <AutoLogout inactivityLimit={30 * 60 * 1000} /> */}
       {/* <MobileSidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
