@@ -27,6 +27,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { CategorySelector } from '../transaction/components/category-selector';
+import { time } from 'console';
 
 type Transaction = {
   _id: string;
@@ -388,53 +389,53 @@ export default function ReportPage() {
     );
   };
 
-  const transformData = (
-    transactions: Transaction[],
-    paymentMethods: string[]
-  ) => {
-    const categoryMap: { [key: string]: CategorySummary } = {};
+const transformData = (
+  transactions: Transaction[],
+  paymentMethods: string[]
+): CategorySummary[] => {
+  const categoryMap: { [key: string]: CategorySummary } = {};
 
-    transactions.forEach((transaction) => {
-      // Skip if transaction method is not in allowed methods for audit
-      if (
-        auditAccessMethods &&
-        !auditAccessMethods.includes(transaction.transactionMethod._id)
-      ) {
-        return;
-      }
+  transactions.forEach((transaction) => {
+    // Skip if transaction method is not allowed for audit
+    if (
+      auditAccessMethods &&
+      !auditAccessMethods.includes(transaction.transactionMethod._id)
+    ) {
+      return;
+    }
 
-      const categoryName = transaction.transactionCategory.name;
-      const methodName = transaction.transactionMethod.name;
+    const categoryName = transaction.transactionCategory?.name;
+    const methodName = transaction.transactionMethod?.name;
 
-      if (!categoryMap[categoryName]) {
-        categoryMap[categoryName] = {
-          categoryName,
-          transactions: [],
-          methodTotals: Object.fromEntries(
-            paymentMethods.map((method) => [method, 0])
-          ),
-          total: 0
-        };
-      }
+    if (!categoryMap[categoryName]) {
+      categoryMap[categoryName] = {
+        categoryName,
+        transactions: [],
+        methodTotals: Object.fromEntries(
+          paymentMethods.map((method) => [method, 0])
+        ),
+        total: 0,
+      };
+    }
 
-      categoryMap[categoryName].transactions.push(transaction);
+    categoryMap[categoryName].transactions.push(transaction);
 
-      if (categoryMap[categoryName].methodTotals[methodName] !== undefined) {
-        categoryMap[categoryName].methodTotals[methodName] +=
-          transaction.transactionAmount;
-      }
+    if (categoryMap[categoryName].methodTotals[methodName] !== undefined) {
+      categoryMap[categoryName].methodTotals[methodName] += Number(
+        transaction.transactionAmount
+      );
+    }
 
-      categoryMap[categoryName].total += transaction.transactionAmount;
-    });
+    categoryMap[categoryName].total += Number(transaction.transactionAmount);
+  });
 
-    return Object.values(categoryMap);
-  };
+  return Object.values(categoryMap);
+};
 
-  const filterData = (data: CategorySummary[]) => {
+const filterData = (data: CategorySummary[]): CategorySummary[] => {
   return data
     .map((category) => {
       const filteredTransactions = category.transactions.filter((transaction) => {
-        // Apply filters
         const methodMatch =
           !filters.method ||
           transaction?.transactionMethod?._id === filters.method;
@@ -442,32 +443,31 @@ export default function ReportPage() {
           !filters.category ||
           transaction?.transactionCategory?._id === filters.category;
         const storageMatch =
-          !filters.storage || // This now correctly handles empty string from "All Storages"
-          transaction?.storage?._id === filters.storage;
+          !filters.storage || transaction?.storage?._id === filters.storage;
 
         return methodMatch && categoryMatch && storageMatch;
       });
 
       // Recalculate methodTotals and total based on filtered transactions
       const filteredPaymentMethods = getFilteredPaymentMethods();
-      const newMethodTotals = Object.fromEntries(
+      const newMethodTotals: Record<string, number> = Object.fromEntries(
         filteredPaymentMethods.map((method) => [method, 0])
       );
-      
+
       let newTotal = 0;
       filteredTransactions.forEach((transaction) => {
-        const methodName = transaction.transactionMethod.name;
+        const methodName = transaction.transactionMethod?.name;
         if (newMethodTotals[methodName] !== undefined) {
-          newMethodTotals[methodName] += transaction.transactionAmount;
+          newMethodTotals[methodName] += Number(transaction.transactionAmount);
         }
-        newTotal += transaction.transactionAmount;
+        newTotal += Number(transaction.transactionAmount);
       });
 
       return {
         ...category,
         transactions: filteredTransactions,
         methodTotals: newMethodTotals,
-        total: newTotal
+        total: newTotal,
       };
     })
     .filter((category) => category.transactions.length > 0);
@@ -496,7 +496,10 @@ export default function ReportPage() {
         params: {
           startDate: fromDate,
           endDate: toDate
-        }
+        },
+        timeout: 120000,
+        maxContentLength: Infinity,
+  maxBodyLength: Infinity
       });
 
       const transactions = response.data.data;
@@ -516,14 +519,32 @@ export default function ReportPage() {
       setOutflowData(outflowData);
       setHasFetched(true);
       setIsReportGenerated(true);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast({
-        title: 'Error fetching data.',
-        description: 'Please try again later.',
-        className: 'bg-destructive text-white border-none'
-      });
-    } finally {
+    }catch (error: any) {
+  console.error('Error fetching data:', error);
+
+  let backendMessage = 'Failed to fetch data. Please try again later.';
+
+  // If response exists, use its message
+  if (error.response && error.response.data) {
+    if (error.response.data.message) {
+      backendMessage = error.response.data.message;
+    } else if (typeof error.response.data === 'string') {
+      backendMessage = error.response.data;
+    }
+  }
+
+  toast({
+    title: backendMessage,
+    className: 'bg-destructive text-white border-none'
+  });
+
+  // Optionally log full data for debugging
+  if (error.response?.data?.data) {
+    console.log('Received data anyway:', error.response.data.data);
+    setAllTransactions(error.response.data.data); // force set if needed
+  }
+}
+finally {
       setLoading(false);
     }
   };
@@ -539,190 +560,111 @@ export default function ReportPage() {
     if (filteredData.length === 0) return null;
 
     return (
-      <Card className="p-2">
-        <CardHeader>
-          <CardTitle className="p-4 text-xl font-bold capitalize">
-            {type} Transactions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="border">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-theme/80 bg-theme text-white ">
-                  <TableHead className="w-[250px] ">Category Name</TableHead>
-                  <TableHead className="w-[150px] text-right">
-                    Transaction Count
-                  </TableHead>
-                  {filteredPaymentMethods.map((method) => (
-                    <TableHead key={method} className="text-right">
-                      {method}
-                    </TableHead>
-                  ))}
-                  <TableHead className="w-[150px] text-right">
-                    Sub Total
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.map((category) => (
-                  <>
-                    <TableRow
-                      key={category.categoryName}
-                      className="hover:cursor-pointer"
-                      onClick={() =>
-                        setExpandedCategory(
-                          expandedCategory === category.categoryName
-                            ? null
-                            : category.categoryName
-                        )
-                      }
-                    >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          {expandedCategory === category.categoryName ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                          {category.categoryName}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {category.transactions.length}
-                      </TableCell>
-                      {filteredPaymentMethods.map((method) => (
-                        <TableCell key={method} className="text-right">
-                          £
-                          {(category.methodTotals[method] || 0)
-                            .toFixed(2)
-                            .toLocaleString()}
-                        </TableCell>
-                      ))}
-                      <TableCell className="text-right font-bold">
-                        £{category.total.toFixed(2).toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-
-                    {expandedCategory === category.categoryName && (
-                      <TableRow>
-                        <TableCell colSpan={filteredPaymentMethods.length + 3}>
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="hover:bg-theme/80 bg-theme text-white">
-                                <TableHead className="w-[200px] text-right">
-                                  Date
-                                </TableHead>
-                                <TableHead className="w-[150px] text-right">
-                                  Transaction ID
-                                </TableHead>
-                                <TableHead className="w-[150px] text-right">
-                                  Invoice No
-                                </TableHead>
-                                <TableHead className="w-[150px] text-right">
-                                  Details
-                                </TableHead>
-                                <TableHead className="w-[150px] text-right">
-                                  Transaction Method
-                                </TableHead>
-                                <TableHead className="w-[150px] text-right">
-                                  Storage
-                                </TableHead>
-                                <TableHead className="w-[150px] text-right">
-                                  Amount
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {category.transactions
-                                .sort((a, b) => {
-                                  if (
-                                    a.transactionMethod.name <
-                                    b.transactionMethod.name
-                                  ) {
-                                    return -1;
-                                  }
-                                  if (
-                                    a.transactionMethod.name >
-                                    b.transactionMethod.name
-                                  ) {
-                                    return 1;
-                                  }
-                                  return 0;
-                                })
-                                .map((transaction) => (
-                                  <TableRow
-                                    key={transaction._id}
-                                    className="bg-gray-200"
-                                  >
-                                    <TableCell className="text-right">
-                                      {moment(
-                                        transaction.transactionDate
-                                      ).format('DD MMM YYYY')}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                      {transaction.tcid}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                      {transaction.invoiceNumber}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                      {transaction.details}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                      {transaction.transactionMethod.name}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                      {transaction.storage.storageName}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                      £
-                                      {transaction.transactionAmount
-                                        .toFixed(2)
-                                        .toLocaleString()}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                            </TableBody>
-                          </Table>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </>
+     <Card className="p-2">
+  <CardHeader>
+    <CardTitle className="p-4 text-xl font-bold capitalize">{type} Transactions</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="border">
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-theme/80 bg-theme text-white">
+            <TableHead className="w-[250px]">Category Name</TableHead>
+            <TableHead className="w-[150px] text-right">Transaction Count</TableHead>
+            {filteredPaymentMethods.map((method) => (
+              <TableHead key={method} className="text-right">{method}</TableHead>
+            ))}
+            <TableHead className="w-[150px] text-right">Sub Total</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredData.map((category) => (
+            <>
+              <TableRow
+                key={category.categoryName}
+                className="hover:cursor-pointer"
+                onClick={() =>
+                  setExpandedCategory(
+                    expandedCategory === category.categoryName ? null : category.categoryName
+                  )
+                }
+              >
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {expandedCategory === category.categoryName ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {category.categoryName}
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">{category.transactions.length}</TableCell>
+                {filteredPaymentMethods.map((method) => (
+                  <TableCell key={method} className="text-right">
+                    £{Number(category.methodTotals[method] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </TableCell>
                 ))}
-                <TableRow className="font-bold">
-                  <TableCell>Total</TableCell>
-                  <TableCell className="text-right">
-                    {filteredData.reduce(
-                      (acc, cat) => acc + cat.transactions.length,
-                      0
-                    )}
-                  </TableCell>
-                  {filteredPaymentMethods.map((method) => (
-                    <TableCell key={method} className="text-right">
-                      £
-                      {filteredData
-                        .reduce(
-                          (acc, cat) => acc + (cat.methodTotals[method] || 0),
-                          0
-                        )
-                        .toFixed(2)
-                        .toLocaleString()}
-                    </TableCell>
-                  ))}
-                  <TableCell className="text-right">
-                    £
-                    {filteredData
-                      .reduce((acc, cat) => acc + cat.total, 0)
-                      .toFixed(2)
-                      .toLocaleString()}
+                <TableCell className="text-right font-bold">
+                  £{Number(category.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </TableCell>
+              </TableRow>
+
+              {expandedCategory === category.categoryName && (
+                <TableRow>
+                  <TableCell colSpan={filteredPaymentMethods.length + 3}>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-theme/80 bg-theme text-white">
+                          <TableHead className="w-[200px] text-right">Date</TableHead>
+                          <TableHead className="w-[150px] text-right">Transaction ID</TableHead>
+                          <TableHead className="w-[150px] text-right">Invoice No</TableHead>
+                          <TableHead className="w-[150px] text-right">Details</TableHead>
+                          <TableHead className="w-[150px] text-right">Transaction Method</TableHead>
+                          <TableHead className="w-[150px] text-right">Storage</TableHead>
+                          <TableHead className="w-[150px] text-right">Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {category.transactions
+                          .sort((a, b) => a.transactionMethod.name.localeCompare(b.transactionMethod.name))
+                          .map((transaction) => (
+                            <TableRow key={transaction._id} className="bg-gray-200">
+                              <TableCell className="text-right">{moment(transaction?.transactionDate).format('DD MMM YYYY')}</TableCell>
+                              <TableCell className="text-right">{transaction?.tcid}</TableCell>
+                              <TableCell className="text-right">{transaction?.invoiceNumber}</TableCell>
+                              <TableCell className="text-right">{transaction?.details}</TableCell>
+                              <TableCell className="text-right">{transaction?.transactionMethod?.name}</TableCell>
+                              <TableCell className="text-right">{transaction.storage?.storageName}</TableCell>
+                              <TableCell className="text-right">
+                                £{Number(transaction.transactionAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
                   </TableCell>
                 </TableRow>
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              )}
+            </>
+          ))}
+          <TableRow className="font-bold">
+            <TableCell>Total</TableCell>
+            <TableCell className="text-right">{filteredData.reduce((acc, cat) => acc + cat.transactions.length, 0)}</TableCell>
+            {filteredPaymentMethods.map((method) => (
+              <TableCell key={method} className="text-right">
+                £{filteredData.reduce((acc, cat) => acc + Number(cat.methodTotals[method] || 0), 0)
+                  .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </TableCell>
+            ))}
+            <TableCell className="text-right">
+              £{filteredData.reduce((acc, cat) => acc + Number(cat.total), 0)
+                .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
+  </CardContent>
+</Card>
+
+
     );
   };
 
