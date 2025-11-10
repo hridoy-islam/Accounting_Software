@@ -58,6 +58,7 @@ export default function CreateInvoice() {
 
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(undefined);
+  const [dueDate, setDueDate] = useState(undefined);
 
   const [notes, setNotes] = useState('');
   const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
@@ -299,6 +300,7 @@ export default function CreateInvoice() {
         // bank: selectedBank,
         invoiceNumber,
         invoiceDate,
+        dueDate,
         termsAndConditions,
         items: items.map(({ id, ...rest }) => ({
           ...rest,
@@ -437,6 +439,17 @@ export default function CreateInvoice() {
             type="date"
             value={invoiceDate}
             onChange={(e) => setInvoiceDate(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="dueDate">Due Date</Label>
+          <Input
+            className="h-10 rounded-sm"
+            id="dueDate"
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
           />
         </div>
       </div>

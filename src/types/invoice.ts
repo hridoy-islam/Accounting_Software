@@ -13,6 +13,7 @@ export interface Invoice {
   details?: string;
   companyId:string;
   invDoc?: string;
+  dueDate?:Date
 }
 
 export interface InvoiceFormData extends Omit<Invoice, '_id' | 'transactionDate'> {

@@ -15,6 +15,7 @@ import { usePermission } from '@/hooks/usePermission';
 
 export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
   const { id } = useParams();
+
   const {
     register,
     handleSubmit,
@@ -36,32 +37,35 @@ export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
 
   const { hasPermission } = usePermission();
 
+  // Reset form only when opening for **new** customer
   useEffect(() => {
     if (open) {
-      reset();
-    }
-
-    return () => {
-      if (!open) {
-        reset();
+      if (initialData) {
+        reset({
+          name: initialData.name ?? '',
+          email: initialData.email ?? '',
+          address: initialData.address ?? '',
+          phone: initialData.phone ?? '',
+          bankName: initialData.bankName ?? '',
+          accountNo: initialData.accountNo ?? '',
+          sortCode: initialData.sortCode ?? '',
+          beneficiary: initialData.beneficiary ?? ''
+        });
+      } else {
+        reset({
+          name: '',
+          email: '',
+          address: '',
+          phone: '',
+          companyId: id,
+          bankName: '',
+          accountNo: '',
+          sortCode: '',
+          beneficiary: ''
+        });
       }
-    };
-  }, [open, reset]);
-
-  useEffect(() => {
-    if (initialData) {
-      reset({
-        name: initialData.name ?? '',
-        email: initialData.email ?? '',
-        address: initialData.address ?? '',
-        phone: initialData.phone ?? '',
-        bankName: initialData.bankName ?? '',
-        accountNo: initialData.accountNo ?? '',
-        sortCode: initialData.sortCode ?? '',
-        beneficiary: initialData.beneficiary ?? ''
-      });
     }
-  }, [initialData, reset]);
+  }, [open, initialData, reset, id]);
 
   const onSubmitForm = (data) => {
     onSubmit(data);
@@ -79,11 +83,8 @@ export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
 
         <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-2">
           <div className="grid grid-cols-2 gap-4">
-            {/* Customer Name */}
             <div>
-              <label className="block text-sm font-medium">
-                Customer Name *
-              </label>
+              <label className="block text-sm font-medium">Customer Name *</label>
               <Input
                 {...register('name', { required: 'Customer Name is required' })}
                 placeholder="Customer Name"
@@ -91,7 +92,6 @@ export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
               <ErrorMessage message={errors.name?.message?.toString()} />
             </div>
 
-            {/* Email */}
             <div>
               <label className="block text-sm font-medium">Email</label>
               <Input
@@ -106,21 +106,18 @@ export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
               <ErrorMessage message={errors.email?.message?.toString()} />
             </div>
 
-            {/* Phone */}
             <div>
               <label className="block text-sm font-medium">Phone</label>
               <Input {...register('phone')} placeholder="Phone" />
               <ErrorMessage message={errors.phone?.message?.toString()} />
             </div>
 
-            {/* Address */}
             <div>
               <label className="block text-sm font-medium">Address</label>
               <Input {...register('address')} placeholder="Address" />
               <ErrorMessage message={errors.address?.message?.toString()} />
             </div>
 
-            {/* Bank Name */}
             <div>
               <label className="block text-sm font-medium">Bank Name *</label>
               <Input
@@ -130,19 +127,15 @@ export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
               <ErrorMessage message={errors.bankName?.message?.toString()} />
             </div>
 
-            {/* Account No */}
             <div>
               <label className="block text-sm font-medium">Account No *</label>
               <Input
-                {...register('accountNo', {
-                  required: 'Account Number is required'
-                })}
+                {...register('accountNo', { required: 'Account Number is required' })}
                 placeholder="Account Number"
               />
               <ErrorMessage message={errors.accountNo?.message?.toString()} />
             </div>
 
-            {/* Sort Code */}
             <div>
               <label className="block text-sm font-medium">Sort Code *</label>
               <Input
@@ -152,7 +145,6 @@ export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
               <ErrorMessage message={errors.sortCode?.message?.toString()} />
             </div>
 
-            {/* Beneficiary */}
             <div>
               <label className="block text-sm font-medium">Beneficiary</label>
               <Input {...register('beneficiary')} placeholder="Beneficiary" />
@@ -160,16 +152,14 @@ export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
             </div>
           </div>
 
-          {hasPermission('Customer', 'create') && (
-            <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="theme">
-                {initialData ? 'Save Changes' : 'Add Customer'}
-              </Button>
-            </DialogFooter>
-          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="theme">
+              {initialData ? 'Save Changes' : 'Add Customer'}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

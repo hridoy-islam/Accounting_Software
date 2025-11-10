@@ -22,45 +22,37 @@ export function BankDialog({ open, onOpenChange, onSubmit, initialData }) {
       name: '',
       accountNo: '',
       sortCode: '',
-      beneficiary:''
+      beneficiary: ''
     }
   });
 
+  // Reset form when dialog opens/closes
   useEffect(() => {
     if (open) {
-      reset();
-    }
-
-    return () => {
-      if (!open) {
-        reset();
+      if (initialData) {
+        reset({
+          name: initialData.name ?? '',
+          accountNo: initialData.accountNo ?? '',
+          sortCode: initialData.sortCode ?? '',
+          beneficiary: initialData.beneficiary ?? ''
+        });
+      } else {
+        reset({ name: '', accountNo: '', sortCode: '', beneficiary: '' });
       }
-    };
-  }, [open, reset]);
-
-  useEffect(() => {
-    if (initialData) {
-      reset({
-        name: initialData.name ?? '',
-        accountNo: initialData.accountNo ?? '',
-        sortCode: initialData.sortCode ?? '',
-        beneficiary: initialData.beneficiary ?? ''
-      });
     }
-  }, [initialData, reset]);
+  }, [open, initialData, reset]);
 
   const onSubmitForm = (data) => {
-    // Send data to the parent component (or server)
     onSubmit(data);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {initialData ? 'Edit Bank' : 'Add New Bank'}
+            {initialData ? 'Edit Bank Account' : 'Add New Bank Account'}
           </DialogTitle>
         </DialogHeader>
 
@@ -70,7 +62,7 @@ export function BankDialog({ open, onOpenChange, onSubmit, initialData }) {
               <label className="block text-sm font-medium">Bank Name *</label>
               <Input
                 {...register('name', { required: 'Bank Name is required' })}
-                placeholder="Bank Name"
+                placeholder="e.g. Barclays"
               />
               <ErrorMessage message={errors.name?.message?.toString()} />
             </div>
@@ -79,7 +71,7 @@ export function BankDialog({ open, onOpenChange, onSubmit, initialData }) {
               <label className="block text-sm font-medium">Account Number *</label>
               <Input
                 {...register('accountNo', { required: 'Account Number is required' })}
-                placeholder="Account Number"
+                placeholder="e.g. 12345678"
               />
               <ErrorMessage message={errors.accountNo?.message?.toString()} />
             </div>
@@ -88,7 +80,7 @@ export function BankDialog({ open, onOpenChange, onSubmit, initialData }) {
               <label className="block text-sm font-medium">Sort Code *</label>
               <Input
                 {...register('sortCode', { required: 'Sort Code is required' })}
-                placeholder="Sort Code"
+                placeholder="e.g. 12-34-56"
               />
               <ErrorMessage message={errors.sortCode?.message?.toString()} />
             </div>
@@ -97,22 +89,17 @@ export function BankDialog({ open, onOpenChange, onSubmit, initialData }) {
               <label className="block text-sm font-medium">Beneficiary *</label>
               <Input
                 {...register('beneficiary', { required: 'Beneficiary is required' })}
-                placeholder="Beneficiary"
+                placeholder="e.g. Company Ltd"
               />
               <ErrorMessage message={errors.beneficiary?.message?.toString()} />
             </div>
-
-            
           </div>
-      
+
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="bg-theme text-white "
-            >
+            <Button type="submit" className="bg-theme text-white">
               {initialData ? 'Save Changes' : 'Add Bank'}
             </Button>
           </DialogFooter>

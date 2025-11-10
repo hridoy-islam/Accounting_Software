@@ -92,6 +92,17 @@ export default function InvoiceDetailsDialog({
               </div>
 
               <div className="space-y-1">
+                <p className="text-sm text-gray-500">Due Date</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">
+                    {invoice?.dueDate
+                      ? moment(invoice.dueDate).format('DD MMM YYYY')
+                      : '—'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-1">
                 <p className="text-sm text-gray-500">
                   Reference Invoice Number
                 </p>

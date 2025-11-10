@@ -52,6 +52,8 @@ export default function EditInvoice() {
   // State for invoice details
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
+    const [dueDate, setDueDate] = useState('');
+
   const [notes, setNotes] = useState('');
   const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
   const [termsAndConditions, setTermsAndConditions] = useState('');
@@ -81,6 +83,11 @@ export default function EditInvoice() {
         setInvoiceDate(
           invoice.invoiceDate
             ? moment(invoice.invoiceDate).format('YYYY-MM-DD') // Corrected format
+            : ''
+        );
+        setDueDate(
+          invoice.dueDate
+            ? moment(invoice.dueDate).format('YYYY-MM-DD') // Corrected format
             : ''
         );
         setTransactionType(invoice.transactionType || '');
@@ -351,6 +358,7 @@ export default function EditInvoice() {
         // bank: selectedBank,
         invoiceNumber,
         invoiceDate,
+        dueDate,
         termsAndConditions: showTermsAndConditions ? termsAndConditions : '',
         items: items.map(({ id, ...rest }) => ({
           ...rest,
@@ -514,6 +522,16 @@ export default function EditInvoice() {
             type="date"
             value={invoiceDate}
             onChange={(e) => setInvoiceDate(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="dueDate">Due Date</Label>
+          <Input
+            className="h-10 rounded-sm"
+            id="dueDate"
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
           />
         </div>
       </div>
