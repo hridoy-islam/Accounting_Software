@@ -223,14 +223,23 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
         </View>
 
         {/* Bill To */}
-        <View style={styles.section}>
+        <View style={[styles.section,{marginTop:-20}]}>
           <Text style={styles.subtitle}>
             {invoice.transactionType === 'outflow' ? 'Remit To' : 'Bill To'}
           </Text>
-          <Text style={[styles.boldText, { marginBottom: 5 }]}>
+          <Text style={[styles.boldText]}>
             {typeof invoice.customer === 'object' ? invoice.customer.name : ''}
           </Text>
         </View>
+
+{invoice.topNote && (
+          <View style={styles.section}>
+            {/* <Text style={styles.subtitle}>Note:</Text> */}
+            <Text style={{ fontSize: 10 }}>{invoice.topNote}</Text>
+          </View>
+        )}
+
+
 
         {/* Invoice Details Table */}
         <View style={styles.section}>
