@@ -98,7 +98,23 @@ const styles = StyleSheet.create({
   }
 });
 
-const InvoicePDF = ({ invoice }: { invoice }) => {
+const InvoicePDF = ({ invoice }: { invoice: any }) => {
+  // --- Calculation Logic ---
+  const calculatePaidAmount = () => {
+    if (!invoice.partialPayment) return 0;
+    const total = invoice.total || 0;
+    
+    // Check type: percentage vs flat
+    if (invoice.partialPaymentType === 'percentage') {
+      return (total * invoice.partialPayment) / 100;
+    }
+    return invoice.partialPayment;
+  };
+
+  const paidAmount = calculatePaidAmount();
+  // Ensure balance doesn't go below 0
+  const balanceDue = Math.max(0, (invoice.total || 0) - paidAmount);
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -232,7 +248,7 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
               <Text style={styles.tableColAmount}>Amount</Text>
             </View>
 
-            {invoice.items?.map((item, index) => (
+            {invoice.items?.map((item: any, index: number) => (
               <View key={index} style={styles.tableRow}>
                 <Text style={styles.tableColNum}>{index + 1}</Text>
                 <Text style={styles.tableColDesc}>{item.details}</Text>
@@ -248,6 +264,7 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
 
         <View style={styles.totals}>
           <View style={{ width: '35%' }}>
+            {/* Subtotal */}
             <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
               <Text
                 style={[
@@ -262,6 +279,7 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
               </Text>
             </View>
 
+            {/* Tax / VAT */}
             {invoice.tax > 0 && (
               <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
                 <Text
@@ -278,6 +296,7 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
               </View>
             )}
 
+            {/* Discount */}
             {invoice.discount > 0 && (
               <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
                 <Text
@@ -302,6 +321,7 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
               </View>
             )}
 
+            {/* Total */}
             <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
               <Text
                 style={[
@@ -321,6 +341,24 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
               </Text>
             </View>
 
+            {/* Amount Paid (Partial Payment) */}
+            {paidAmount > 0 && (
+              <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
+                <Text
+                  style={[
+                    styles.tableColAmount,
+                    { width: '50%', textAlign: 'left' }
+                  ]}
+                >
+                  Amount Paid:
+                </Text>
+                <Text style={[styles.tableColAmount, { width: '50%' }]}>
+                  -£{paidAmount.toFixed(2)}
+                </Text>
+              </View>
+            )}
+
+            {/* Balance Due */}
             <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
               <Text
                 style={[
@@ -336,7 +374,7 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
                   { width: '50%', fontWeight: 'bold' }
                 ]}
               >
-                £{invoice.total?.toFixed(2) || '0.00'}
+                £{balanceDue.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -368,7 +406,7 @@ const InvoicePDF = ({ invoice }: { invoice }) => {
   );
 };
 
-export const InvoicePDFDownload = ({ invoice }: { invoice }) => {
+export const InvoicePDFDownload = ({ invoice }: { invoice: any }) => {
   return (
     <PDFDownloadLink
       document={<InvoicePDF invoice={invoice} />}

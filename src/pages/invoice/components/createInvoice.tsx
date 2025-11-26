@@ -1,8 +1,6 @@
-
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PlusCircle, Trash2, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft, XCircle, Trash } from 'lucide-react';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
 
@@ -61,16 +59,26 @@ export default function CreateInvoice() {
   const [dueDate, setDueDate] = useState(undefined);
 
   const [notes, setNotes] = useState('');
+
+  // --- NEW: Top Note State ---
+  const [topNote, setTopNote] = useState('');
+  const [showTopNote, setShowTopNote] = useState(false);
+
   const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
   const [termsAndConditions, setTermsAndConditions] = useState('');
 
   const [total, setTotal] = useState(0);
+  const [subtotal, setSubtotal] = useState(0);
 
-  // Add state variables for invoice-level tax and discount at the top of the component
+  // Invoice-level tax and discount
   const [invoiceTax, setInvoiceTax] = useState('0');
   const [invoiceDiscount, setInvoiceDiscount] = useState('0');
   const [invoiceDiscountType, setInvoiceDiscountType] = useState('percentage');
-  const [subtotal, setSubtotal] = useState(0);
+
+  // --- NEW: Partial Payment State ---
+  const [partialPayment, setPartialPayment] = useState('0');
+  const [partialPaymentType, setPartialPaymentType] = useState('flat');
+  const [balanceDue, setBalanceDue] = useState(0);
 
   const fetchCustomers = async () => {
     if (!companyId) return;
@@ -116,6 +124,7 @@ export default function CreateInvoice() {
     fetchCustomers();
   }, [companyId]);
 
+  // --- Updated Calculation Effect ---
   useEffect(() => {
     const newSubtotal = items.reduce((sum, item) => {
       const rate =
@@ -129,11 +138,12 @@ export default function CreateInvoice() {
 
     const parsedTax = Number.parseFloat(invoiceTax);
     const parsedDiscount = Number.parseFloat(invoiceDiscount);
+    const parsedPartialPayment = Number.parseFloat(partialPayment);
 
     const taxAmount =
       !isNaN(parsedTax) && parsedTax > 0 ? newSubtotal * (parsedTax / 100) : 0;
 
-    // Compute discount only if valid
+    // Compute discount
     let discountAmount = 0;
     if (!isNaN(parsedDiscount) && parsedDiscount > 0) {
       discountAmount =
@@ -144,7 +154,27 @@ export default function CreateInvoice() {
 
     const newTotal = newSubtotal + taxAmount - discountAmount;
     setTotal(newTotal);
-  }, [items, invoiceTax, invoiceDiscount, invoiceDiscountType]);
+
+    // Compute Partial Payment / Balance Due
+    let paymentAmount = 0;
+    if (!isNaN(parsedPartialPayment) && parsedPartialPayment > 0) {
+      paymentAmount =
+        partialPaymentType === 'percentage'
+          ? newTotal * (parsedPartialPayment / 100)
+          : parsedPartialPayment;
+    }
+
+    // Ensure balance doesn't go negative if payment > total
+    const newBalance = Math.max(0, newTotal - paymentAmount);
+    setBalanceDue(newBalance);
+  }, [
+    items,
+    invoiceTax,
+    invoiceDiscount,
+    invoiceDiscountType,
+    partialPayment,
+    partialPaymentType
+  ]);
 
   const handleAddRow = () => {
     const newId =
@@ -161,7 +191,6 @@ export default function CreateInvoice() {
     ]);
   };
 
-  // Handle removing a row
   const handleRemoveRow = (id: number) => {
     if (items.length === 1) {
       toast({
@@ -175,20 +204,17 @@ export default function CreateInvoice() {
     setItems(items.filter((item) => item.id !== id));
   };
 
-  // Handle item change
   const handleItemChange = (id: number, field: string, value: any) => {
     const updatedItems = items.map((item) => {
       if (item.id === id) {
         const updatedItem = { ...item, [field]: value };
 
-        // Handle rate validation and parsing
         if (field === 'rate') {
-          // Ensure rate is a valid number
           const parsedRate = Number.parseFloat(value);
           if (!isNaN(parsedRate)) {
             updatedItem.rate = parsedRate;
           } else {
-            updatedItem.rate = value; // Keep as string for input
+            updatedItem.rate = value;
           }
         }
 
@@ -215,7 +241,6 @@ export default function CreateInvoice() {
     setItems(updatedItems);
   };
 
-  // Handle creating a new customer
   const handleCreateCustomer = async () => {
     if (!newCustomer.name) {
       toast({
@@ -259,7 +284,6 @@ export default function CreateInvoice() {
     }
   };
 
-  // Handle saving invoice
   const handleSaveInvoice = async () => {
     if (!selectedCustomer) {
       toast({
@@ -297,7 +321,6 @@ export default function CreateInvoice() {
       const invoiceData = {
         companyId,
         customer: selectedCustomer,
-        // bank: selectedBank,
         invoiceNumber,
         invoiceDate,
         dueDate,
@@ -310,6 +333,7 @@ export default function CreateInvoice() {
               : rest.rate
         })),
         notes,
+        topNote, // Added Top Note
         transactionType,
         status: 'due',
         amount: total,
@@ -317,10 +341,15 @@ export default function CreateInvoice() {
         tax: Number.parseFloat(invoiceTax) || 0,
         discount: Number.parseFloat(invoiceDiscount) || 0,
         discountType: invoiceDiscountType,
-        subtotal: subtotal
+        subtotal: subtotal,
+        // Added Partial Payment Data
+        partialPayment: Number.parseFloat(partialPayment) || 0,
+        partialPaymentType,
+        balanceDue
       };
 
       if (transactionType !== 'outflow') {
+        // @ts-ignore
         invoiceData.bank = selectedBank;
       }
 
@@ -457,6 +486,46 @@ export default function CreateInvoice() {
       <div className="mt-8">
         <Card>
           <CardContent className="p-0">
+            {/* --- NEW: Top Note Section --- */}
+            <div className="border-b border-gray-200 p-4">
+              {!showTopNote ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTopNote(true)}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Invoice Note
+                </Button>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-start gap-4">
+                    <Label htmlFor="topNote" className="text-sm font-medium">
+                      Invoice Note
+                    </Label>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8  text-red-500 hover:text-red-500"
+                      onClick={() => {
+                        setShowTopNote(false);
+                        setTopNote('');
+                      }}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Textarea
+                    id="topNote"
+                    value={topNote}
+                    onChange={(e) => setTopNote(e.target.value)}
+                    placeholder="Enter a note to display at the top of the invoice..."
+                    className="min-h-[60px] w-full border border-gray-200"
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -547,9 +616,7 @@ export default function CreateInvoice() {
                     max="100"
                     value={invoiceTax}
                     onChange={(e) => {
-                      // Allow only numbers and decimal point
                       const value = e.target.value.replace(/[^0-9.]/g, '');
-                      // Ensure only one decimal point
                       if ((value.match(/\./g) || []).length <= 1) {
                         setInvoiceTax(value);
                       }
@@ -563,6 +630,9 @@ export default function CreateInvoice() {
                   <div className="flex w-full items-center gap-2">
                     <Select
                       id="invoiceDiscountType"
+                      styles={{
+                        container: (base) => ({ ...base, width: '200px' })
+                      }}
                       value={[
                         { label: 'Percentage', value: 'percentage' },
                         { label: 'Flat', value: 'flat' }
@@ -583,11 +653,49 @@ export default function CreateInvoice() {
                         min="0"
                         value={invoiceDiscount}
                         onChange={(e) => {
-                          // Allow only numbers and decimal point
                           const value = e.target.value.replace(/[^0-9.]/g, '');
-                          // Ensure only one decimal point
                           if ((value.match(/\./g) || []).length <= 1) {
                             setInvoiceDiscount(value);
+                          }
+                        }}
+                        className="w-32 text-center"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* --- NEW: Partial Payment Input Section --- */}
+                <div className="mb-2 flex items-center">
+                  <span className="mr-4 w-28 font-medium">Paid Amount</span>
+                  <div className="flex w-full items-center gap-2">
+                    <Select
+                      id="partialPaymentType"
+                      styles={{
+                        container: (base) => ({ ...base, width: '200px' })
+                      }}
+                      value={[
+                        { label: 'Percentage', value: 'percentage' },
+                        { label: 'Flat', value: 'flat' }
+                      ].find((opt) => opt.value === partialPaymentType)}
+                      onChange={(selectedOption) =>
+                        setPartialPaymentType(
+                          selectedOption?.value || 'flat' // Default to flat for payment usually
+                        )
+                      }
+                      options={[
+                        { label: 'Percentage', value: 'percentage' },
+                        { label: 'Flat', value: 'flat' }
+                      ]}
+                    />
+                    <div className="ml-auto">
+                      <Input
+                        type="text"
+                        min="0"
+                        value={partialPayment}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9.]/g, '');
+                          if ((value.match(/\./g) || []).length <= 1) {
+                            setPartialPayment(value);
                           }
                         }}
                         className="w-32 text-center"
@@ -628,12 +736,38 @@ export default function CreateInvoice() {
                     </span>
                   </div>
 
-                  <div className="mb-2 flex items-center">
-                    <span className="mr-4 w-28 font-medium">Total</span>
+                  <div className="mb-2 flex items-center border-t border-gray-100 pt-2">
+                    <span className="mr-4 w-28 font-bold">Total</span>
                     <span className=" ml-auto w-32 text-center font-bold">
                       £{total.toFixed(2)}
                     </span>
                   </div>
+
+                  {/* --- NEW: Partial Payment Summary Breakdown --- */}
+                  {Number(partialPayment) > 0 && (
+                    <>
+                      <div className="mb-2 flex items-center text-gray-600">
+                        <span className="mr-4 w-32 font-medium">
+                          {partialPaymentType === 'percentage'
+                            ? `Paid (${Number(partialPayment) || 0}%)`
+                            : 'Paid'}
+                        </span>
+                        <span className="ml-auto w-32 text-center font-medium">
+                          -
+                          {(partialPaymentType === 'percentage'
+                            ? total * (Number(partialPayment) / 100)
+                            : Number(partialPayment)
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="mb-2 flex items-center border-t border-gray-300 pt-2 ">
+                        {/* <span className="mr-4 w-32 font-bold">Balance Due</span> */}
+                        <span className="ml-auto w-32 text-center font-bold">
+                          £{balanceDue.toFixed(2)}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -783,7 +917,10 @@ export default function CreateInvoice() {
                 id="beneficiary"
                 value={newCustomer.beneficiary}
                 onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, beneficiary: e.target.value })
+                  setNewCustomer({
+                    ...newCustomer,
+                    beneficiary: e.target.value
+                  })
                 }
               />
             </div>

@@ -5,7 +5,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { FileIcon } from 'lucide-react';
+import { FileIcon, Info } from 'lucide-react';
 import { Invoice } from 'src/types/invoice';
 import moment from 'moment';
 import { Button } from '@/components/ui/button';
@@ -44,9 +44,23 @@ export default function InvoiceDetailsDialog({
     return 'N/A';
   };
 
+  // Helper to calculate paid amount for display
+  const calculatePaidAmount = () => {
+    if (!invoice.partialPayment) return 0;
+    const total = invoice.total || invoice.amount;
+    if (invoice.partialPaymentType === 'percentage') {
+      return total * (invoice.partialPayment / 100);
+    }
+    return invoice.partialPayment;
+  };
+
+  const isPartialPayment = invoice.partialPayment && invoice.partialPayment > 0;
+  const paidAmount = calculatePaidAmount();
+  const balanceDue = invoice.balanceDue ?? 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[48vh] overflow-y-auto sm:max-w-[700px]">
+      <DialogContent className="min-h-[48vh] max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             Invoice Details
@@ -67,17 +81,47 @@ export default function InvoiceDetailsDialog({
               </Badge>
             )}
           </DialogTitle>
-          {/* Amount Section */}
-          <div className="border-b pb-4">
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold">
-                £ {invoice.amount.toFixed(2)}
-              </span>
-            </div>
+
+          {/* Amount Section with Partial Payment Logic */}
+          <div className="border-b pb-4 pt-2">
+            {isPartialPayment ? (
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between sm:justify-start sm:gap-8">
+                   <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 uppercase">Total Invoice</span>
+                      <span className="text-lg font-semibold text-gray-700">
+                        £ {(invoice.total || invoice.amount).toFixed(2)}
+                      </span>
+                   </div>
+                   <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 uppercase">Paid</span>
+                      <span className="text-lg font-semibold text-green-600">
+                        £ {paidAmount.toFixed(2)}
+                      </span>
+                   </div>
+                </div>
+                
+                <div className="mt-2 flex flex-col">
+                    <span className="text-xs text-gray-500 uppercase">Balance Due</span>
+                    <span className="text-3xl font-bold text-red-600">
+                        £ {balanceDue.toFixed(2)}
+                    </span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold">
+                  £ {invoice.amount.toFixed(2)}
+                </span>
+              </div>
+            )}
           </div>
         </DialogHeader>
 
         <div className="space-y-6 overflow-y-auto py-4">
+          
+          
+
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             <div className="space-y-3">
               <div className="space-y-1">
@@ -117,6 +161,8 @@ export default function InvoiceDetailsDialog({
                   {moment(invoice?.createdAt).format('DD MMM YYYY')}
                 </p>
               </div>
+
+             
             </div>
 
             {/* Middle Grid - Invoice Details */}
@@ -139,6 +185,7 @@ export default function InvoiceDetailsDialog({
                 </p>
               </div>
             </div>
+            
 
             <div className="space-y-6">
               <div className="space-y-2">
