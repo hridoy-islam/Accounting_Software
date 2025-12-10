@@ -421,14 +421,7 @@ export default function EditInvoice() {
       });
       return;
     }
-    if (isRecurring && (!scheduleFrequency || !scheduleDay)) {
-      toast({
-        title: 'Please configure the schedule settings',
-        variant: 'destructive'
-      });
-      setIsScheduleDialogOpen(true);
-      return;
-    }
+    
 
     const todayISO = new Date().toISOString().split('T')[0];
     const actualInvoiceDate = invoiceDate || todayISO;
