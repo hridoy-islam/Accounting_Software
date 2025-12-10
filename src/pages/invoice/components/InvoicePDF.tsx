@@ -182,43 +182,52 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
               {invoice.transactionType === 'outflow' ? 'REMIT' : 'INVOICE'}
             </Text>
             {[
-              {
-                label:
-                  invoice.transactionType === 'outflow'
-                    ? 'Remit ID:'
-                    : 'Invoice:',
-                value: invoice.invId || ''
-              },
-              {
-                label: invoice.transactionType === 'outflow'
-                    ? 'Remit Date:'
-                    : 'Invoice Date:',
-                value: moment(invoice.invoiceDate).format('DD MMM YYYY')
-              },
-              { label: 'Terms:', value: 'Due On Receipt' },
-              {
-                label: 'Due Date:',
-                value: moment(invoice.createdAt).format('DD MMM YYYY')
-              }
-            ].map((item, index) => (
-              <View
-                key={index}
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginBottom: 2
-                }}
-              >
-                <Text style={[styles.subtitle, { flex: 1, textAlign: 'left' }]}>
-                  {item.label}
-                </Text>
-                <Text
-                  style={[styles.subtitle, { flex: 1, textAlign: 'right' }]}
-                >
-                  {item.value}
-                </Text>
-              </View>
-            ))}
+  {
+    label:
+      invoice.transactionType === 'outflow'
+        ? 'Remit ID:'
+        : 'Invoice:',
+    value: invoice.invId
+  },
+  {
+    label:
+      invoice.transactionType === 'outflow'
+        ? 'Remit Date:'
+        : 'Invoice Date:',
+    value: invoice.invoiceDate
+      ? moment(invoice.invoiceDate).format('DD MMM YYYY')
+      : null
+  },
+  {
+    label: 'Terms:',
+    value: 'Due On Receipt'
+  },
+  {
+    label: 'Due Date:',
+    value: invoice?.dueDate
+      ? moment(invoice.dueDate).format('DD MMM YYYY')
+      : null
+  }
+]
+  .filter(item => item.value) // <-- show only if value exists
+  .map((item, index) => (
+    <View
+      key={index}
+      style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 2
+      }}
+    >
+      <Text style={[styles.subtitle, { flex: 1, textAlign: 'left' }]}>
+        {item.label}
+      </Text>
+      <Text style={[styles.subtitle, { flex: 1, textAlign: 'right' }]}>
+        {item.value}
+      </Text>
+    </View>
+  ))}
+
           </View>
         </View>
 
