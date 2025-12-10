@@ -612,7 +612,7 @@ finally {
                     <Table>
                       <TableHeader>
                         <TableRow className="hover:bg-theme/80 bg-theme text-white">
-                          <TableHead className="w-[200px] text-right">Date</TableHead>
+                          <TableHead className="w-[200px] text-right">Transaction Date</TableHead>
                           <TableHead className="w-[150px] text-right">Transaction ID</TableHead>
                           <TableHead className="w-[150px] text-right">Invoice No</TableHead>
                           <TableHead className="w-[150px] text-right">Details</TableHead>
@@ -623,7 +623,7 @@ finally {
                       </TableHeader>
                       <TableBody>
                         {category.transactions
-                          .sort((a, b) => a.transactionMethod.name.localeCompare(b.transactionMethod.name))
+                          .sort((a, b) => b.transactionDate.localeCompare(a.transactionDate))
                           .map((transaction) => (
                             <TableRow key={transaction._id} className="bg-gray-200">
                               <TableCell className="text-right">{moment(transaction?.transactionDate).format('DD MMM YYYY')}</TableCell>

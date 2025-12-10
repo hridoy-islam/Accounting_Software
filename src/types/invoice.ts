@@ -13,7 +13,12 @@ export interface Invoice {
   details?: string;
   companyId:string;
   invDoc?: string;
-  dueDate?:Date
+  dueDate?:Date;
+  frequency:  "monthly" | "yearly";
+  frequencyDueDate:Number;
+  scheduledMonth:Number;
+  scheduledDay:Number;
+  lastRunDate: Date;
 }
 
 export interface InvoiceFormData extends Omit<Invoice, '_id' | 'transactionDate'> {

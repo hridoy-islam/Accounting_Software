@@ -1,20 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PlusCircle, Trash2, ArrowLeft, XCircle, Trash } from 'lucide-react';
+import {
+  PlusCircle,
+  Trash2,
+  ArrowLeft,
+  Trash,
+  CalendarClock
+} from 'lucide-react';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import Select from 'react-select';
-
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,6 +29,7 @@ export default function CreateInvoice() {
   const { id: companyId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  // --- EXISTING STATE ---
   const [items, setItems] = useState([
     {
       id: 1,
@@ -32,8 +39,6 @@ export default function CreateInvoice() {
       amount: 0
     }
   ]);
-
-  // State for customers
   const [customers, setCustomers] = useState<any[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState('');
@@ -41,7 +46,6 @@ export default function CreateInvoice() {
   const [banks, setBanks] = useState<any[]>([]);
   const [isLoadingBanks, setIsLoadingBanks] = useState(false);
   const [selectedBank, setSelectedBank] = useState('');
-  // State for new customer dialog
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
     name: '',
@@ -53,36 +57,57 @@ export default function CreateInvoice() {
     sortCode: '',
     beneficiary: ''
   });
-
   const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [invoiceDate, setInvoiceDate] = useState(undefined);
-  const [dueDate, setDueDate] = useState(undefined);
-
+  const [invoiceDate, setInvoiceDate] = useState<string | undefined>(undefined);
+  const [dueDate, setDueDate] = useState<string | undefined>(undefined);
   const [notes, setNotes] = useState('');
-
-  // --- NEW: Top Note State ---
   const [topNote, setTopNote] = useState('');
   const [showTopNote, setShowTopNote] = useState(false);
-
   const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
   const [termsAndConditions, setTermsAndConditions] = useState('');
-
   const [total, setTotal] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
-
-  // Invoice-level tax and discount
   const [invoiceTax, setInvoiceTax] = useState('0');
   const [invoiceDiscount, setInvoiceDiscount] = useState('0');
   const [invoiceDiscountType, setInvoiceDiscountType] = useState('percentage');
-
-  // --- NEW: Partial Payment State ---
   const [partialPayment, setPartialPayment] = useState('0');
   const [partialPaymentType, setPartialPaymentType] = useState('flat');
   const [balanceDue, setBalanceDue] = useState(0);
 
+  // --- SCHEDULE STATE ---
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [scheduleFrequency, setScheduleFrequency] = useState<
+    string | undefined
+  >(undefined);
+  const [scheduleDay, setScheduleDay] = useState<number>();
+  const [scheduleMonth, setScheduleMonth] = useState<number>(
+    new Date().getMonth() + 1
+  ); // 1-12
+  const [scheduleDueDays, setScheduleDueDays] = useState<string>('');
+
+  // Helper options
+  const daysOptions = Array.from({ length: 31 }, (_, i) => ({
+    label: `${i + 1}`,
+    value: i + 1
+  }));
+  const monthOptions = [
+    { label: 'January', value: 1 },
+    { label: 'February', value: 2 },
+    { label: 'March', value: 3 },
+    { label: 'April', value: 4 },
+    { label: 'May', value: 5 },
+    { label: 'June', value: 6 },
+    { label: 'July', value: 7 },
+    { label: 'August', value: 8 },
+    { label: 'September', value: 9 },
+    { label: 'October', value: 10 },
+    { label: 'November', value: 11 },
+    { label: 'December', value: 12 }
+  ];
+
   const fetchCustomers = async () => {
     if (!companyId) return;
-
     setIsLoadingCustomers(true);
     try {
       const response = await axiosInstance.get(
@@ -99,9 +124,9 @@ export default function CreateInvoice() {
       setIsLoadingCustomers(false);
     }
   };
+
   const fetchBanks = async () => {
     if (!companyId) return;
-
     setIsLoadingBanks(true);
     try {
       const response = await axiosInstance.get(
@@ -124,7 +149,6 @@ export default function CreateInvoice() {
     fetchCustomers();
   }, [companyId]);
 
-  // --- Updated Calculation Effect ---
   useEffect(() => {
     const newSubtotal = items.reduce((sum, item) => {
       const rate =
@@ -133,17 +157,12 @@ export default function CreateInvoice() {
           : item.rate;
       return sum + item.quantity * rate;
     }, 0);
-
     setSubtotal(newSubtotal);
-
     const parsedTax = Number.parseFloat(invoiceTax);
     const parsedDiscount = Number.parseFloat(invoiceDiscount);
     const parsedPartialPayment = Number.parseFloat(partialPayment);
-
     const taxAmount =
       !isNaN(parsedTax) && parsedTax > 0 ? newSubtotal * (parsedTax / 100) : 0;
-
-    // Compute discount
     let discountAmount = 0;
     if (!isNaN(parsedDiscount) && parsedDiscount > 0) {
       discountAmount =
@@ -151,11 +170,8 @@ export default function CreateInvoice() {
           ? newSubtotal * (parsedDiscount / 100)
           : parsedDiscount;
     }
-
     const newTotal = newSubtotal + taxAmount - discountAmount;
     setTotal(newTotal);
-
-    // Compute Partial Payment / Balance Due
     let paymentAmount = 0;
     if (!isNaN(parsedPartialPayment) && parsedPartialPayment > 0) {
       paymentAmount =
@@ -163,8 +179,6 @@ export default function CreateInvoice() {
           ? newTotal * (parsedPartialPayment / 100)
           : parsedPartialPayment;
     }
-
-    // Ensure balance doesn't go negative if payment > total
     const newBalance = Math.max(0, newTotal - paymentAmount);
     setBalanceDue(newBalance);
   }, [
@@ -200,7 +214,6 @@ export default function CreateInvoice() {
       });
       return;
     }
-
     setItems(items.filter((item) => item.id !== id));
   };
 
@@ -208,7 +221,6 @@ export default function CreateInvoice() {
     const updatedItems = items.map((item) => {
       if (item.id === id) {
         const updatedItem = { ...item, [field]: value };
-
         if (field === 'rate') {
           const parsedRate = Number.parseFloat(value);
           if (!isNaN(parsedRate)) {
@@ -217,7 +229,6 @@ export default function CreateInvoice() {
             updatedItem.rate = value;
           }
         }
-
         if (field === 'quantity' || field === 'rate') {
           const quantity =
             field === 'quantity' ? Number.parseFloat(value) : item.quantity;
@@ -229,15 +240,12 @@ export default function CreateInvoice() {
               : typeof item.rate === 'string'
                 ? Number.parseFloat(item.rate) || 0
                 : item.rate;
-
           updatedItem.amount = quantity * rate;
         }
-
         return updatedItem;
       }
       return item;
     });
-
     setItems(updatedItems);
   };
 
@@ -249,13 +257,11 @@ export default function CreateInvoice() {
       });
       return;
     }
-
     try {
       const response = await axiosInstance.post('/customer', {
         ...newCustomer,
         companyId
       });
-
       const createdCustomer = response.data.data;
       setCustomers([...customers, createdCustomer]);
       setSelectedCustomer(createdCustomer._id);
@@ -270,7 +276,6 @@ export default function CreateInvoice() {
         sortCode: '',
         beneficiary: ''
       });
-
       toast({
         title: 'Customer created successfully',
         className: 'bg-theme text-white border-none'
@@ -292,7 +297,6 @@ export default function CreateInvoice() {
       });
       return;
     }
-
     if (transactionType !== 'outflow' && !selectedBank) {
       toast({
         title: 'Please select a bank',
@@ -300,7 +304,6 @@ export default function CreateInvoice() {
       });
       return;
     }
-
     if (!transactionType) {
       toast({
         title: 'Please select a transaction type',
@@ -308,7 +311,6 @@ export default function CreateInvoice() {
       });
       return;
     }
-
     if (items.some((item) => !item.details)) {
       toast({
         title: 'Please fill in all item details',
@@ -316,6 +318,19 @@ export default function CreateInvoice() {
       });
       return;
     }
+    if (isRecurring && (!scheduleFrequency || !scheduleDay)) {
+      toast({
+        title: 'Please configure the schedule settings',
+        variant: 'destructive'
+      });
+      setIsScheduleDialogOpen(true);
+      return;
+    }
+
+    // Determine lastRunDate: use invoiceDate if set, else today
+    const todayISO = new Date().toISOString().split('T')[0];
+    const actualInvoiceDate = invoiceDate || todayISO;
+    const actualLastRunDate = isRecurring ? actualInvoiceDate : undefined;
 
     try {
       const invoiceData = {
@@ -333,7 +348,7 @@ export default function CreateInvoice() {
               : rest.rate
         })),
         notes,
-        topNote, // Added Top Note
+        topNote,
         transactionType,
         status: 'due',
         amount: total,
@@ -342,10 +357,19 @@ export default function CreateInvoice() {
         discount: Number.parseFloat(invoiceDiscount) || 0,
         discountType: invoiceDiscountType,
         subtotal: subtotal,
-        // Added Partial Payment Data
         partialPayment: Number.parseFloat(partialPayment) || 0,
         partialPaymentType,
-        balanceDue
+        balanceDue,
+        isRecurring,
+        // --- RECURRING FIELDS ---
+        ...(isRecurring && {
+          frequency: scheduleFrequency,
+          scheduledDay: scheduleDay,
+          scheduledMonth:
+            scheduleFrequency === 'yearly' ? scheduleMonth : undefined,
+          frequencyDueDate: Number(scheduleDueDays) || 0,
+          lastRunDate: actualLastRunDate // First run is NOW
+        })
       };
 
       if (transactionType !== 'outflow') {
@@ -353,13 +377,13 @@ export default function CreateInvoice() {
         invoiceData.bank = selectedBank;
       }
 
+      console.log('Invoice Data to be sent:', invoiceData);
       await axiosInstance.post('/invoice', invoiceData);
 
       toast({
         title: 'Invoice saved successfully',
         className: 'bg-theme text-white border-none'
       });
-
       navigate(`/admin/company/${companyId}/invoice`);
     } catch (error) {
       console.error('Error saving invoice:', error);
@@ -372,20 +396,48 @@ export default function CreateInvoice() {
 
   return (
     <div className="mb-2 rounded-md bg-white p-4 shadow-lg">
-      <div className="mb-6 flex items-center">
+      <div className="mb-6 flex items-center justify-between">
+        <div className=" flex items-center">
+          <Button
+            variant="theme"
+            onClick={() => navigate(`/admin/company/${companyId}/invoice`)}
+            className="mr-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-bold">Create New Invoice</h1>
+        </div>
         <Button
-          variant="theme"
-          onClick={() => navigate(`/admin/company/${companyId}/invoice`)}
-          className="mr-4"
+          variant="outline"
+          className={`${isRecurring ? 'hover:bg-theme/90 border-none bg-theme text-white' : ''}`}
+          onClick={() => {
+            setIsScheduleDialogOpen(true);
+          }}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          <CalendarClock className="mr-2 h-4 w-4" />
+          {isRecurring && scheduleFrequency && scheduleDay ? (
+            <span className="flex items-center gap-1 text-xs sm:text-sm">
+              <span className="font-semibold text-inherit">
+                Scheduled ( {scheduleDay} of every{' '}
+                {scheduleFrequency === 'monthly' ? 'month' : 'year'}
+              </span>
+              {scheduleFrequency === 'yearly' && (
+                <span className="font-semibold text-inherit">
+                  {' '}
+                  of{' '}
+                  {monthOptions.find((m) => m.value === scheduleMonth)?.label}
+                </span>
+              )}
+              )
+            </span>
+          ) : (
+            'Schedule Invoice'
+          )}
         </Button>
-        <h1 className="text-2xl font-bold">Create New Invoice</h1>
       </div>
-
+      {/* ... rest of form unchanged until Dialog ... */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
-        {/* Transaction Type */}
         <div className="space-y-2">
           <Label htmlFor="transactionType">Transaction Type*</Label>
           <Select
@@ -447,7 +499,6 @@ export default function CreateInvoice() {
             </div>
           </div>
         )}
-
         <div className="space-y-2">
           <Label htmlFor="invoiceNumber">Reference Invoice Number</Label>
           <div className="flex items-center gap-2">
@@ -459,7 +510,6 @@ export default function CreateInvoice() {
             />
           </div>
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="invoiceDate">Reference Invoice Date</Label>
           <Input
@@ -470,7 +520,6 @@ export default function CreateInvoice() {
             onChange={(e) => setInvoiceDate(e.target.value)}
           />
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="dueDate">Due Date</Label>
           <Input
@@ -482,11 +531,9 @@ export default function CreateInvoice() {
           />
         </div>
       </div>
-
       <div className="mt-8">
         <Card>
           <CardContent className="p-0">
-            {/* --- NEW: Top Note Section --- */}
             <div className="border-b border-gray-200 p-4">
               {!showTopNote ? (
                 <Button
@@ -506,7 +553,7 @@ export default function CreateInvoice() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8  text-red-500 hover:text-red-500"
+                      className="h-8 w-8 text-red-500 hover:text-red-500"
                       onClick={() => {
                         setShowTopNote(false);
                         setTopNote('');
@@ -525,7 +572,6 @@ export default function CreateInvoice() {
                 </div>
               )}
             </div>
-
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -601,7 +647,6 @@ export default function CreateInvoice() {
                 </tbody>
               </table>
             </div>
-
             <div className="flex justify-between p-4">
               <div className="flex flex-col gap-2">
                 <Button variant="theme" onClick={handleAddRow}>
@@ -624,7 +669,6 @@ export default function CreateInvoice() {
                     className="ml-auto w-32 text-center"
                   />
                 </div>
-
                 <div className="mb-2 flex items-center">
                   <span className="mr-4 w-28 font-medium">Discount</span>
                   <div className="flex w-full items-center gap-2">
@@ -663,8 +707,6 @@ export default function CreateInvoice() {
                     </div>
                   </div>
                 </div>
-
-                {/* --- NEW: Partial Payment Input Section --- */}
                 <div className="mb-2 flex items-center">
                   <span className="mr-4 w-28 font-medium">Paid Amount</span>
                   <div className="flex w-full items-center gap-2">
@@ -678,9 +720,7 @@ export default function CreateInvoice() {
                         { label: 'Flat', value: 'flat' }
                       ].find((opt) => opt.value === partialPaymentType)}
                       onChange={(selectedOption) =>
-                        setPartialPaymentType(
-                          selectedOption?.value || 'flat' // Default to flat for payment usually
-                        )
+                        setPartialPaymentType(selectedOption?.value || 'flat')
                       }
                       options={[
                         { label: 'Percentage', value: 'percentage' },
@@ -704,7 +744,6 @@ export default function CreateInvoice() {
                   </div>
                 </div>
               </div>
-
               <div className="flex flex-wrap justify-between gap-4 p-4">
                 <div className="flex flex-col text-left">
                   <div className="mb-2 flex items-center">
@@ -735,15 +774,12 @@ export default function CreateInvoice() {
                       ).toFixed(2)}
                     </span>
                   </div>
-
                   <div className="mb-2 flex items-center border-t border-gray-100 pt-2">
                     <span className="mr-4 w-28 font-bold">Total</span>
                     <span className=" ml-auto w-32 text-center font-bold">
                       £{total.toFixed(2)}
                     </span>
                   </div>
-
-                  {/* --- NEW: Partial Payment Summary Breakdown --- */}
                   {Number(partialPayment) > 0 && (
                     <>
                       <div className="mb-2 flex items-center text-gray-600">
@@ -761,7 +797,6 @@ export default function CreateInvoice() {
                         </span>
                       </div>
                       <div className="mb-2 flex items-center border-t border-gray-300 pt-2 ">
-                        {/* <span className="mr-4 w-32 font-bold">Balance Due</span> */}
                         <span className="ml-auto w-32 text-center font-bold">
                           £{balanceDue.toFixed(2)}
                         </span>
@@ -774,7 +809,6 @@ export default function CreateInvoice() {
           </CardContent>
         </Card>
       </div>
-
       <div className="mt-6 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="notes">Notes</Label>
@@ -789,7 +823,6 @@ export default function CreateInvoice() {
             Will be displayed on the invoice
           </p>
         </div>
-
         <div>
           <Button
             variant="link"
@@ -799,7 +832,6 @@ export default function CreateInvoice() {
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Terms and conditions
           </Button>
-
           {showTermsAndConditions && (
             <div className="mt-2 space-y-2">
               <Textarea
@@ -812,7 +844,6 @@ export default function CreateInvoice() {
           )}
         </div>
       </div>
-
       <div className="mt-8 flex justify-between">
         <div className="flex w-full flex-row justify-end gap-2">
           <Button
@@ -822,11 +853,169 @@ export default function CreateInvoice() {
             Cancel
           </Button>
           <Button variant="theme" onClick={() => handleSaveInvoice()}>
-            Save
+            {isRecurring ? 'Save Schedule' : 'Save Invoice'}
           </Button>
         </div>
       </div>
 
+      {/* SCHEDULE DIALOG */}
+      <Dialog
+        open={isScheduleDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            if (isRecurring && (!scheduleFrequency || !scheduleDay)) {
+              setIsRecurring(false);
+              setScheduleFrequency('monthly');
+              setScheduleDueDays('0');
+            }
+          }
+          setIsScheduleDialogOpen(open);
+          if (open) {
+            // No need to reset nextRunDate anymore
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Schedule Invoice Settings</DialogTitle>
+            <DialogDescription>
+              Configure how this invoice should be automatically generated.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="frequency" className="text-sm font-medium">
+                  How often would you like the invoice to be scheduled?{' '}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  id="frequency"
+                  value={[
+                    { label: 'Monthly', value: 'monthly' },
+                    { label: 'Yearly', value: 'yearly' }
+                  ].find((opt) => opt.value === scheduleFrequency)}
+                  onChange={(opt: any) => setScheduleFrequency(opt?.value)}
+                  options={[
+                    { label: 'Monthly', value: 'monthly' },
+                    { label: 'Yearly', value: 'yearly' }
+                  ]}
+                />
+              </div>
+
+              <div className="space-y-2">
+                {/* Dynamic label */}
+                <Label className="text-sm font-medium">
+                  {scheduleFrequency === 'yearly'
+                    ? 'Choose the month and day the invoice should be issued'
+                    : 'Choose the day the invoice should be issued'}{' '}
+                  <span className="text-red-500">*</span>
+                </Label>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {scheduleFrequency === 'yearly' && (
+                    <div className="col-span-1">
+                      <Select
+                        placeholder="Select Month"
+                        options={monthOptions}
+                        value={monthOptions.find(
+                          (m) => m.value === scheduleMonth
+                        )}
+                        onChange={(opt: any) => setScheduleMonth(opt?.value)}
+                        menuPlacement="auto"
+                      />
+                    </div>
+                  )}
+
+                  <div
+                    className={`${scheduleFrequency !== 'yearly' ? 'col-span-2' : 'col-span-1'}`}
+                  >
+                    <Select
+                      placeholder="Enter a day (1–30)"
+                      options={daysOptions}
+                      value={daysOptions.find((d) => d.value === scheduleDay)}
+                      onChange={(opt: any) => setScheduleDay(opt?.value)}
+                      menuPlacement="auto"
+                      maxMenuHeight={200}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="dueDays" className="text-sm font-medium">
+                  Due date duration (in days)
+                </Label>
+                <Input
+                  id="dueDays"
+                  type="number"
+                  min="0"
+                  placeholder="e.g., 30"
+                  value={scheduleDueDays}
+                  onChange={(e) => setScheduleDueDays(e.target.value)}
+                />
+                <p className="text-xs font-semibold text-gray-500">
+                  We will automatically set future due dates based on the
+                  duration you choose
+                </p>
+              </div>
+
+              {scheduleFrequency && scheduleDay && (
+                <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600">
+                  <p>
+                    Invoice will generate on{' '}
+                    <span className="font-semibold text-theme">
+                      {scheduleDay}
+                      {scheduleFrequency === 'yearly' && (
+                        <>
+                          {' '}
+                          <span className="font-semibold text-theme">
+                            {
+                              monthOptions.find(
+                                (m) => m.value === scheduleMonth
+                              )?.label
+                            }
+                          </span>
+                        </>
+                      )}{' '}
+                      of every{' '}
+                      {scheduleFrequency === 'monthly' ? 'month' : 'year'}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsRecurring(false);
+                setScheduleFrequency(undefined);
+                setScheduleDay(undefined);
+                setScheduleMonth(new Date().getMonth() + 1);
+                setScheduleDueDays('0');
+                setIsScheduleDialogOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="theme"
+              disabled={!scheduleFrequency || !scheduleDay}
+              onClick={() => {
+                if (!scheduleFrequency || !scheduleDay) return;
+                setIsRecurring(true);
+                setIsScheduleDialogOpen(false);
+              }}
+            >
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* NEW CUSTOMER DIALOG */}
       <Dialog
         open={isNewCustomerDialogOpen}
         onOpenChange={setIsNewCustomerDialogOpen}
@@ -835,7 +1024,6 @@ export default function CreateInvoice() {
           <DialogHeader>
             <DialogTitle>Add New Customer</DialogTitle>
           </DialogHeader>
-
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="customerName">Name*</Label>
@@ -847,7 +1035,6 @@ export default function CreateInvoice() {
                 }
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="customerEmail">Email</Label>
               <Input
@@ -859,7 +1046,6 @@ export default function CreateInvoice() {
                 }
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="customerPhone">Phone</Label>
               <Input
@@ -870,7 +1056,6 @@ export default function CreateInvoice() {
                 }
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="customerAddress">Address</Label>
               <Textarea
@@ -925,7 +1110,6 @@ export default function CreateInvoice() {
               />
             </div>
           </div>
-
           <DialogFooter>
             <Button
               variant="outline"

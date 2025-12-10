@@ -12,6 +12,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import Select from 'react-select';
 import {
   Dialog,
@@ -24,34 +25,27 @@ import {
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 
-export default function EditInvoice() {
-  const { id: companyId, invoiceId } = useParams<{
-    id: string;
-    invoiceId: string;
-  }>();
+export default function CreateScheduleInvoice() {
+  const { id: companyId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // --- LOADING STATE (Consolidated) ---
-  const [isPageLoading, setIsPageLoading] = useState(true);
-
-  // --- DATA STATE ---
+  // --- EXISTING STATE ---
   const [items, setItems] = useState([
     {
       id: 1,
       details: '',
       quantity: 1,
-      rate: '' as any,
+      rate: '',
       amount: 0
     }
   ]);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState('');
-
-  const [banks, setBanks] = useState<any[]>([]);
-  const [selectedBank, setSelectedBank] = useState('');
   const [transactionType, setTransactionType] = useState('');
-
-  // New Customer Dialog State
+  const [banks, setBanks] = useState<any[]>([]);
+  const [isLoadingBanks, setIsLoadingBanks] = useState(false);
+  const [selectedBank, setSelectedBank] = useState('');
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
     name: '',
@@ -63,8 +57,6 @@ export default function EditInvoice() {
     sortCode: '',
     beneficiary: ''
   });
-
-  // Invoice Meta
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState<string | undefined>(undefined);
   const [dueDate, setDueDate] = useState<string | undefined>(undefined);
@@ -73,8 +65,6 @@ export default function EditInvoice() {
   const [showTopNote, setShowTopNote] = useState(false);
   const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
   const [termsAndConditions, setTermsAndConditions] = useState('');
-
-  // Calculations
   const [total, setTotal] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
   const [invoiceTax, setInvoiceTax] = useState('0');
@@ -90,11 +80,11 @@ export default function EditInvoice() {
   const [scheduleFrequency, setScheduleFrequency] = useState<
     string | undefined
   >(undefined);
-  const [scheduleDay, setScheduleDay] = useState<number | undefined>(undefined);
+  const [scheduleDay, setScheduleDay] = useState<number>();
   const [scheduleMonth, setScheduleMonth] = useState<number>(
     new Date().getMonth() + 1
-  );
-  const [scheduleDueDays, setScheduleDueDays] = useState<string>('0');
+  ); // 1-12
+  const [scheduleDueDays, setScheduleDueDays] = useState<string>('');
 
   // Helper options
   const daysOptions = Array.from({ length: 31 }, (_, i) => ({
@@ -125,11 +115,9 @@ export default function EditInvoice() {
     return 'th';
   }
 
-  // --- DATA FETCHING ---
-
-  // NOTE: Loading state is handled by the useEffect wrapper, not individual functions
   const fetchCustomers = async () => {
     if (!companyId) return;
+    setIsLoadingCustomers(true);
     try {
       const response = await axiosInstance.get(
         `/customer?companyId=${companyId}&limit=all`
@@ -137,11 +125,18 @@ export default function EditInvoice() {
       setCustomers(response.data.data.result || []);
     } catch (error) {
       console.error('Error fetching customers:', error);
+      toast({
+        title: 'Failed to load customers',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoadingCustomers(false);
     }
   };
 
   const fetchBanks = async () => {
     if (!companyId) return;
+    setIsLoadingBanks(true);
     try {
       const response = await axiosInstance.get(
         `/bank?companyId=${companyId}&limit=10000`
@@ -149,101 +144,20 @@ export default function EditInvoice() {
       setBanks(response.data.data.result || []);
     } catch (error) {
       console.error('Error fetching Banks:', error);
-    }
-  };
-
-  const fetchInvoiceDetails = async () => {
-    if (!invoiceId) return;
-    try {
-      const response = await axiosInstance.get(`/invoice/${invoiceId}`);
-      const data = response.data.data;
-
-      // Populate State
-      setTransactionType(data.transactionType || 'inflow');
-      setSelectedCustomer(
-        typeof data.customer === 'object' ? data.customer._id : data.customer
-      );
-      if (data.bank) {
-        setSelectedBank(
-          typeof data.bank === 'object' ? data.bank._id : data.bank
-        );
-      }
-      setInvoiceNumber(data.invoiceNumber || '');
-
-      // Handle Dates
-      if (data.invoiceDate) setInvoiceDate(data.invoiceDate.split('T')[0]);
-      if (data.dueDate) setDueDate(data.dueDate.split('T')[0]);
-
-      // Items
-      if (data.items && data.items.length > 0) {
-        const formattedItems = data.items.map((item: any, index: number) => ({
-          id: index + 1,
-          details: item.details,
-          quantity: item.quantity,
-          rate: item.rate,
-          amount: item.amount
-        }));
-        setItems(formattedItems);
-      }
-
-      // Financials
-      setInvoiceTax(String(data.tax || 0));
-      setInvoiceDiscount(String(data.discount || 0));
-      setInvoiceDiscountType(data.discountType || 'percentage');
-      setPartialPayment(String(data.partialPayment || 0));
-      setPartialPaymentType(data.partialPaymentType || 'flat');
-
-      // Notes & Terms
-      setNotes(data.notes || '');
-      if (data.topNote) {
-        setTopNote(data.topNote);
-        setShowTopNote(true);
-      }
-      setTermsAndConditions(data.termsAndConditions || '');
-      if (data.termsAndConditions) setShowTermsAndConditions(true);
-
-      // Recurring Settings
-      if (data.isRecurring) {
-        setIsRecurring(true);
-        setScheduleFrequency(data.frequency);
-        setScheduleDay(data.scheduledDay);
-        if (data.scheduledMonth) setScheduleMonth(data.scheduledMonth);
-        setScheduleDueDays(String(data.frequencyDueDate || 0));
-      }
-    } catch (error) {
-      console.error('Error fetching invoice details:', error);
       toast({
-        title: 'Failed to load invoice details',
+        title: 'Failed to load Banks',
         variant: 'destructive'
       });
-      navigate(`/admin/company/${companyId}/invoice`);
+    } finally {
+      setIsLoadingBanks(false);
     }
   };
 
-  // --- INITIALIZATION ---
   useEffect(() => {
-    const init = async () => {
-      setIsPageLoading(true); // Start loading
-      try {
-        // Fetch all data in parallel for speed
-        await Promise.all([
-          fetchBanks(),
-          fetchCustomers(),
-          fetchInvoiceDetails()
-        ]);
-      } catch (error) {
-        console.error('Initialization error:', error);
-      } finally {
-        setIsPageLoading(false); // Stop loading regardless of success/failure
-      }
-    };
+    fetchBanks();
+    fetchCustomers();
+  }, [companyId]);
 
-    if (companyId && invoiceId) {
-      init();
-    }
-  }, [companyId, invoiceId]);
-
-  // Calculation Effect
   useEffect(() => {
     const newSubtotal = items.reduce((sum, item) => {
       const rate =
@@ -253,14 +167,11 @@ export default function EditInvoice() {
       return sum + item.quantity * rate;
     }, 0);
     setSubtotal(newSubtotal);
-
     const parsedTax = Number.parseFloat(invoiceTax);
     const parsedDiscount = Number.parseFloat(invoiceDiscount);
     const parsedPartialPayment = Number.parseFloat(partialPayment);
-
     const taxAmount =
       !isNaN(parsedTax) && parsedTax > 0 ? newSubtotal * (parsedTax / 100) : 0;
-
     let discountAmount = 0;
     if (!isNaN(parsedDiscount) && parsedDiscount > 0) {
       discountAmount =
@@ -268,10 +179,8 @@ export default function EditInvoice() {
           ? newSubtotal * (parsedDiscount / 100)
           : parsedDiscount;
     }
-
     const newTotal = newSubtotal + taxAmount - discountAmount;
     setTotal(newTotal);
-
     let paymentAmount = 0;
     if (!isNaN(parsedPartialPayment) && parsedPartialPayment > 0) {
       paymentAmount =
@@ -279,7 +188,6 @@ export default function EditInvoice() {
           ? newTotal * (parsedPartialPayment / 100)
           : parsedPartialPayment;
     }
-
     const newBalance = Math.max(0, newTotal - paymentAmount);
     setBalanceDue(newBalance);
   }, [
@@ -290,8 +198,6 @@ export default function EditInvoice() {
     partialPayment,
     partialPaymentType
   ]);
-
-  // --- HANDLERS ---
 
   const handleAddRow = () => {
     const newId =
@@ -430,15 +336,17 @@ export default function EditInvoice() {
       return;
     }
 
+    // Determine lastRunDate: use invoiceDate if set, else today
     const todayISO = new Date().toISOString().split('T')[0];
     const actualInvoiceDate = invoiceDate || todayISO;
+    const actualLastRunDate = isRecurring ? actualInvoiceDate : undefined;
 
     try {
       const invoiceData = {
         companyId,
         customer: selectedCustomer,
         invoiceNumber,
-        invoiceDate,
+        invoiceDate: actualInvoiceDate,
         dueDate,
         termsAndConditions,
         items: items.map(({ id, ...rest }) => ({
@@ -451,6 +359,7 @@ export default function EditInvoice() {
         notes,
         topNote,
         transactionType,
+        status: 'due',
         amount: total,
         total: total,
         tax: Number.parseFloat(invoiceTax) || 0,
@@ -467,7 +376,8 @@ export default function EditInvoice() {
           scheduledDay: scheduleDay,
           scheduledMonth:
             scheduleFrequency === 'yearly' ? scheduleMonth : undefined,
-          frequencyDueDate: Number(scheduleDueDays) || 0
+          frequencyDueDate: Number(scheduleDueDays) || 0,
+          lastRunDate: actualLastRunDate // First run is NOW
         })
       };
 
@@ -476,34 +386,28 @@ export default function EditInvoice() {
         invoiceData.bank = selectedBank;
       }
 
-      await axiosInstance.patch(`/invoice/${invoiceId}`, invoiceData);
+      console.log('Invoice Data to be sent:', invoiceData);
+
+      // Changed endpoint to /schedule-invoice
+      await axiosInstance.post('/schedule-invoice', invoiceData);
 
       toast({
-        title: 'Invoice updated successfully',
+        title: isRecurring
+          ? 'Invoice scheduled successfully'
+          : 'Invoice saved successfully',
         className: 'bg-theme text-white border-none'
       });
-      navigate(`/admin/company/${companyId}/invoice`);
+
+      // Changed redirect to schedule-invoice
+      navigate(`/admin/company/${companyId}/schedule-invoice`);
     } catch (error) {
-      console.error('Error updating invoice:', error);
+      console.error('Error saving invoice:', error);
       toast({
-        title: 'Failed to update invoice',
+        title: 'Failed to save invoice',
         variant: 'destructive'
       });
     }
   };
-
-  // --- RENDER ---
-
-  if (isPageLoading) {
-    return (
-      <div className="flex h-10 w-full flex-col items-center justify-center">
-        <div className="flex flex-row items-center gap-4">
-          <p className="font-semibold">Please Wait..</p>
-          <div className="h-5 w-5 animate-spin rounded-full border-4 border-dashed border-theme"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="mb-2 rounded-md bg-white p-4 shadow-lg">
@@ -511,13 +415,16 @@ export default function EditInvoice() {
         <div className=" flex items-center">
           <Button
             variant="theme"
-            onClick={() => navigate(`/admin/company/${companyId}/invoice`)}
+            // Changed redirect
+            onClick={() =>
+              navigate(`/admin/company/${companyId}/schedule-invoice`)
+            }
             className="mr-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          <h1 className="text-2xl font-bold">Edit Invoice</h1>
+          <h1 className="text-2xl font-bold">Create Schedule Invoice</h1>
         </div>
         <Button
           variant="outline"
@@ -547,8 +454,6 @@ export default function EditInvoice() {
           )}
         </Button>
       </div>
-
-      {/* --- FORM CONTENT --- */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
         <div className="space-y-2">
           <Label htmlFor="transactionType">Transaction Type*</Label>
@@ -583,7 +488,9 @@ export default function EditInvoice() {
                 options={customers}
                 getOptionLabel={(option) => option.name}
                 getOptionValue={(option) => option._id}
+                isDisabled={isLoadingCustomers}
                 placeholder="Select or add customer"
+                isLoading={isLoadingCustomers}
               />
             </div>
           </div>
@@ -602,7 +509,9 @@ export default function EditInvoice() {
                 options={banks}
                 getOptionLabel={(option) => option.name}
                 getOptionValue={(option) => option._id}
+                isDisabled={isLoadingBanks}
                 placeholder="Select Bank Account"
+                isLoading={isLoadingBanks}
               />
             </div>
           </div>
@@ -618,7 +527,7 @@ export default function EditInvoice() {
             />
           </div>
         </div>
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="invoiceDate">Reference Invoice Date</Label>
           <Input
             className="h-10 rounded-sm"
@@ -628,16 +537,7 @@ export default function EditInvoice() {
             onChange={(e) => setInvoiceDate(e.target.value)}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="dueDate">Due Date</Label>
-          <Input
-            className="h-10 rounded-sm"
-            id="dueDate"
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-          />
-        </div>
+         */}
       </div>
       <div className="mt-8">
         <Card>
@@ -956,12 +856,15 @@ export default function EditInvoice() {
         <div className="flex w-full flex-row justify-end gap-2">
           <Button
             variant="outline"
-            onClick={() => navigate(`/admin/company/${companyId}/invoice`)}
+            // Changed redirect
+            onClick={() =>
+              navigate(`/admin/company/${companyId}/schedule-invoice`)
+            }
           >
             Cancel
           </Button>
           <Button variant="theme" onClick={() => handleSaveInvoice()}>
-            {isRecurring ? 'Update Schedule' : 'Update Invoice'}
+            {isRecurring ? 'Save Schedule' : 'Save Invoice'}
           </Button>
         </div>
       </div>
@@ -978,6 +881,9 @@ export default function EditInvoice() {
             }
           }
           setIsScheduleDialogOpen(open);
+          if (open) {
+            // No need to reset nextRunDate anymore
+          }
         }}
       >
         <DialogContent className="sm:max-w-[500px]">
@@ -988,7 +894,7 @@ export default function EditInvoice() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">
-            <>
+                      <>
               <div className="space-y-2">
                 <Label htmlFor="frequency" className="text-sm font-medium">
                   How often would you like the invoice to be scheduled?{' '}
@@ -1036,7 +942,7 @@ export default function EditInvoice() {
                     className={`${scheduleFrequency !== 'yearly' ? 'col-span-2' : 'col-span-1'}`}
                   >
                     <Select
-                      placeholder="Select Day"
+                      placeholder="Enter a day (1–30)"
                       options={daysOptions}
                       value={daysOptions.find((d) => d.value === scheduleDay)}
                       onChange={(opt: any) => setScheduleDay(opt?.value)}
@@ -1049,13 +955,13 @@ export default function EditInvoice() {
 
               <div className="space-y-2">
                 <Label htmlFor="dueDays" className="text-sm font-medium">
-                  Due date duration (in days){' '}
+                  Due date duration (in days)
                 </Label>
                 <Input
                   id="dueDays"
                   type="number"
                   min="0"
-                  placeholder="e.g. 7"
+                  placeholder="e.g., 30"
                   value={scheduleDueDays}
                   onChange={(e) => setScheduleDueDays(e.target.value)}
                 />
@@ -1074,10 +980,13 @@ export default function EditInvoice() {
                       {scheduleFrequency === 'yearly' && (
                         <>
                           {' '}
-                          {
-                            monthOptions.find((m) => m.value === scheduleMonth)
-                              ?.label
-                          }
+                          <span className="font-semibold text-theme">
+                            {
+                              monthOptions.find(
+                                (m) => m.value === scheduleMonth
+                              )?.label
+                            }
+                          </span>
                         </>
                       )}{' '}
                       of every{' '}
@@ -1092,6 +1001,11 @@ export default function EditInvoice() {
             <Button
               variant="outline"
               onClick={() => {
+                setIsRecurring(false);
+                setScheduleFrequency(undefined);
+                setScheduleDay(undefined);
+                setScheduleMonth(new Date().getMonth() + 1);
+                setScheduleDueDays('0');
                 setIsScheduleDialogOpen(false);
               }}
             >

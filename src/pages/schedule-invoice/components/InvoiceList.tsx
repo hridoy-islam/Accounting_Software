@@ -15,31 +15,19 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import {
-  MoreVertical,
-  FileEdit,
-  Trash2,
-  Download,
-  Receipt,
-  Loader,
-  Pen,
-  Upload
-} from 'lucide-react';
+import { MoreVertical, Trash2, Receipt, Pen } from 'lucide-react';
 
-import moment from 'moment';
 import { Invoice } from 'src/types/invoice';
 import InvoiceDetailsDialog from './InvoiceDetailsDialog';
 import { ImageUploader } from './invoiceDoc-uploader';
 import { useNavigate, useParams } from 'react-router-dom';
 import { InvoicePDFDownload } from './InvoicePDF';
-import { useSelector } from 'react-redux';
 import { usePermission } from '@/hooks/usePermission';
 
 interface InvoiceListProps {
   invoices: Invoice[];
   onEdit: (invoice: Invoice) => void;
   onDelete: (invoiceId: string) => void;
-  onMarkAsPaid: (invoice: Invoice) => void;
   loading: Boolean;
 }
 
@@ -47,14 +35,39 @@ export function InvoiceList({
   invoices = [],
   onEdit,
   onDelete,
-  onMarkAsPaid,
   loading
 }: InvoiceListProps) {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const { id: companyId } = useParams();
-  const permission = useSelector((state: any) => state.permission.permissions);
+
+  // Define Month Options locally for display mapping
+  const monthOptions = [
+    { label: 'January', value: 1 },
+    { label: 'February', value: 2 },
+    { label: 'March', value: 3 },
+    { label: 'April', value: 4 },
+    { label: 'May', value: 5 },
+    { label: 'June', value: 6 },
+    { label: 'July', value: 7 },
+    { label: 'August', value: 8 },
+    { label: 'September', value: 9 },
+    { label: 'October', value: 10 },
+    { label: 'November', value: 11 },
+    { label: 'December', value: 12 }
+  ];
+
+  // Helper function to format the date suffix
+  function getOrdinalSuffix(i: number) {
+    if (!i) return '';
+    const j = i % 10,
+      k = i % 100;
+    if (j === 1 && k !== 11) return 'st';
+    if (j === 2 && k !== 12) return 'nd';
+    if (j === 3 && k !== 13) return 'rd';
+    return 'th';
+  }
 
   const handleRowClick = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -70,24 +83,14 @@ export function InvoiceList({
   const { hasPermission } = usePermission();
 
   return (
-    <div className="  shadow-sm">
+    <div className="shadow-sm">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="text-left">INV ID</TableHead>
-            <TableHead className="text-left">Created At</TableHead>
-            <TableHead className="text-left">Invoice Date</TableHead>
-            <TableHead className="text-left">
-              Reference Invoice Number
-            </TableHead>
             <TableHead className="text-left">Customer</TableHead>
             <TableHead className="text-left">Amount</TableHead>
-            <TableHead className="text-left">Status</TableHead>
             <TableHead className="text-left">Type</TableHead>
-            {hasPermission('TransactionList', 'create') && (
-              <TableHead className="text-left">Payment</TableHead>
-            )}
-
+            <TableHead className="text-left">Schedule</TableHead>
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -122,39 +125,6 @@ export function InvoiceList({
                     onClick={() => handleRowClick(invoice)}
                     className="text-left"
                   >
-                    {invoice?.invId} {invoice?.isRecurring && (
-                      <span className="rounded-full bg-theme text-white text-xs px-3 py-1">
-                        Recurring
-                      </span>
-                    )}
-
-                  </TableCell>
-                  <TableCell
-                    onClick={() => handleRowClick(invoice)}
-                    className="text-left"
-                  >
-                    {moment(invoice?.createdAt).format('DD MMM YYYY')}
-                  </TableCell>
-                  <TableCell
-                    onClick={() => handleRowClick(invoice)}
-                    className="text-left"
-                  >
-                    {invoice?.invoiceDate
-                      ? moment(invoice.invoiceDate).format('DD MMM YYYY')
-                      : '—'}
-                  </TableCell>
-
-                  <TableCell
-                    onClick={() => handleRowClick(invoice)}
-                    className="text-left"
-                  >
-                    {invoice.invoiceNumber}
-                  </TableCell>
-
-                  <TableCell
-                    onClick={() => handleRowClick(invoice)}
-                    className="text-left"
-                  >
                     {invoice?.customer?.name}
                   </TableCell>
                   <TableCell
@@ -165,20 +135,7 @@ export function InvoiceList({
                       £{invoice.amount.toFixed(2)}
                     </div>
                   </TableCell>
-                  <TableCell
-                    onClick={() => handleRowClick(invoice)}
-                    className="text-left"
-                  >
-                    <Badge
-                      variant="outline"
-                      className={
-                        invoice.status === 'paid' ? 'bg-paid' : 'bg-due'
-                      }
-                    >
-                      {invoice.status.charAt(0).toUpperCase() +
-                        invoice.status.slice(1)}
-                    </Badge>
-                  </TableCell>
+
                   <TableCell
                     onClick={() => handleRowClick(invoice)}
                     className="text-left"
@@ -196,23 +153,39 @@ export function InvoiceList({
                         : 'Outflow'}
                     </Badge>
                   </TableCell>
-                  {hasPermission('TransactionList', 'create') && (
-                    <TableCell className="text-left">
-                      {invoice.status === 'paid' ? (
-                        <div className=" text-xs text-gray-600 hover:text-gray-800">
-                          Completed
-                        </div>
-                      ) : (
-                        <Button
-                          onClick={() => onMarkAsPaid(invoice)}
-                          variant="theme"
-                          size="sm"
-                        >
-                          Mark as Paid
-                        </Button>
-                      )}
-                    </TableCell>
-                  )}
+
+                  <TableCell
+                    onClick={() => handleRowClick(invoice)}
+                    className="text-left"
+                  >
+                    {/* FIXED SECTION START */}
+                    {invoice.frequency && invoice.scheduledDay ? (
+                      <span className="flex items-center gap-1 text-xs sm:text-sm">
+                        <span className="font-semibold text-inherit">
+                          {String(invoice.scheduledDay)}
+                           {" "} of every{' '}
+                          {invoice.frequency === 'monthly' ? 'month' : 'year'}
+                        </span>
+
+                        {invoice.frequency === 'yearly' &&
+                          invoice.scheduledMonth && (
+                            <span className="font-semibold text-inherit">
+                              {' '}
+                              of{' '}
+                              {
+                                monthOptions.find(
+                                  (m) => m.value === invoice.scheduledMonth
+                                )?.label
+                              }
+                            </span>
+                          )}
+                      </span>
+                    ) : (
+                      'Schedule Invoice'
+                    )}
+
+                    {/* FIXED SECTION END */}
+                  </TableCell>
 
                   <TableCell className="flex flex-row items-center justify-end gap-2 text-right">
                     {hasPermission('Invoice', 'edit') && (
@@ -220,30 +193,15 @@ export function InvoiceList({
                         variant="theme"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => {
-                          setSelectedInvoice(invoice);
-                          setUploadOpen(true);
-                        }}
+                        onClick={() =>
+                          navigate(
+                            `/admin/company/${companyId}/schedule-invoice/${invoice._id}`
+                          )
+                        }
                       >
-                        <Upload />
+                        <Pen />
                       </Button>
                     )}
-
-                    {hasPermission('Invoice', 'edit') &&
-                      invoice.status !== 'paid' && (
-                        <Button
-                          variant="theme"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() =>
-                            navigate(
-                              `/admin/company/${companyId}/invoice/${invoice._id}`
-                            )
-                          }
-                        >
-                          <Pen />
-                        </Button>
-                      )}
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

@@ -20,7 +20,9 @@ import {
   BadgePoundSterling,
   FileWarning,
  User,
- ShieldBan
+ ShieldBan,
+ FileClock,
+ FileSpreadsheetIcon
 } from 'lucide-react';
 import { UserNav } from './user-nav';
 import { useSelector } from 'react-redux';
@@ -77,11 +79,26 @@ export function Navigation() {
       label: 'Dashboard',
       roles: ['admin', 'user', 'company','manager','audit']
     },
-    {
-      to: `/admin/company/${id}/invoice`,
+    
+     {
       icon: <ClipboardList className="h-4 w-4" />,
       label: 'Invoice',
-      roles: ['admin', 'user', 'company','manager','audit']
+      roles: ['admin', 'user', 'company','manager','audit'],
+      subItems: [
+        {
+          to: `/admin/company/${id}/invoice`,
+          icon: <FileSpreadsheetIcon className="h-4 w-4" />,
+          label: 'Invoice List',
+          roles: ['admin', 'user', 'company','manager','audit']
+        },
+         {
+          to: `/admin/company/${id}/schedule-invoice`,
+          icon: <FileClock className="h-4 w-4" />,
+          label: 'Schedule Invoice',
+          roles: ['admin', 'user', 'company','manager','audit']
+        },
+       
+      ]
     },
     {
       icon: <ArrowLeftRight className="h-4 w-4" />,
@@ -100,6 +117,7 @@ export function Navigation() {
           label: 'Pending',
           roles: ['admin', 'user', 'company','manager','audit']
         },
+       
         {
           to: `/admin/company/${id}/csv`,
           icon: <FileSpreadsheet className="h-4 w-4" />,

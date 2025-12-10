@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  PlusCircle,
-  Trash2,
-  ArrowLeft,
-  Trash,
-  CalendarClock
-} from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft, Trash, CalendarClock } from 'lucide-react';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -23,18 +17,16 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { format } from 'date-fns';
 
-export default function EditInvoice() {
-  const { id: companyId, invoiceId } = useParams<{
-    id: string;
-    invoiceId: string;
-  }>();
+export default function EditScheduleInvoice() {
+  const { id: companyId, invoiceId } = useParams<{ id: string; invoiceId: string }>();
   const navigate = useNavigate();
 
-  // --- LOADING STATE (Consolidated) ---
+  // --- LOADING STATE ---
   const [isPageLoading, setIsPageLoading] = useState(true);
 
-  // --- DATA STATE ---
+  // --- STATE ---
   const [items, setItems] = useState([
     {
       id: 1,
@@ -46,12 +38,11 @@ export default function EditInvoice() {
   ]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState('');
-
+  const [transactionType, setTransactionType] = useState('');
   const [banks, setBanks] = useState<any[]>([]);
   const [selectedBank, setSelectedBank] = useState('');
-  const [transactionType, setTransactionType] = useState('');
-
-  // New Customer Dialog State
+  
+  // New Customer Dialog
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
     name: '',
@@ -64,7 +55,7 @@ export default function EditInvoice() {
     beneficiary: ''
   });
 
-  // Invoice Meta
+  // Invoice Data
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState<string | undefined>(undefined);
   const [dueDate, setDueDate] = useState<string | undefined>(undefined);
@@ -73,8 +64,8 @@ export default function EditInvoice() {
   const [showTopNote, setShowTopNote] = useState(false);
   const [showTermsAndConditions, setShowTermsAndConditions] = useState(false);
   const [termsAndConditions, setTermsAndConditions] = useState('');
-
-  // Calculations
+  
+  // Financials
   const [total, setTotal] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
   const [invoiceTax, setInvoiceTax] = useState('0');
@@ -84,17 +75,13 @@ export default function EditInvoice() {
   const [partialPaymentType, setPartialPaymentType] = useState('flat');
   const [balanceDue, setBalanceDue] = useState(0);
 
-  // --- SCHEDULE STATE ---
+  // --- SCHEDULE STATE (Dialog Based) ---
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
-  const [scheduleFrequency, setScheduleFrequency] = useState<
-    string | undefined
-  >(undefined);
+  const [scheduleFrequency, setScheduleFrequency] = useState<string | undefined>(undefined);
   const [scheduleDay, setScheduleDay] = useState<number | undefined>(undefined);
-  const [scheduleMonth, setScheduleMonth] = useState<number>(
-    new Date().getMonth() + 1
-  );
-  const [scheduleDueDays, setScheduleDueDays] = useState<string>('0');
+  const [scheduleMonth, setScheduleMonth] = useState<number>(new Date().getMonth() + 1);
+  const [scheduleDueDays, setScheduleDueDays] = useState<string>('');
 
   // Helper options
   const daysOptions = Array.from({ length: 31 }, (_, i) => ({
@@ -102,32 +89,24 @@ export default function EditInvoice() {
     value: i + 1
   }));
   const monthOptions = [
-    { label: 'January', value: 1 },
-    { label: 'February', value: 2 },
-    { label: 'March', value: 3 },
-    { label: 'April', value: 4 },
-    { label: 'May', value: 5 },
-    { label: 'June', value: 6 },
-    { label: 'July', value: 7 },
-    { label: 'August', value: 8 },
-    { label: 'September', value: 9 },
-    { label: 'October', value: 10 },
-    { label: 'November', value: 11 },
-    { label: 'December', value: 12 }
+    { label: 'January', value: 1 }, { label: 'February', value: 2 },
+    { label: 'March', value: 3 }, { label: 'April', value: 4 },
+    { label: 'May', value: 5 }, { label: 'June', value: 6 },
+    { label: 'July', value: 7 }, { label: 'August', value: 8 },
+    { label: 'September', value: 9 }, { label: 'October', value: 10 },
+    { label: 'November', value: 11 }, { label: 'December', value: 12 }
   ];
 
   function getOrdinalSuffix(i: number) {
-    const j = i % 10,
-      k = i % 100;
-    if (j === 1 && k !== 11) return 'st';
-    if (j === 2 && k !== 12) return 'nd';
-    if (j === 3 && k !== 13) return 'rd';
-    return 'th';
+    const j = i % 10, k = i % 100;
+    if (j === 1 && k !== 11) return "st";
+    if (j === 2 && k !== 12) return "nd";
+    if (j === 3 && k !== 13) return "rd";
+    return "th";
   }
 
   // --- DATA FETCHING ---
 
-  // NOTE: Loading state is handled by the useEffect wrapper, not individual functions
   const fetchCustomers = async () => {
     if (!companyId) return;
     try {
@@ -152,39 +131,25 @@ export default function EditInvoice() {
     }
   };
 
-  const fetchInvoiceDetails = async () => {
+  const fetchScheduleDetails = async () => {
     if (!invoiceId) return;
     try {
-      const response = await axiosInstance.get(`/invoice/${invoiceId}`);
+      const response = await axiosInstance.get(`/schedule-invoice/${invoiceId}`);
       const data = response.data.data;
 
-      // Populate State
+      // Populate Fields
       setTransactionType(data.transactionType || 'inflow');
-      setSelectedCustomer(
-        typeof data.customer === 'object' ? data.customer._id : data.customer
-      );
+      setSelectedCustomer(typeof data.customer === 'object' ? data.customer._id : data.customer);
       if (data.bank) {
-        setSelectedBank(
-          typeof data.bank === 'object' ? data.bank._id : data.bank
-        );
+        setSelectedBank(typeof data.bank === 'object' ? data.bank._id : data.bank);
       }
       setInvoiceNumber(data.invoiceNumber || '');
 
-      // Handle Dates
-      if (data.invoiceDate) setInvoiceDate(data.invoiceDate.split('T')[0]);
-      if (data.dueDate) setDueDate(data.dueDate.split('T')[0]);
-
-      // Items
-      if (data.items && data.items.length > 0) {
-        const formattedItems = data.items.map((item: any, index: number) => ({
-          id: index + 1,
-          details: item.details,
-          quantity: item.quantity,
-          rate: item.rate,
-          amount: item.amount
-        }));
-        setItems(formattedItems);
-      }
+      // Dates (Format YYYY-MM-DD for input type="date")
+      const formatDate = (dateStr: string) => dateStr ? format(new Date(dateStr), 'yyyy-MM-dd') : undefined;
+      
+      setInvoiceDate(formatDate(data.invoiceDate));
+      setDueDate(formatDate(data.dueDate));
 
       // Financials
       setInvoiceTax(String(data.tax || 0));
@@ -193,7 +158,7 @@ export default function EditInvoice() {
       setPartialPayment(String(data.partialPayment || 0));
       setPartialPaymentType(data.partialPaymentType || 'flat');
 
-      // Notes & Terms
+      // Notes
       setNotes(data.notes || '');
       if (data.topNote) {
         setTopNote(data.topNote);
@@ -202,7 +167,19 @@ export default function EditInvoice() {
       setTermsAndConditions(data.termsAndConditions || '');
       if (data.termsAndConditions) setShowTermsAndConditions(true);
 
-      // Recurring Settings
+      // Items
+      if (data.items && data.items.length > 0) {
+        const formattedItems = data.items.map((item: any, index: number) => ({
+            id: index + 1,
+            details: item.details,
+            quantity: item.quantity,
+            rate: item.rate,
+            amount: item.amount
+        }));
+        setItems(formattedItems);
+      }
+
+      // Schedule Specifics
       if (data.isRecurring) {
         setIsRecurring(true);
         setScheduleFrequency(data.frequency);
@@ -210,31 +187,31 @@ export default function EditInvoice() {
         if (data.scheduledMonth) setScheduleMonth(data.scheduledMonth);
         setScheduleDueDays(String(data.frequencyDueDate || 0));
       }
+
     } catch (error) {
-      console.error('Error fetching invoice details:', error);
+      console.error('Error fetching schedule invoice:', error);
       toast({
-        title: 'Failed to load invoice details',
+        title: 'Failed to load schedule details',
         variant: 'destructive'
       });
-      navigate(`/admin/company/${companyId}/invoice`);
+      navigate(`/admin/company/${companyId}/schedule-invoice`);
     }
   };
 
   // --- INITIALIZATION ---
   useEffect(() => {
     const init = async () => {
-      setIsPageLoading(true); // Start loading
+      setIsPageLoading(true);
       try {
-        // Fetch all data in parallel for speed
         await Promise.all([
           fetchBanks(),
           fetchCustomers(),
-          fetchInvoiceDetails()
+          fetchScheduleDetails()
         ]);
       } catch (error) {
-        console.error('Initialization error:', error);
+        console.error("Initialization error:", error);
       } finally {
-        setIsPageLoading(false); // Stop loading regardless of success/failure
+        setIsPageLoading(false);
       }
     };
 
@@ -243,7 +220,7 @@ export default function EditInvoice() {
     }
   }, [companyId, invoiceId]);
 
-  // Calculation Effect
+  // --- CALCULATIONS ---
   useEffect(() => {
     const newSubtotal = items.reduce((sum, item) => {
       const rate =
@@ -253,14 +230,14 @@ export default function EditInvoice() {
       return sum + item.quantity * rate;
     }, 0);
     setSubtotal(newSubtotal);
-
+    
     const parsedTax = Number.parseFloat(invoiceTax);
     const parsedDiscount = Number.parseFloat(invoiceDiscount);
     const parsedPartialPayment = Number.parseFloat(partialPayment);
-
+    
     const taxAmount =
       !isNaN(parsedTax) && parsedTax > 0 ? newSubtotal * (parsedTax / 100) : 0;
-
+    
     let discountAmount = 0;
     if (!isNaN(parsedDiscount) && parsedDiscount > 0) {
       discountAmount =
@@ -268,10 +245,10 @@ export default function EditInvoice() {
           ? newSubtotal * (parsedDiscount / 100)
           : parsedDiscount;
     }
-
+    
     const newTotal = newSubtotal + taxAmount - discountAmount;
     setTotal(newTotal);
-
+    
     let paymentAmount = 0;
     if (!isNaN(parsedPartialPayment) && parsedPartialPayment > 0) {
       paymentAmount =
@@ -279,7 +256,7 @@ export default function EditInvoice() {
           ? newTotal * (parsedPartialPayment / 100)
           : parsedPartialPayment;
     }
-
+    
     const newBalance = Math.max(0, newTotal - paymentAmount);
     setBalanceDue(newBalance);
   }, [
@@ -392,7 +369,7 @@ export default function EditInvoice() {
     }
   };
 
-  const handleSaveInvoice = async () => {
+  const handleUpdateSchedule = async () => {
     if (!selectedCustomer) {
       toast({
         title: 'Please select a customer',
@@ -430,6 +407,11 @@ export default function EditInvoice() {
       return;
     }
 
+    // For Edit: We typically preserve existing dates unless changed by user.
+    // If user didn't change isRecurring settings, we might not want to reset "lastRunDate".
+    // However, if they DID change frequency, we might need to.
+    // The safest "Update" usually sends the config and lets backend handle run-time logic.
+    
     const todayISO = new Date().toISOString().split('T')[0];
     const actualInvoiceDate = invoiceDate || todayISO;
 
@@ -465,9 +447,10 @@ export default function EditInvoice() {
         ...(isRecurring && {
           frequency: scheduleFrequency,
           scheduledDay: scheduleDay,
-          scheduledMonth:
-            scheduleFrequency === 'yearly' ? scheduleMonth : undefined,
-          frequencyDueDate: Number(scheduleDueDays) || 0
+          scheduledMonth: scheduleFrequency === 'yearly' ? scheduleMonth : undefined,
+          frequencyDueDate: Number(scheduleDueDays) || 0,
+          // Note: We are NOT forcibly resetting lastRunDate here on edit, 
+          // to prevent accidental re-sending of already sent schedules.
         })
       };
 
@@ -476,52 +459,53 @@ export default function EditInvoice() {
         invoiceData.bank = selectedBank;
       }
 
-      await axiosInstance.patch(`/invoice/${invoiceId}`, invoiceData);
+      
+      // Use PUT to update the schedule
+      await axiosInstance.patch(`/schedule-invoice/${invoiceId}`, invoiceData);
 
       toast({
-        title: 'Invoice updated successfully',
+        title: 'Schedule updated successfully',
         className: 'bg-theme text-white border-none'
       });
-      navigate(`/admin/company/${companyId}/invoice`);
+      
+      navigate(`/admin/company/${companyId}/schedule-invoice`);
     } catch (error) {
-      console.error('Error updating invoice:', error);
+      console.error('Error updating schedule:', error);
       toast({
-        title: 'Failed to update invoice',
+        title: 'Failed to update schedule',
         variant: 'destructive'
       });
     }
   };
 
-  // --- RENDER ---
-
   if (isPageLoading) {
-    return (
-      <div className="flex h-10 w-full flex-col items-center justify-center">
+      return (
+        <div className="flex h-10 w-full flex-col items-center justify-center">
         <div className="flex flex-row items-center gap-4">
           <p className="font-semibold">Please Wait..</p>
           <div className="h-5 w-5 animate-spin rounded-full border-4 border-dashed border-theme"></div>
         </div>
       </div>
-    );
+      );
   }
 
   return (
     <div className="mb-2 rounded-md bg-white p-4 shadow-lg">
-      <div className="mb-6 flex items-center justify-between">
+      <div className='flex items-center justify-between mb-6'>
         <div className=" flex items-center">
           <Button
             variant="theme"
-            onClick={() => navigate(`/admin/company/${companyId}/invoice`)}
+            onClick={() => navigate(`/admin/company/${companyId}/schedule-invoice`)}
             className="mr-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          <h1 className="text-2xl font-bold">Edit Invoice</h1>
+          <h1 className="text-2xl font-bold">Edit Schedule Invoice</h1>
         </div>
         <Button
           variant="outline"
-          className={`${isRecurring ? 'hover:bg-theme/90 border-none bg-theme text-white' : ''}`}
+          className={`${isRecurring ? 'bg-theme hover:bg-theme/90 text-white border-none' : ''}`}
           onClick={() => {
             setIsScheduleDialogOpen(true);
           }}
@@ -547,7 +531,7 @@ export default function EditInvoice() {
           )}
         </Button>
       </div>
-
+      
       {/* --- FORM CONTENT --- */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
         <div className="space-y-2">
@@ -618,26 +602,26 @@ export default function EditInvoice() {
             />
           </div>
         </div>
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="invoiceDate">Reference Invoice Date</Label>
           <Input
             className="h-10 rounded-sm"
             id="invoiceDate"
             type="date"
-            value={invoiceDate}
+            value={invoiceDate || ''}
             onChange={(e) => setInvoiceDate(e.target.value)}
           />
-        </div>
-        <div className="space-y-2">
+        </div> */}
+        {/* <div className="space-y-2">
           <Label htmlFor="dueDate">Due Date</Label>
           <Input
             className="h-10 rounded-sm"
             id="dueDate"
             type="date"
-            value={dueDate}
+            value={dueDate || ''}
             onChange={(e) => setDueDate(e.target.value)}
           />
-        </div>
+        </div> */}
       </div>
       <div className="mt-8">
         <Card>
@@ -828,7 +812,9 @@ export default function EditInvoice() {
                         { label: 'Flat', value: 'flat' }
                       ].find((opt) => opt.value === partialPaymentType)}
                       onChange={(selectedOption) =>
-                        setPartialPaymentType(selectedOption?.value || 'flat')
+                        setPartialPaymentType(
+                          selectedOption?.value || 'flat'
+                        )
                       }
                       options={[
                         { label: 'Percentage', value: 'percentage' },
@@ -956,26 +942,26 @@ export default function EditInvoice() {
         <div className="flex w-full flex-row justify-end gap-2">
           <Button
             variant="outline"
-            onClick={() => navigate(`/admin/company/${companyId}/invoice`)}
+            onClick={() => navigate(`/admin/company/${companyId}/schedule-invoice`)}
           >
             Cancel
           </Button>
-          <Button variant="theme" onClick={() => handleSaveInvoice()}>
-            {isRecurring ? 'Update Schedule' : 'Update Invoice'}
+          <Button variant="theme" onClick={() => handleUpdateSchedule()}>
+            Update Schedule
           </Button>
         </div>
       </div>
 
       {/* SCHEDULE DIALOG */}
-      <Dialog
-        open={isScheduleDialogOpen}
+      <Dialog 
+        open={isScheduleDialogOpen} 
         onOpenChange={(open) => {
           if (!open) {
-            if (isRecurring && (!scheduleFrequency || !scheduleDay)) {
-              setIsRecurring(false);
-              setScheduleFrequency('monthly');
-              setScheduleDueDays('0');
-            }
+             if (isRecurring && (!scheduleFrequency || !scheduleDay)) {
+                setIsRecurring(false);
+                setScheduleFrequency('monthly');
+                setScheduleDueDays('0');
+             }
           }
           setIsScheduleDialogOpen(open);
         }}
@@ -988,7 +974,7 @@ export default function EditInvoice() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">
-            <>
+              <>
               <div className="space-y-2">
                 <Label htmlFor="frequency" className="text-sm font-medium">
                   How often would you like the invoice to be scheduled?{' '}
@@ -1092,6 +1078,7 @@ export default function EditInvoice() {
             <Button
               variant="outline"
               onClick={() => {
+                
                 setIsScheduleDialogOpen(false);
               }}
             >

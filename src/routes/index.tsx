@@ -35,6 +35,9 @@ import EditInvoice from '@/pages/invoice/components/editInvoice';
 import PermissionPage from '@/pages/permission';
 import BankPage from '@/pages/invoice/bank';
 import BankDetailsPage from '@/pages/invoice/bank/details';
+import ScheduleInvoicePage from '@/pages/schedule-invoice';
+import CreateScheduleInvoice from '@/pages/schedule-invoice/components/createScheduleInvoice';
+import EditScheduleInvoice from '@/pages/schedule-invoice/components/editScheduleInvoice';
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
 // ----------------------------------------------------------------------
@@ -202,6 +205,30 @@ export default function AppRouter() {
           element: (
             <CompanyLayout>
               <CompanyDetailsPage />
+            </CompanyLayout>
+          )
+        },
+        {
+          path: 'company/:id/schedule-invoice',
+          element: (
+            <CompanyLayout>
+              <ScheduleInvoicePage />
+            </CompanyLayout>
+          )
+        },
+        {
+          path: 'company/:id/schedule-invoice/new',
+          element: (
+            <CompanyLayout>
+              <CreateScheduleInvoice />
+            </CompanyLayout>
+          )
+        },
+        {
+          path: 'company/:id/schedule-invoice/:invoiceId',
+          element: (
+            <CompanyLayout>
+              <EditScheduleInvoice />
             </CompanyLayout>
           )
         },
