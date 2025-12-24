@@ -90,8 +90,11 @@ const handleSubmit = async (data: any) => {
     setDialogOpen(false);
     setEditingCustomer(null);
   } catch (error) {
+    const message =
+    error?.response?.data?.message ||
+    'An error occurred. Please try again.';
     toast({
-      title: 'An error occurred. Please try again.',
+      title: message,
       className: 'bg-destructive border-none text-white'
     });
     // Optionally: rollback optimistic update on error (advanced)
