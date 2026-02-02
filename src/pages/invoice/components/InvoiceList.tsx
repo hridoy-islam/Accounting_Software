@@ -31,7 +31,7 @@ import { Invoice } from 'src/types/invoice';
 import InvoiceDetailsDialog from './InvoiceDetailsDialog';
 import { ImageUploader } from './invoiceDoc-uploader';
 import { useNavigate, useParams } from 'react-router-dom';
-import { InvoicePDFDownload } from './InvoicePDF';
+import { InvoicePDFDownload, InvoicePDFPreview } from './InvoicePDF';
 import { useSelector } from 'react-redux';
 import { usePermission } from '@/hooks/usePermission';
 
@@ -122,12 +122,12 @@ export function InvoiceList({
                     onClick={() => handleRowClick(invoice)}
                     className="text-left"
                   >
-                    {invoice?.invId} {invoice?.isRecurring && (
-                      <span className="rounded-full bg-theme text-white text-xs px-3 py-1">
+                    {invoice?.invId}{' '}
+                    {invoice?.isRecurring && (
+                      <span className="rounded-full bg-theme px-3 py-1 text-xs text-white">
                         Recurring
                       </span>
                     )}
-
                   </TableCell>
                   <TableCell
                     onClick={() => handleRowClick(invoice)}
@@ -215,6 +215,7 @@ export function InvoiceList({
                   )}
 
                   <TableCell className="flex flex-row items-center justify-end gap-2 text-right">
+                    <InvoicePDFPreview invoice={invoice} />
                     {hasPermission('Invoice', 'edit') && (
                       <Button
                         variant="theme"
@@ -245,7 +246,17 @@ export function InvoiceList({
                         </Button>
                       )}
 
-                    <DropdownMenu>
+                    {hasPermission('Invoice', 'delete') && (
+                      <Button
+                        variant="theme"
+                        size="icon"
+                        className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
+                        onClick={() => onDelete(invoice._id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {/* <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="theme" className="h-8 w-8 p-0 ">
                           <MoreVertical className="h-4 w-4" />
@@ -253,7 +264,7 @@ export function InvoiceList({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-[160px]">
                         <DropdownMenuItem>
-                          <InvoicePDFDownload invoice={invoice} />
+                          
                         </DropdownMenuItem>
 
                         {hasPermission('Invoice', 'delete') && (
@@ -266,7 +277,7 @@ export function InvoiceList({
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
-                    </DropdownMenu>
+                    </DropdownMenu> */}
                   </TableCell>
                 </TableRow>
               ))

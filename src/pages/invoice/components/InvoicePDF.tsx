@@ -5,10 +5,18 @@ import {
   Document,
   StyleSheet,
   PDFDownloadLink,
-  Image
+  Image,
+  PDFViewer
 } from '@react-pdf/renderer';
-import { Download } from 'lucide-react';
+import { Download, Eye } from 'lucide-react';
 import moment from 'moment';
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const styles = StyleSheet.create({
   page: {
@@ -144,6 +152,7 @@ const styles = StyleSheet.create({
   },
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const InvoicePDF = ({ invoice }: { invoice: any }) => {
   // --- Logic ---
   const calculatePaidAmount = () => {
@@ -160,6 +169,7 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
   const isOutflow = invoice.transactionType === 'outflow';
 
   // --- Helper to render Address Lines ---
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderAddress = (entity: any) => {
     if (!entity) return null;
     return (
@@ -237,11 +247,7 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
             {typeof invoice.customer === 'object' ? renderAddress(invoice.customer) : null}
           </View>
 
-          <View style={styles.customerRight}>
-            <Text style={styles.bold}>Account Number</Text>
-            {/* If Inflow, usually Client ID. If Outflow, potentially their Account Number ref */}
-            <Text>{typeof invoice.customer === 'object' ? invoice.customer.accountNo : '1005'}</Text>
-          </View>
+          
         </View>
 
         {/* --- MAIN TABLE BOX --- */}
@@ -396,13 +402,61 @@ export const InvoicePDFDownload = ({ invoice }: { invoice: any }) => {
       document={<InvoicePDF invoice={invoice} />}
       fileName={`invoice_${invoice.invId}.pdf`}
     >
-        {({ blob, url, loading, error }) => (
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {({ loading }: any) => (
           <div className="flex cursor-pointer flex-row items-center text-sm font-medium">
-             <Download className="mr-2 h-4 w-4" />
              {loading ? 'Loading...' : 'Download PDF'}
           </div>
         )}
     </PDFDownloadLink>
+  );
+};
+
+export const InvoicePDFPreview = ({ invoice }: { invoice: any }) => {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button className="gap-2 bg-theme text-white hover:bg-theme/90">
+          Preview
+        </Button>
+      </DialogTrigger>
+      
+      <DialogContent className="flex h-[90vh] max-w-5xl flex-col p-0 sm:max-w-5xl">
+        
+        <div className="flex items-center justify-between border-b px-6 py-2">
+          <DialogTitle className="text-lg font-semibold">
+            Invoice Preview: {invoice.invId}
+          </DialogTitle>
+          
+          <div className="mr-8">
+            <PDFDownloadLink
+              document={<InvoicePDF invoice={invoice} />}
+              fileName={`invoice_${invoice.invId}.pdf`}
+            >
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {({ loading }: any) => (
+                <Button size="sm"  className=" gap-2 bg-theme text-white hover:bg-theme/90">
+                  <Download className="h-4 w-4 mr-2" />
+                  {loading ? 'Preparing...' : 'Download PDF'}
+                </Button>
+              )}
+            </PDFDownloadLink>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-hidden ">
+          <PDFViewer
+            width="100%"
+            height="100%"
+            showToolbar={false}
+            className="h-full w-full border-none"
+          >
+            <InvoicePDF invoice={invoice} />
+          </PDFViewer>
+        </div>
+        
+      </DialogContent>
+    </Dialog>
   );
 };
 
