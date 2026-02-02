@@ -24,7 +24,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { InvoiceDialog } from './components/InvoiceDialog';
-import { toast } from '@/components/ui/use-toast';
+import { toast, useToast } from '@/components/ui/use-toast';
 import { usePermission } from '@/hooks/usePermission';
 
 
@@ -48,7 +48,7 @@ const InvoicePage = () => {
   const [status, setStatus] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const {hasPermission} = usePermission();
-  
+    const {toast}= useToast()
   const form = useForm({
     defaultValues: {
       customer: '',
@@ -107,6 +107,10 @@ const InvoicePage = () => {
       setCustomers(response?.data.data.result || []);
     } catch (error) {
       console.error('Error fetching customers:', error);
+      toast({
+        title: error?.response?.data?.message||'Failed to fetch customers',
+        variant: 'destructive'
+      });
     } finally {
       setIsLoadingCustomers(false);
     }
@@ -137,8 +141,17 @@ const InvoicePage = () => {
     try {
       await axiosInstance.patch(`/invoice/${id}`, { isDeleted: true });
       setInvoices((prev) => prev.filter((invoice) => invoice?._id !== id));
+
+      toast({
+        title: 'Invoice deleted successfully',
+        className: 'bg-theme text-white border-none'
+      });
     } catch (error) {
       console.error('Error deleting invoice:', error);
+      toast({
+        title: error?.response?.data?.message||'Error deleting invoice',
+        variant: 'destructive'
+      });
     }
   };
 
