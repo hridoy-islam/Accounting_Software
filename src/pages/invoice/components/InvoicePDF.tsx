@@ -416,7 +416,7 @@ export const InvoicePDFPreview = ({ invoice }: { invoice: any }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="gap-2 bg-theme text-white hover:bg-theme/90">
+        <Button size={'sm'} className="gap-2 bg-theme text-white text-xs hover:bg-theme/90">
           Preview
         </Button>
       </DialogTrigger>
@@ -435,7 +435,7 @@ export const InvoicePDFPreview = ({ invoice }: { invoice: any }) => {
             >
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {({ loading }: any) => (
-                <Button size="sm"  className=" gap-2 bg-theme text-white hover:bg-theme/90">
+                <Button size="sm"  className=" gap-2 bg-theme text-white  hover:bg-theme/90">
                   <Download className="h-4 w-4 mr-2" />
                   {loading ? 'Preparing...' : 'Download PDF'}
                 </Button>

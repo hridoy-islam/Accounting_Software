@@ -58,7 +58,7 @@ const customStyles = {
 // 1. Define Validation Schema
 const customerSchema = z.object({
   name: z.string().min(1, 'Customer Name is required'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  email: z.string().email('Invalid email address').min(1, 'Email is required'),
   phone: z.string().optional(),
   
   // Address Block
@@ -190,7 +190,7 @@ export function CustomerDialog({ open, onOpenChange, onSubmit, initialData }) {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Email" {...field} />
                     </FormControl>

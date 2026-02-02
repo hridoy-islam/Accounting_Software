@@ -198,19 +198,22 @@ export function InvoiceList({
                   </TableCell>
                   {hasPermission('TransactionList', 'create') && (
                     <TableCell className="text-left">
+                      <div className="flex items-center justify-center">
+
                       {invoice.status === 'paid' ? (
                         <div className=" text-xs text-gray-600 hover:text-gray-800">
                           Completed
                         </div>
                       ) : (
                         <Button
-                          onClick={() => onMarkAsPaid(invoice)}
-                          variant="theme"
-                          size="sm"
+                        onClick={() => onMarkAsPaid(invoice)}
+                        variant="theme"
+                        size="sm"
                         >
                           Mark as Paid
                         </Button>
                       )}
+                      </div>
                     </TableCell>
                   )}
 

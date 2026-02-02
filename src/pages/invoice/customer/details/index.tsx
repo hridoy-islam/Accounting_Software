@@ -56,7 +56,7 @@ const customStyles = {
 
 const customerSchema = z.object({
   name: z.string().min(1, 'Customer Name is required'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  email: z.string().email('Invalid email address').min(1, 'Email is required'),
   phone: z.string().optional(),
   
   // Address Block
@@ -211,7 +211,7 @@ const CustomerDetailsPage = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
