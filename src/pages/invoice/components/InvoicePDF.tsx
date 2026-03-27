@@ -323,7 +323,7 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
                    <Text style={styles.totalValue}>£{invoice.total?.toFixed(2)}</Text>
                  </View>
                 <View style={styles.totalRow}>
-                  <Text style={[styles.totalLabel, { fontStyle: 'italic' }]}>(-) Payment(s) Received</Text>
+                  <Text style={[styles.totalLabel, { fontStyle: 'italic' }]}>(-) Paid</Text>
                   <Text style={styles.totalValue}>£{paidAmount.toFixed(2)}</Text>
                 </View>
                 <View style={[styles.totalRow, { marginTop: 5 }]}>
