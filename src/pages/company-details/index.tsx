@@ -31,8 +31,8 @@ const profileFormSchema = z.object({
   // Address Block
   address: z.string().nonempty('Address Line 1 is required'),
   address2: z.string().optional(),
-  city: z.string().nonempty('City is required'),
-  state: z.string().nonempty('State/Province is required'),
+  city: z.string().optional(),
+  state: z.string().optional(),
   postCode: z.string().nonempty('Post Code is required'),
   country: z.string().nonempty('Country is required'),
 
