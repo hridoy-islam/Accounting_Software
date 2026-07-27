@@ -174,7 +174,7 @@ export function ImageUploader({
           {uploadError && <p className="text-red-600">{uploadError}</p>}
 
           {selectedImage && !uploading && (
-            <Button className="w-full" onClick={uploadImage}>
+            <Button className="w-full" variant={'outline'} onClick={uploadImage}>
               Upload Image
             </Button>
           )}

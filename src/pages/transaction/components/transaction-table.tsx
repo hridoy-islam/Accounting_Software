@@ -18,12 +18,14 @@ import { ConfirmModal } from './ConfirmModal';
 import { TransactionDetailsDialog } from './TransactionDetailsDialog';
 import { ImageUploader } from './transactionDoc-uploader';
 import { usePermission } from '@/hooks/usePermission';
+import { useToast } from '@/components/ui/use-toast';
 
 
 interface TransactionTableProps {
   transactions: Transaction[];
   onEdit: (transaction: Transaction) => void;
   onArchive: (transactionId: string) => void;
+  onUploadComplete: () => void;
   loading: boolean;
   categories: any;
   methods: any;
@@ -34,6 +36,7 @@ export function TransactionTable({
   transactions,
   onEdit,
   onArchive,
+  onUploadComplete,
   loading,
   categories,
   methods,
@@ -45,6 +48,7 @@ export function TransactionTable({
   const [selectedRow, setSelectedRow] = useState<Transaction | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const {hasPermission} = usePermission();
+  const { toast } = useToast();
   const handleArchive = async () => {
     if (!selectedTransaction) return;
 
@@ -64,6 +68,8 @@ export function TransactionTable({
    
 
   const handleUploadComplete = (data) => {
+    toast({ title: "Document Uploaded", className: "bg-theme border-none text-white" });
+    onUploadComplete();
     setUploadOpen(false);
     setSelectedTransaction(null);
   };
@@ -131,11 +137,10 @@ export function TransactionTable({
                   {hasPermission('TransactionList', 'edit') &&(
                   <TableCell>
                     <div className="flex w-full flex-row justify-end gap-2">
-                    {hasPermission('TransactionList', 'edit') &&(
+                    {hasPermission('TransactionList', 'edit') && !transaction.transactionDoc &&(
                       <Button
                         variant="theme"
                         size="icon"
-                       
                         onClick={() => {
                           setSelectedTransaction(transaction);
                           setUploadOpen(true);

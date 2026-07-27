@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Transaction, TransactionFilters as Filters } from '@/types';
 import { TransactionFilters } from './components/transaction-filter';
@@ -88,6 +88,34 @@ export default function TransactionPage() {
   const refreshTransactions = () => {
     setRefreshKey((prevKey) => prevKey + 1);
   };
+
+  const silentRefresh = useCallback(async () => {
+    try {
+      const { search, type, category, method, storage, fromDate, toDate } =
+        appliedFilters;
+
+      const [transactionsRes] = await Promise.all([
+        axiosInstance.get(`/transactions/company/${id}`, {
+          params: {
+            page: currentPage,
+            limit: entriesPerPage,
+            searchTerm: search || undefined,
+            transactionType: type || undefined,
+            transactionCategory: category || undefined,
+            transactionMethod: method || undefined,
+            storage: storage || undefined,
+            startDate: fromDate || undefined,
+            endDate: toDate || undefined,
+          }
+        })
+      ]);
+
+      setTransactions(transactionsRes.data.data.result);
+      setTotalPages(transactionsRes.data.data.meta.totalPage);
+    } catch (error) {
+      console.error('Error silently refreshing data:', error);
+    }
+  }, [id, currentPage, entriesPerPage, appliedFilters]);
 
 
   const handleEditTransaction = async (transaction: Transaction) => {
@@ -225,6 +253,7 @@ export default function TransactionPage() {
           transactions={transactions}
           onEdit={handleEditTransaction}
           onArchive={handleArchiveTransaction}
+          onUploadComplete={silentRefresh}
           loading={loading}
           categories={categories}
           methods={methods}
