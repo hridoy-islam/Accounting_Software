@@ -19,19 +19,14 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { countries } from '@/types';
 
 // --- Configuration & Helpers ---
 
-const countryOptions = [
-  { value: 'Bangladesh', label: 'Bangladesh' },
-  { value: 'United States', label: 'United States' },
-  { value: 'United Kingdom', label: 'United Kingdom' },
-  { value: 'Canada', label: 'Canada' },
-  { value: 'Australia', label: 'Australia' },
-  { value: 'India', label: 'India' },
-  { value: 'Germany', label: 'Germany' },
-  { value: 'France', label: 'France' },
-];
+const countryOptions = countries.map((country) => ({
+  value: country,
+  label: country
+}));
 
 const customStyles = {
   control: (provided: any, state: any) => ({

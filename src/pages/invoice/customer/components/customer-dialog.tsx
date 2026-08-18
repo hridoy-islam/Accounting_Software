@@ -21,19 +21,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { countries } from '@/types';
 
-// Country Data
-const countryOptions = [
-  { value: 'Bangladesh', label: 'Bangladesh' },
-  { value: 'United States', label: 'United States' },
-  { value: 'United Kingdom', label: 'United Kingdom' },
-  { value: 'Canada', label: 'Canada' },
-  { value: 'Australia', label: 'Australia' },
-  { value: 'India', label: 'India' },
-  { value: 'Germany', label: 'Germany' },
-  { value: 'France', label: 'France' },
-  // Add more as needed
-];
+const countryOptions = countries.map((country) => ({
+  value: country,
+  label: country
+}));
 
 // Custom Styles for React Select to match Shadcn UI
 const customStyles = {
