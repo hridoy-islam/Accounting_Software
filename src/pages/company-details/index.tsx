@@ -22,6 +22,12 @@ import { Camera } from 'lucide-react';
 import { ImageUploader } from './components/userImage-uploader';
 import { useParams } from 'react-router-dom';
 import { usePermission } from '@/hooks/usePermission';
+import { countries } from '@/types';
+
+const countryOptions = countries.map((country) => ({
+  value: country,
+  label: country
+}));
 
 const profileFormSchema = z.object({
   name: z.string().nonempty('Name is required'),
@@ -44,16 +50,7 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-const countryOptions = [
-  { value: 'Bangladesh', label: 'Bangladesh' },
-  { value: 'United States', label: 'United States' },
-  { value: 'United Kingdom', label: 'United Kingdom' },
-  { value: 'Canada', label: 'Canada' },
-  { value: 'Australia', label: 'Australia' },
-  { value: 'India', label: 'India' },
-  { value: 'Germany', label: 'Germany' },
-  { value: 'France', label: 'France' },
-];
+
 
 export default function CompanyDetailsPage() {
   const [uploadOpen, setUploadOpen] = useState(false);

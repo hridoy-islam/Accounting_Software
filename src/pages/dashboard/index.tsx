@@ -223,8 +223,10 @@ export function Dashboard() {
                 <TableCell className="text-right">{user.email}</TableCell>
                 <TableCell className="text-right">{user.phone}</TableCell>
                 <TableCell className="text-right">
-                    {user.address} {user.city ? `, ${user.city}` : ''}
-                </TableCell>
+  {user.address}
+  {user.city ? `, ${user.city}` : ""}
+  {user.country ? `, ${user.country}` : ""}
+</TableCell>
                 <TableCell className="text-right">
                   <Link to={`company/${user._id}`}>
                     <Button variant="theme" className="w-full">
