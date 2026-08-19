@@ -34,6 +34,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { InvoicePDFDownload, InvoicePDFPreview } from './InvoicePDF';
 import { useSelector } from 'react-redux';
 import { usePermission } from '@/hooks/usePermission';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -68,6 +69,7 @@ export function InvoiceList({
 
   const navigate = useNavigate();
   const { hasPermission } = usePermission();
+  const { code, symbol } = useCurrency();
 
   return (
     <div className="  shadow-sm">
@@ -162,7 +164,7 @@ export function InvoiceList({
                     className="text-left"
                   >
                     <div className="flex items-center justify-start gap-2">
-                      £{invoice.amount.toFixed(2)}
+                      {symbol}{invoice.amount.toFixed(2)}
                     </div>
                   </TableCell>
                   <TableCell
@@ -218,7 +220,7 @@ export function InvoiceList({
                   )}
 
                   <TableCell className="flex flex-row items-center justify-end gap-2 text-right">
-                    <InvoicePDFPreview invoice={invoice} />
+                    <InvoicePDFPreview invoice={invoice} currencySymbol={symbol} currencyCode={code} />
                     {hasPermission('Invoice', 'edit') && (
                       <Button
                         variant="theme"

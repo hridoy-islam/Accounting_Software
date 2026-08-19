@@ -9,6 +9,7 @@ import { CalendarIcon, FileIcon } from 'lucide-react';
 import { Transaction } from '@/types';
 import moment from 'moment';
 import { Button } from '@/components/ui/button';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface TransactionDetailsDialogProps {
   transaction: Transaction | null;
@@ -19,6 +20,7 @@ export function TransactionDetailsDialog({
   transaction,
   onOpenChange
 }: TransactionDetailsDialogProps) {
+  const { symbol } = useCurrency();
   if (!transaction) return null;
 
   const getDisplayValue = (field: any): string => {
@@ -70,7 +72,7 @@ export function TransactionDetailsDialog({
           <div className="border-b pb-4">
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold">
-                £ {getDisplayValue(transaction.transactionAmount)}
+                {symbol} {getDisplayValue(transaction.transactionAmount)}
               </span>
             </div>
           </div>

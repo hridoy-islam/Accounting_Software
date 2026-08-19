@@ -11,9 +11,11 @@ import { useParams } from 'react-router-dom';
 import axiosInstance from '@/lib/axios'
 
 import { Landmark } from 'lucide-react';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function History({ companyData }) {
     const { id } = useParams();
+    const { symbol } = useCurrency();
     const [storages, setStorages] = useState<any>([]);
     const [initialLoading, setInitialLoading] = useState(true);
 
@@ -93,8 +95,8 @@ export default function History({ companyData }) {
                         {monthlyData.map((data, index) => (
                             <TableRow key={index}>
                                 <TableCell className="font-bold">{data.monthYear}</TableCell>
-                                <TableCell className="font-bold">£{data.inflow.toFixed(2)}</TableCell>
-                                <TableCell className="font-bold">£{data.outflow.toFixed(2)}</TableCell>
+                                <TableCell className="font-bold">{symbol}{data.inflow.toFixed(2)}</TableCell>
+                                <TableCell className="font-bold">{symbol}{data.outflow.toFixed(2)}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -105,7 +107,7 @@ export default function History({ companyData }) {
                 <div className="space-y-6">
                     <div className="flex justify-between rounded-lg bg-white p-6 shadow-md">
                         <h2 className="mb-2 text-xl font-semibold">Balance</h2>
-                        <p className="text-2xl font-bold">£{totalOpeningBalance.toLocaleString('en-UK', { minimumFractionDigits: 2 })}</p>
+                        <p className="text-2xl font-bold">{symbol}{totalOpeningBalance.toLocaleString('en-UK', { minimumFractionDigits: 2 })}</p>
                     </div>
                     <div className="rounded-lg bg-white p-6 shadow-md">
                         <h2 className="mb-4 text-xl font-semibold">Storage</h2>
@@ -117,7 +119,7 @@ export default function History({ companyData }) {
                                     </div>
                                     <span className="font-medium">{Item.storageName}</span>
                                 </div>
-                                <span className="font-bold">£{Number(Item.openingBalance.toFixed(2))}</span>
+                                <span className="font-bold">{symbol}{Number(Item.openingBalance.toFixed(2))}</span>
                             </div>
                         ))}
                     </div>

@@ -98,7 +98,12 @@ const styles = StyleSheet.create({
   }
 });
 
-const InvoicePDF = ({ invoice }: { invoice: any }) => {
+const InvoicePDF = ({ invoice, currencySymbol = '£', currencyCode = 'GBP' }: { invoice: any; currencySymbol?: string; currencyCode?: string }) => {
+  const currencyLabel =
+    currencySymbol === '$' || currencySymbol === '£'
+      ? currencySymbol
+      : currencyCode;
+
   // --- Calculation Logic ---
   const calculatePaidAmount = () => {
     if (!invoice.partialPayment) return 0;
@@ -262,9 +267,9 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
                 <Text style={styles.tableColNum}>{index + 1}</Text>
                 <Text style={styles.tableColDesc}>{item.details}</Text>
                 <Text style={styles.tableColQty}>{item.quantity}</Text>
-                <Text style={styles.tableColRate}>£{item.rate.toFixed(2)}</Text>
+                <Text style={styles.tableColRate}>{currencyLabel}{item.rate.toFixed(2)}</Text>
                 <Text style={styles.tableColAmount}>
-                  £{item.amount.toFixed(2)}
+                  {currencyLabel}{item.amount.toFixed(2)}
                 </Text>
               </View>
             ))}
@@ -284,7 +289,7 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
                 Subtotal:
               </Text>
               <Text style={[styles.tableColAmount, { width: '50%' }]}>
-                £{invoice.subtotal?.toFixed(2) || '0.00'}
+                {currencyLabel}{invoice.subtotal?.toFixed(2) || '0.00'}
               </Text>
             </View>
 
@@ -300,7 +305,7 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
                   VAT ({invoice.tax}%):
                 </Text>
                 <Text style={[styles.tableColAmount, { width: '50%' }]}>
-                  +£{((invoice.subtotal * invoice.tax) / 100).toFixed(2)}
+                  +{currencyLabel}{((invoice.subtotal * invoice.tax) / 100).toFixed(2)}
                 </Text>
               </View>
             )}
@@ -321,7 +326,7 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
                   :
                 </Text>
                 <Text style={[styles.tableColAmount, { width: '50%' }]}>
-                  -£
+                  -{currencyLabel}
                   {(invoice.discountType === 'percentage'
                     ? (invoice.subtotal * invoice.discount) / 100
                     : invoice.discount
@@ -346,7 +351,7 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
                   { width: '50%', fontWeight: 'bold' }
                 ]}
               >
-                £{invoice.total?.toFixed(2) || '0.00'}
+                {currencyLabel}{invoice.total?.toFixed(2) || '0.00'}
               </Text>
             </View>
 
@@ -362,7 +367,7 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
                   Amount Paid:
                 </Text>
                 <Text style={[styles.tableColAmount, { width: '50%' }]}>
-                  -£{paidAmount.toFixed(2)}
+                  -{currencyLabel}{paidAmount.toFixed(2)}
                 </Text>
               </View>
             )}
@@ -383,7 +388,7 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
                   { width: '50%', fontWeight: 'bold' }
                 ]}
               >
-                £{balanceDue.toFixed(2)}
+                {currencyLabel}{balanceDue.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -415,10 +420,10 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
   );
 };
 
-export const InvoicePDFDownload = ({ invoice }: { invoice: any }) => {
+export const InvoicePDFDownload = ({ invoice, currencySymbol = '£', currencyCode = 'GBP' }: { invoice: any; currencySymbol?: string; currencyCode?: string }) => {
   return (
     <PDFDownloadLink
-      document={<InvoicePDF invoice={invoice} />}
+      document={<InvoicePDF invoice={invoice} currencySymbol={currencySymbol} currencyCode={currencyCode} />}
       fileName={`invoice_${invoice.invId}.pdf`}
     >
       <div className="flex cursor-pointer flex-row items-center text-sm font-medium">

@@ -153,7 +153,12 @@ const styles = StyleSheet.create({
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const InvoicePDF = ({ invoice }: { invoice: any }) => {
+const InvoicePDF = ({ invoice, currencySymbol = '£', currencyCode = 'GBP' }: { invoice: any; currencySymbol?: string; currencyCode?: string }) => {
+  const currencyLabel =
+    currencySymbol === '$' || currencySymbol === '£'
+      ? currencySymbol
+      : currencyCode;
+
   // --- Logic ---
   const calculatePaidAmount = () => {
     if (!invoice.partialPayment) return 0;
@@ -274,8 +279,8 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
                 <Text style={styles.colNum}>{index + 1}</Text>
                 <Text style={styles.colDesc}>{item.details}</Text>
                 <Text style={styles.colQty}>{item.quantity}</Text>
-                <Text style={styles.colRate}>£{item.rate.toFixed(2)}</Text>
-                <Text style={styles.colAmount}>£{item.amount.toFixed(2)}</Text>
+                <Text style={styles.colRate}>{currencyLabel}{item.rate.toFixed(2)}</Text>
+                <Text style={styles.colAmount}>{currencyLabel}{item.amount.toFixed(2)}</Text>
               </View>
             ))}
           </View>
@@ -284,13 +289,13 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
           <View style={styles.totalsContainer}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Subtotal</Text>
-              <Text style={styles.totalValue}>£{invoice.subtotal?.toFixed(2) || '0.00'}</Text>
+              <Text style={styles.totalValue}>{currencyLabel}{invoice.subtotal?.toFixed(2) || '0.00'}</Text>
             </View>
 
             {invoice.tax > 0 && (
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>VAT ({invoice.tax}%)</Text>
-                <Text style={styles.totalValue}>+£{((invoice.subtotal * invoice.tax) / 100).toFixed(2)}</Text>
+                <Text style={styles.totalValue}>+{currencyLabel}{((invoice.subtotal * invoice.tax) / 100).toFixed(2)}</Text>
               </View>
             )}
 
@@ -300,7 +305,7 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
                   Discount {invoice.discountType === 'percentage' ? `(${invoice.discount}%)` : ''}
                 </Text>
                 <Text style={styles.totalValue}>
-                  -£{(invoice.discountType === 'percentage'
+                  -{currencyLabel}{(invoice.discountType === 'percentage'
                     ? (invoice.subtotal * invoice.discount) / 100
                     : invoice.discount
                   ).toFixed(2)}
@@ -320,21 +325,21 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
               <>
                  <View style={styles.totalRow}>
                    <Text style={[styles.totalLabel, {fontStyle:'italic'}]}>Total</Text>
-                   <Text style={styles.totalValue}>£{invoice.total?.toFixed(2)}</Text>
+<Text style={styles.totalValue}>{currencyLabel}{invoice.total?.toFixed(2)}</Text>
                  </View>
                 <View style={styles.totalRow}>
                   <Text style={[styles.totalLabel, { fontStyle: 'italic' }]}>Paid</Text>
-                  <Text style={styles.totalValue}>£{paidAmount.toFixed(2)}</Text>
+                  <Text style={styles.totalValue}>{currencyLabel}{paidAmount.toFixed(2)}</Text>
                 </View>
                 <View style={[styles.totalRow, { marginTop: 5 }]}>
                   <Text style={styles.totalLabel}>New Balance</Text>
-                  <Text style={styles.totalValue}>£{balanceDue.toFixed(2)}</Text>
+                  <Text style={styles.totalValue}>{currencyLabel}{balanceDue.toFixed(2)}</Text>
                 </View>
               </>
             ) : (
                <View style={[styles.totalRow, { marginTop: 5 }]}>
                   <Text style={styles.totalLabel}>New Balance</Text>
-                  <Text style={styles.totalValue}>£{invoice.total?.toFixed(2)}</Text>
+                  <Text style={styles.totalValue}>{currencyLabel}{invoice.total?.toFixed(2)}</Text>
                </View>
             )}
           </View>
@@ -396,10 +401,10 @@ const InvoicePDF = ({ invoice }: { invoice: any }) => {
   );
 };
 
-export const InvoicePDFDownload = ({ invoice }: { invoice: any }) => {
+export const InvoicePDFDownload = ({ invoice, currencySymbol = '£', currencyCode = 'GBP' }: { invoice: any; currencySymbol?: string; currencyCode?: string }) => {
   return (
     <PDFDownloadLink
-      document={<InvoicePDF invoice={invoice} />}
+      document={<InvoicePDF invoice={invoice} currencySymbol={currencySymbol} currencyCode={currencyCode} />}
       fileName={`invoice_${invoice.invId}.pdf`}
     >
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -412,7 +417,7 @@ export const InvoicePDFDownload = ({ invoice }: { invoice: any }) => {
   );
 };
 
-export const InvoicePDFPreview = ({ invoice }: { invoice: any }) => {
+export const InvoicePDFPreview = ({ invoice, currencySymbol = '£', currencyCode = 'GBP' }: { invoice: any; currencySymbol?: string; currencyCode?: string }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -430,7 +435,7 @@ export const InvoicePDFPreview = ({ invoice }: { invoice: any }) => {
           
           <div className="mr-8">
             <PDFDownloadLink
-              document={<InvoicePDF invoice={invoice} />}
+              document={<InvoicePDF invoice={invoice} currencySymbol={currencySymbol} currencyCode={currencyCode} />}
               fileName={`invoice_${invoice.invId}.pdf`}
             >
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -451,7 +456,7 @@ export const InvoicePDFPreview = ({ invoice }: { invoice: any }) => {
             showToolbar={false}
             className="h-full w-full border-none"
           >
-            <InvoicePDF invoice={invoice} />
+            <InvoicePDF invoice={invoice} currencySymbol={currencySymbol} currencyCode={currencyCode} />
           </PDFViewer>
         </div>
         

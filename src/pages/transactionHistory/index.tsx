@@ -17,9 +17,11 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function TransactionHistory() {
   const { id } = useParams();
+  const { symbol } = useCurrency();
   const [storages, setStorages] = useState<any>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [monthlyData, setMonthlyData] = useState<any>([]);
@@ -139,10 +141,10 @@ export default function TransactionHistory() {
                       {data.monthName} {selectedYear}
                     </TableCell>
                     <TableCell className="text-right">
-                      £{data?.totalInflow?.toFixed(2)}
+                      {symbol}{data?.totalInflow?.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
-                      £{data?.totalOutflow?.toFixed(2)}
+                      {symbol}{data?.totalOutflow?.toFixed(2)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -164,7 +166,7 @@ export default function TransactionHistory() {
                   <span className="font-medium">{Item.storageName}</span>
                 </div>
                 <span className="font-bold">
-                  £{Item?.currentBalance?.toFixed(2)}
+                  {symbol}{Item?.currentBalance?.toFixed(2)}
                 </span>
               </div>
             ))}

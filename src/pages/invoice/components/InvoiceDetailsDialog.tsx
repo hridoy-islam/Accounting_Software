@@ -9,6 +9,7 @@ import { FileIcon, Info } from 'lucide-react';
 import { Invoice } from 'src/types/invoice';
 import moment from 'moment';
 import { Button } from '@/components/ui/button';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface InvoiceDetailsDialogProps {
   open: boolean;
@@ -21,6 +22,8 @@ export default function InvoiceDetailsDialog({
   onOpenChange,
   invoice
 }: InvoiceDetailsDialogProps) {
+  const { symbol } = useCurrency();
+
   if (!invoice) return null;
 
   const getDisplayValue = (field: any): string => {
@@ -90,13 +93,13 @@ export default function InvoiceDetailsDialog({
                    <div className="flex flex-col">
                       <span className="text-xs text-gray-500 uppercase">Total Invoice</span>
                       <span className="text-lg font-semibold text-gray-700">
-                        £ {(invoice.total || invoice.amount).toFixed(2)}
+                        {symbol} {(invoice.total || invoice.amount).toFixed(2)}
                       </span>
                    </div>
                    <div className="flex flex-col">
                       <span className="text-xs text-gray-500 uppercase">Paid</span>
                       <span className="text-lg font-semibold text-green-600">
-                        £ {paidAmount.toFixed(2)}
+                        {symbol} {paidAmount.toFixed(2)}
                       </span>
                    </div>
                 </div>
@@ -104,14 +107,14 @@ export default function InvoiceDetailsDialog({
                 <div className="mt-2 flex flex-col">
                     <span className="text-xs text-gray-500 uppercase">Balance Due</span>
                     <span className="text-3xl font-bold text-red-600">
-                        £ {balanceDue.toFixed(2)}
+                        {symbol} {balanceDue.toFixed(2)}
                     </span>
                 </div>
               </div>
             ) : (
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold">
-                  £ {invoice.amount.toFixed(2)}
+                  {symbol} {invoice.amount.toFixed(2)}
                 </span>
               </div>
             )}

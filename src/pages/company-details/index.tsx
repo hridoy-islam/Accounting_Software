@@ -22,11 +22,16 @@ import { Camera } from 'lucide-react';
 import { ImageUploader } from './components/userImage-uploader';
 import { useParams } from 'react-router-dom';
 import { usePermission } from '@/hooks/usePermission';
-import { countries } from '@/types';
+import { countries, currencies } from '@/types';
 
 const countryOptions = countries.map((country) => ({
   value: country,
   label: country
+}));
+
+const currencyOptions = currencies.map((currency) => ({
+  value: currency.code,
+  label: `${currency.code} - ${currency.currency}`
 }));
 
 const profileFormSchema = z.object({
@@ -41,6 +46,7 @@ const profileFormSchema = z.object({
   state: z.string().optional(),
   postCode: z.string().nonempty('Post Code is required'),
   country: z.string().nonempty('Country is required'),
+  currency: z.string().optional(),
 
   // Banking Block
   sortCode: z.string().nonempty('Sort Code is required'),
@@ -70,6 +76,7 @@ export default function CompanyDetailsPage() {
     state: '',
     postCode: '',
     country: '',
+    currency: '',
     sortCode: '',
     accountNo: '',
     beneficiary: ''
@@ -97,6 +104,7 @@ export default function CompanyDetailsPage() {
         state: data.state || '',
         postCode: data.postCode || '',
         country: data.country || '',
+        currency: data.currency || '',
         sortCode: data.sortCode || '',
         accountNo: data.accountNo || '',
         beneficiary: data.beneficiary || ''
@@ -327,9 +335,38 @@ export default function CompanyDetailsPage() {
                             {...field}
                             options={countryOptions}
                             value={countryOptions.find(c => c.value === field.value)}
-                            onChange={(val) => field.onChange(val?.value)}
+                            onChange={(val) => {
+                              field.onChange(val?.value);
+                              const currency = currencies.find(
+                                (c) => c.country === val?.value
+                              );
+                              if (currency) {
+                                form.setValue('currency', currency.code);
+                              }
+                            }}
                             styles={customStyles}
                             placeholder="Select Country"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <FormControl>
+                         <Select
+                            {...field}
+                            options={currencyOptions}
+                            value={currencyOptions.find(c => c.value === field.value)}
+                            onChange={(val) => field.onChange(val?.value)}
+                            styles={customStyles}
+                            placeholder="Select Currency"
                         />
                       </FormControl>
                       <FormMessage />

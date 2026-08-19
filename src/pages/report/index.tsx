@@ -18,6 +18,7 @@ import autoTable from 'jspdf-autotable';
 import moment from 'moment';
 import { toast } from '@/components/ui/use-toast';
 import { usePermission } from '@/hooks/usePermission';
+import { useCurrency } from '@/hooks/useCurrency';
 
 import {
   Select,
@@ -118,6 +119,7 @@ type Filters = {
 
 export default function ReportPage() {
   const { id } = useParams();
+  const { symbol } = useCurrency();
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
@@ -294,9 +296,9 @@ export default function ReportPage() {
         category.categoryName,
         category.transactions.length.toString(),
         ...filteredPaymentMethods.map(
-          (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
+          (method) => `${symbol}${(category.methodTotals[method] || 0).toFixed(2)}`
         ),
-        `£${category.total.toFixed(2)}`
+        `${symbol}${category.total.toFixed(2)}`
       ]);
 
       // Add total row
@@ -307,9 +309,9 @@ export default function ReportPage() {
           .toString(),
         ...filteredPaymentMethods.map(
           (method) =>
-            `£${filteredInflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
+            `${symbol}${filteredInflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
         ),
-        `£${filteredInflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`
+        `${symbol}${filteredInflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`
       ]);
 
       autoTable(doc, {
@@ -338,9 +340,9 @@ export default function ReportPage() {
         category.categoryName,
         category.transactions.length.toString(),
         ...filteredPaymentMethods.map(
-          (method) => `£${(category.methodTotals[method] || 0).toFixed(2)}`
+          (method) => `${symbol}${(category.methodTotals[method] || 0).toFixed(2)}`
         ),
-        `£${category.total.toFixed(2)}`
+        `${symbol}${category.total.toFixed(2)}`
       ]);
 
       // Add total row
@@ -351,9 +353,9 @@ export default function ReportPage() {
           .toString(),
         ...filteredPaymentMethods.map(
           (method) =>
-            `£${filteredOutflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
+            `${symbol}${filteredOutflowData.reduce((acc, cat) => acc + (cat.methodTotals[method] || 0), 0).toFixed(2)}`
         ),
-        `£${filteredOutflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`
+        `${symbol}${filteredOutflowData.reduce((acc, cat) => acc + cat.total, 0).toFixed(2)}`
       ]);
 
       autoTable(doc, {
@@ -598,11 +600,11 @@ finally {
                 <TableCell className="text-right">{category.transactions.length}</TableCell>
                 {filteredPaymentMethods.map((method) => (
                   <TableCell key={method} className="text-right">
-                    £{Number(category.methodTotals[method] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {symbol}{Number(category.methodTotals[method] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </TableCell>
                 ))}
                 <TableCell className="text-right font-bold">
-                  £{Number(category.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {symbol}{Number(category.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </TableCell>
               </TableRow>
 
@@ -633,7 +635,7 @@ finally {
                               <TableCell className="text-right">{transaction?.transactionMethod?.name}</TableCell>
                               <TableCell className="text-right">{transaction.storage?.storageName}</TableCell>
                               <TableCell className="text-right">
-                                £{Number(transaction.transactionAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {symbol}{Number(transaction.transactionAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -649,12 +651,12 @@ finally {
             <TableCell className="text-right">{filteredData.reduce((acc, cat) => acc + cat.transactions.length, 0)}</TableCell>
             {filteredPaymentMethods.map((method) => (
               <TableCell key={method} className="text-right">
-                £{filteredData.reduce((acc, cat) => acc + Number(cat.methodTotals[method] || 0), 0)
+                {symbol}{filteredData.reduce((acc, cat) => acc + Number(cat.methodTotals[method] || 0), 0)
                   .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </TableCell>
             ))}
             <TableCell className="text-right">
-              £{filteredData.reduce((acc, cat) => acc + Number(cat.total), 0)
+              {symbol}{filteredData.reduce((acc, cat) => acc + Number(cat.total), 0)
                 .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </TableCell>
           </TableRow>

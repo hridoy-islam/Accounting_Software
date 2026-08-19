@@ -21,6 +21,7 @@ import moment from 'moment';
 import { Invoice } from 'src/types/invoice';
 import  InvoiceDetailsDialog  from './InvoiceDetailsDialog'; 
 import { usePermission } from '@/hooks/usePermission';
+import { useCurrency } from '@/hooks/useCurrency';
 
 
 interface InvoiceListProps {
@@ -42,6 +43,7 @@ export function InvoiceList({
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const {hasPermission} = usePermission();
+  const { symbol } = useCurrency();
   const handleRowClick = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setDialogOpen(true);
@@ -107,7 +109,7 @@ export function InvoiceList({
                 <TableCell  onClick={() => handleRowClick(invoice)} className="text-left">
                   <div className="flex items-center justify-start gap-2">
                   
-                    £{invoice.amount.toFixed(2)}
+                    {symbol}{invoice.amount.toFixed(2)}
                   </div>
                 </TableCell>
                 

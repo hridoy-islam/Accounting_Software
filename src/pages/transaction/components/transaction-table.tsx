@@ -19,6 +19,7 @@ import { TransactionDetailsDialog } from './TransactionDetailsDialog';
 import { ImageUploader } from './transactionDoc-uploader';
 import { usePermission } from '@/hooks/usePermission';
 import { useToast } from '@/components/ui/use-toast';
+import { useCurrency } from '@/hooks/useCurrency';
 
 
 interface TransactionTableProps {
@@ -42,6 +43,7 @@ export function TransactionTable({
   methods,
   storages
 }: TransactionTableProps) {
+  const { symbol } = useCurrency();
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -123,7 +125,7 @@ export function TransactionTable({
                     onClick={() => setSelectedRow(transaction)}
                     className="font-semibold"
                   >
-                    £{transaction.transactionAmount.toFixed(2)}
+                    {symbol}{transaction.transactionAmount.toFixed(2)}
                   </TableCell>
                   <TableCell onClick={() => setSelectedRow(transaction)}>
                     {transaction.transactionCategory?.name}

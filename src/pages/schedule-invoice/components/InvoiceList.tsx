@@ -23,6 +23,7 @@ import { ImageUploader } from './invoiceDoc-uploader';
 import { useNavigate, useParams } from 'react-router-dom';
 import { InvoicePDFDownload } from './InvoicePDF';
 import { usePermission } from '@/hooks/usePermission';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -41,6 +42,7 @@ export function InvoiceList({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const { id: companyId } = useParams();
+  const { code, symbol } = useCurrency();
 
   // Define Month Options locally for display mapping
   const monthOptions = [
@@ -132,7 +134,7 @@ export function InvoiceList({
                     className="text-left"
                   >
                     <div className="flex items-center justify-start gap-2">
-                      £{invoice.amount.toFixed(2)}
+                      {symbol}{invoice.amount.toFixed(2)}
                     </div>
                   </TableCell>
 
@@ -211,7 +213,7 @@ export function InvoiceList({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-[160px]">
                         <DropdownMenuItem>
-                          <InvoicePDFDownload invoice={invoice} />
+                          <InvoicePDFDownload invoice={invoice} currencySymbol={symbol} currencyCode={code} />
                         </DropdownMenuItem>
 
                         {hasPermission('Invoice', 'delete') && (

@@ -22,12 +22,14 @@ import { useForm } from 'react-hook-form';
 import axiosInstance from '@/lib/axios';
 import moment from 'moment';
 import { Pen } from 'lucide-react';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const StoragePage = () => {
   const [storages, setStorages] = useState<any>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [storageToEdit, setStorageToEdit] = useState<any>(null);
   const { id } = useParams();
+  const { symbol } = useCurrency();
   const [initialLoading, setInitialLoading] = useState(true);
 
   const { register, handleSubmit, setValue, reset } = useForm({
@@ -132,7 +134,7 @@ const StoragePage = () => {
               {storages.map((storage) => (
                 <TableRow key={storage._id}>
                   <TableCell>{storage.storageName}</TableCell>
-                  <TableCell className='font-semibold'>£{Number(storage.openingBalance.toFixed(2))}</TableCell>
+                  <TableCell className='font-semibold'>{symbol}{Number(storage.openingBalance.toFixed(2))}</TableCell>
                   <TableCell>{moment(storage.openingDate).format('DD MMM YYYY')}</TableCell>
                   <TableCell>{storage.status ? 'Yes' : 'No'}</TableCell>
                   <TableCell>{storage.auditStatus ? 'Yes' : 'No'}</TableCell>

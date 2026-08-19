@@ -33,6 +33,7 @@ import { Input } from '@/components/ui/input';
 import moment from 'moment';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '@/lib/axios';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Transaction {
   id: string;
@@ -156,6 +157,8 @@ export function InvoiceDialog({
   const capitalizeFirst = (str: string) =>
     str.charAt(0).toUpperCase() + str.slice(1);
 
+  const { symbol } = useCurrency();
+
   if (!invoice) return null;
 
   return (
@@ -222,7 +225,7 @@ export function InvoiceDialog({
                   </p>
 
                   <p className="text-sm text-black">
-                    <span className="font-medium">Amount:</span> £
+                    <span className="font-medium">Amount:</span> {symbol}
                     {invoice.amount.toFixed(2)}
                   </p>
 

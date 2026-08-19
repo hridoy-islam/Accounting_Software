@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileIcon } from 'lucide-react';
 import { Invoice } from 'src/types/invoice';
 import moment from 'moment';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface InvoiceDetailsDialogProps {
   open: boolean;
@@ -20,6 +21,8 @@ export default function InvoiceDetailsDialog({
   onOpenChange,
   invoice
 }: InvoiceDetailsDialogProps) {
+  const { symbol } = useCurrency();
+
   if (!invoice) return null;
 
   const getDisplayValue = (field: any): string => {
@@ -69,7 +72,7 @@ export default function InvoiceDetailsDialog({
         <div className="border-b pb-4">
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold">
-              £ {invoice.amount.toFixed(2)}
+              {symbol} {invoice.amount.toFixed(2)}
             </span>
 
           </div>

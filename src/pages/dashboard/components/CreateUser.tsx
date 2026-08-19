@@ -19,16 +19,27 @@ import { AppDispatch } from '@/redux/store';
 import { useToast } from '@/components/ui/use-toast';
 import { convertToLowerCase } from '@/lib/utils';
 import { fetchUserProfile } from '@/redux/features/profileSlice';
+import { countries, currencies } from '@/types';
 
 export default function CreateUser({ onUserCreated }) {
   const { user } = useSelector((state: any) => state.auth);
   const { toast } = useToast();
   const [isCompanyDialogOpen, setIsCompanyDialogOpen] = useState(false);
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, setValue, watch } = useForm();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const dispatch = useDispatch<AppDispatch>();
   const { profileData } = useSelector((state: any) => state.profile);
+  const selectedCountry = watch('country');
+
+  const handleCountryChange = (e) => {
+    const country = e.target.value;
+    setValue('country', country);
+    const currency = currencies.find((c) => c.country === country);
+    if (currency) {
+      setValue('currency', currency.code);
+    }
+  };
 
   const onCompanySubmit = async (data) => {
     data.role = 'user'; // Set the role
@@ -117,6 +128,43 @@ export default function CreateUser({ onUserCreated }) {
                   className="col-span-3"
                   required
                 />
+              </div>
+              <div className="grid grid-cols-2 items-start gap-4">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="country" className="text-left">
+                    Country
+                  </Label>
+                  <select
+                    id="country"
+                    value={selectedCountry || ''}
+                    onChange={handleCountryChange}
+                    className="w-full rounded-md border border-gray-300 bg-white p-2 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                  >
+                    <option value="">Select Country</option>
+                    {countries.map((country) => (
+                      <option key={country} value={country}>
+                        {country}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="currency" className="text-left">
+                    Currency
+                  </Label>
+                  <select
+                    id="currency"
+                    {...register('currency')}
+                    className="w-full rounded-md border border-gray-300 bg-white p-2 text-gray-900 shadow-sm focus:border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                  >
+                    <option value="">Select Currency</option>
+                    {currencies.map((currency) => (
+                      <option key={currency.code} value={currency.code}>
+                        {currency.code} - {currency.currency}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               {error && <p className="text-red-500">{error}</p>}
             </div>

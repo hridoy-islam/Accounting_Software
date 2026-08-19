@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function EditInvoice() {
   const { id: companyId, invoiceId } = useParams<{
@@ -30,6 +31,8 @@ export default function EditInvoice() {
     invoiceId: string;
   }>();
   const navigate = useNavigate();
+
+  const { symbol } = useCurrency();
 
   // --- LOADING STATE (Consolidated) ---
   const [isPageLoading, setIsPageLoading] = useState(true);
@@ -878,7 +881,7 @@ export default function EditInvoice() {
                   <div className="mb-2 flex items-center border-t border-gray-100 pt-2">
                     <span className="mr-4 w-28 font-bold">Total</span>
                     <span className=" ml-auto w-32 text-center font-bold">
-                      £{total.toFixed(2)}
+                      {symbol}{total.toFixed(2)}
                     </span>
                   </div>
                   {Number(partialPayment) > 0 && (
@@ -899,7 +902,7 @@ export default function EditInvoice() {
                       </div>
                       <div className="mb-2 flex items-center border-t border-gray-300 pt-2 ">
                         <span className="ml-auto w-32 text-center font-bold">
-                          £{balanceDue.toFixed(2)}
+                          {symbol}{balanceDue.toFixed(2)}
                         </span>
                       </div>
                     </>

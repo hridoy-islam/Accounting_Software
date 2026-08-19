@@ -27,13 +27,18 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import company from '@/assets/imges/home/company.png';
 import { Switch } from '@/components/ui/switch';
-import { countries } from '@/types';
+import { countries, currencies } from '@/types';
 
 // 3. Define Country Options (You can move this to a separate utils file)
 const countryOptions = countries.map((country) => ({
     value: country,
     label: country
   }));
+
+const currencyOptions = currencies.map((currency) => ({
+  value: currency.code,
+  label: `${currency.code} - ${currency.currency}`
+}));
 
 export interface TCompany {
   id: string;
@@ -62,6 +67,7 @@ interface TUser {
   state?: string;
   postCode?: string;
   country?: string;
+  currency?: string;
   image?: string;
   createdBy?: string;
   otp?: string;
@@ -78,7 +84,7 @@ export function Dashboard() {
   const [initialLoading, setInitialLoading] = useState(true);
 
   // 4. Destructure 'control' from useForm
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, control, setValue, formState: { errors } } = useForm();
 
   useEffect(() => {
     if (editingUser) {
@@ -399,7 +405,11 @@ export function Dashboard() {
                       // Map the string value (from DB) to the object value (required by React Select)
                       value={countryOptions.find(c => c.value === field.value)}
                       // On change, pull the value out of the object and send just the string to the form
-                      onChange={(val) => field.onChange(val?.value)}
+                      onChange={(val) => {
+                        field.onChange(val?.value);
+                        const currency = currencies.find(c => c.country === val?.value);
+                        if (currency) setValue('currency', currency.code);
+                      }}
                       styles={customStyles}
                       placeholder="Select Country"
                     />
@@ -408,6 +418,26 @@ export function Dashboard() {
                 {errors.country && (
                   <span className="text-sm text-red-500">{errors.country.message as string}</span>
                 )}
+              </div>
+
+              {/* Currency */}
+              <div>
+                <Label htmlFor="currency">Currency</Label>
+                <Controller
+                  name="currency"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      options={currencyOptions}
+                      inputId="currency"
+                      value={currencyOptions.find(c => c.value === field.value)}
+                      onChange={(val) => field.onChange(val?.value)}
+                      styles={customStyles}
+                      placeholder="Select Currency"
+                    />
+                  )}
+                />
               </div>
 
               {/* Company Color */}

@@ -23,6 +23,7 @@ import axiosInstance from '@/lib/axios';
 import moment from 'moment';
 import { Pen } from 'lucide-react';
 import { usePermission } from '@/hooks/usePermission';
+import { useCurrency } from '@/hooks/useCurrency';
 
 import { useSelector } from 'react-redux';
 import { useToast } from '@/components/ui/use-toast';
@@ -32,6 +33,7 @@ const StoragePage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [storageToEdit, setStorageToEdit] = useState<any>(null);
   const { id } = useParams();
+  const { symbol } = useCurrency();
   const [initialLoading, setInitialLoading] = useState(true);
   const {hasPermission} = usePermission();
   const {toast} = useToast()
@@ -159,10 +161,10 @@ const StoragePage = () => {
                 <TableRow key={storage._id}>
                   <TableCell>{storage.storageName}</TableCell>
                   <TableCell className="font-semibold">
-                    £{storage.openingBalance.toFixed(2)}
+                    {symbol}{storage.openingBalance.toFixed(2)}
                   </TableCell>
                   <TableCell className="font-semibold">
-                    £{storage.currentBalance.toFixed(2)}
+                    {symbol}{storage.currentBalance.toFixed(2)}
                   </TableCell>
                   <TableCell>
                     {moment(storage.openingDate).format('DD MMM YYYY')}

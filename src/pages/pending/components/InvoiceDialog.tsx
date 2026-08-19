@@ -34,6 +34,7 @@ import moment from 'moment';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export function InvoiceDialog({
   invoice,
@@ -46,6 +47,7 @@ export function InvoiceDialog({
   const [methods, setMethods] = useState([]);
   const [storages, setStorages] = useState([]);
   const { id } = useParams();
+  const { symbol } = useCurrency();
 
   const form = useForm({
     defaultValues: {
@@ -191,7 +193,7 @@ export function InvoiceDialog({
                   </p>
 
                   <p className="text-sm text-black">
-                    <span className="font-medium">Amount:</span> £
+                    <span className="font-medium">Amount:</span> {symbol}
                     {invoice.amount.toFixed(2)}
                   </p>
                 </div>

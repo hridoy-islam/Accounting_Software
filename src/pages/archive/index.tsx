@@ -13,6 +13,7 @@ import moment from 'moment';
 import { Badge } from '@/components/ui/badge';
 import { ArchiveRestore, Pen, Trash } from 'lucide-react';
 import { usePermission } from '@/hooks/usePermission';
+import { useCurrency } from '@/hooks/useCurrency';
 
 import axiosInstance from '@/lib/axios';
 import { useParams } from 'react-router-dom';
@@ -22,6 +23,7 @@ import { ConfirmModal } from '../transaction/components/ConfirmModal';
 
 export default function ArchivePage() {
   const { id } = useParams();
+  const { symbol } = useCurrency();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState([]);
   const [methods, setMethods] = useState([]);
@@ -172,7 +174,7 @@ export default function ArchivePage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="font-semibold">
-                  £{transaction.transactionAmount.toFixed(2)}
+                  {symbol}{transaction.transactionAmount.toFixed(2)}
                 </TableCell>
                 <TableCell>{transaction.transactionCategory.name}</TableCell>
                 <TableCell>{transaction.transactionMethod.name}</TableCell>
