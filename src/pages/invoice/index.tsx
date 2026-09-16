@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { InvoiceList } from './components/InvoiceList';
+import { InvoiceList, getInvoiceBalanceDue } from './components/InvoiceList';
 import type { Invoice } from '@/types/invoice';
 import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '@/lib/axios';
@@ -23,10 +23,14 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
-import { InvoiceDialog } from './components/InvoiceDialog';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  FieldError,
+  invoiceDialogSchema
+} from './components/invoice-form-validation';
+import { InvoicePaymentDialog } from './components/InvoicePaymentDialog';
 import { toast, useToast } from '@/components/ui/use-toast';
 import { usePermission } from '@/hooks/usePermission';
-
 
 const InvoicePage = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -47,9 +51,15 @@ const InvoicePage = () => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
-  const {hasPermission} = usePermission();
-    const {toast}= useToast()
-  const form = useForm({
+
+  // Transaction fields needed to record a payment from the list
+  const [categories, setCategories] = useState<any[]>([]);
+  const [methods, setMethods] = useState<any[]>([]);
+  const [storages, setStorages] = useState<any[]>([]);
+  const { hasPermission } = usePermission();
+  const { toast } = useToast();
+  const form = useForm<any>({
+    resolver: zodResolver(invoiceDialogSchema),
     defaultValues: {
       customer: '',
       invoiceDate: '',
@@ -58,8 +68,8 @@ const InvoicePage = () => {
       status: 'due',
       transactionType: 'inflow',
       amount: 0,
-      details:'',
-      invDoc:''
+      details: '',
+      invDoc: ''
     }
   });
 
@@ -92,11 +102,9 @@ const InvoicePage = () => {
     }
   };
 
-
   const refreshTransactions = () => {
     setRefreshKey((prevKey) => prevKey + 1);
   };
-
 
   const fetchCustomers = async () => {
     setIsLoadingCustomers(true);
@@ -108,7 +116,7 @@ const InvoicePage = () => {
     } catch (error) {
       console.error('Error fetching customers:', error);
       toast({
-        title: error?.response?.data?.message||'Failed to fetch customers',
+        title: error?.response?.data?.message || 'Failed to fetch customers',
         variant: 'destructive'
       });
     } finally {
@@ -116,10 +124,27 @@ const InvoicePage = () => {
     }
   };
 
+  const fetchTransactionOptions = async () => {
+    if (!id) return;
+    try {
+      const [categoriesRes, methodsRes, storagesRes] = await Promise.all([
+        axiosInstance.get(`/categories/company/${id}?limit=10000`),
+        axiosInstance.get(`/methods/company/${id}?limit=10000`),
+        axiosInstance.get(`/storages/company/${id}?limit=10000`)
+      ]);
+      setCategories(categoriesRes.data.data.result || []);
+      setMethods(methodsRes.data.data.result || []);
+      setStorages(storagesRes.data.data.result || []);
+    } catch (error) {
+      console.error('Error fetching transaction options:', error);
+    }
+  };
+
   useEffect(() => {
     fetchCustomers();
+    fetchTransactionOptions();
     fetchInvoices(currentPage, entriesPerPage, searchTerm);
-  }, [id,refreshKey]);
+  }, [id, refreshKey]);
 
   useEffect(() => {
     fetchInvoices(currentPage, entriesPerPage, searchTerm);
@@ -127,7 +152,7 @@ const InvoicePage = () => {
 
   const handleEdit = (invoice: Invoice) => {
     form.reset({
-      ...invoice,
+      ...(invoice as any),
       customer: invoice?.customer?._id || '',
       invoiceDate: invoice.invoiceDate
         ? new Date(invoice.invoiceDate).toISOString().split('T')[0]
@@ -149,7 +174,7 @@ const InvoicePage = () => {
     } catch (error) {
       console.error('Error deleting invoice:', error);
       toast({
-        title: error?.response?.data?.message||'Error deleting invoice',
+        title: error?.response?.data?.message || 'Error deleting invoice',
         variant: 'destructive'
       });
     }
@@ -232,10 +257,17 @@ const InvoicePage = () => {
     }
   };
 
+  // Opens the payment dialog with whatever is still outstanding on the invoice
   const handleMarkAsPaid = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
+    const inv = invoice as any;
+    const total = Number(inv?.total) || Number(inv?.amount) || 0;
+
+    setSelectedInvoice({
+      ...inv,
+      total,
+      balanceDue: getInvoiceBalanceDue(inv)
+    });
     setIsDialogOpen(true);
-    // fetchInvoices(currentPage, entriesPerPage, searchTerm);
   };
 
   const handleClose = () => {
@@ -254,12 +286,14 @@ const InvoicePage = () => {
   return (
     <div className="mb-2 rounded-md bg-white p-4 shadow-lg">
       <div className="mb-2 flex flex-col justify-between">
-        <div className="flex flex-row items-center justify-between">
-          <h1 className="mb-2 text-3xl font-bold">Invoice Management</h1>
-          <div className="flex flex-row items-center justify-center gap-2">
-          <Button variant="theme" onClick={() => refreshTransactions()}>
-              <div className='flex flex-row items-center justify-center gap-2'>
-                <RefreshCcw size='18' />
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="mb-2 text-2xl font-bold sm:text-3xl">
+            Invoice Management
+          </h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="theme" onClick={() => refreshTransactions()}>
+              <div className="flex flex-row items-center justify-center gap-2">
+                <RefreshCcw size="18" />
                 Refresh
               </div>
             </Button>
@@ -267,70 +301,75 @@ const InvoicePage = () => {
               <PersonIcon className="mr-2 h-4 w-4" />
               Customer
             </Button>
-            {hasPermission('Invoice', 'create') &&(
-            <Button variant="theme" onClick={() => handleViewBank()}>
-              <Landmark  className="mr-2 h-4 w-4" />
-              Bank List
-            </Button>)}
-            {hasPermission('Invoice', 'create') &&(
-            <Button variant="theme" onClick={() => handleCreateInvoice()}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Invoice
-            </Button>)}
-
+            {hasPermission('Invoice', 'create') && (
+              <Button variant="theme" onClick={() => handleViewBank()}>
+                <Landmark className="mr-2 h-4 w-4" />
+                Bank List
+              </Button>
+            )}
+            {hasPermission('Invoice', 'create') && (
+              <Button variant="theme" onClick={() => handleCreateInvoice()}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Invoice
+              </Button>
+            )}
           </div>
         </div>
 
-        <div className="mt-4 flex flex-row gap-8 items-center justify-between ">
-          <Input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by Invoice Number"
-            className="h-8 "
-          />
-          <div className="flex flex-row items-center gap-4">
-            <div className="flex flex-row items-center gap-2">
-              <p className="text-xs font-medium">From Date</p>
-              <Input
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                type="date"
-                
-              />
-            </div>
-
-            <div className="flex flex-row items-center gap-2">
-              <p className="text-xs font-medium">To Date</p>
-              <Input
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                type="date"
-               
-              />
-            </div>
+        <div className="mt-4 grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="w-full space-y-1">
+            <p className="text-xs font-medium">Search</p>
+            <Input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by Invoice Number"
+              className="w-full"
+            />
           </div>
-          <div className="flex flex-row items-center gap-2">
-            
+
+          <div className="w-full space-y-1">
+            <p className="text-xs font-medium">From Date</p>
+            <Input
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              type="date"
+              className="w-full"
+            />
+          </div>
+
+          <div className="w-full space-y-1">
+            <p className="text-xs font-medium">To Date</p>
+            <Input
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              type="date"
+              className="w-full"
+            />
+          </div>
+
+          <div className="w-full space-y-1">
+            <p className="text-xs font-medium">Status</p>
             <Select onValueChange={setStatus} value={status}>
-              <SelectTrigger >
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="due">Due</SelectItem>
+                <SelectItem value="partial">Partial</SelectItem>
                 <SelectItem value="paid">Paid</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex  items-center gap-1">
-            
+          <div className="w-full space-y-1">
+            <p className="text-xs font-medium">Customer</p>
             <Select
               onValueChange={setSelectedCustomer}
               value={selectedCustomer}
               disabled={isLoadingCustomers}
             >
-              <SelectTrigger >
+              <SelectTrigger className="w-full">
                 <SelectValue
                   placeholder={
                     isLoadingCustomers ? 'Loading...' : 'Select Customer'
@@ -347,10 +386,15 @@ const InvoicePage = () => {
             </Select>
           </div>
 
-          <Button className="bg-theme text-white" onClick={handleSearch}>
-            <Search className="mr-2 h-4 w-4" />
-            Search
-          </Button>
+          <div className="flex w-full items-end">
+            <Button
+              className="w-full bg-theme text-white"
+              onClick={handleSearch}
+            >
+              <Search className="mr-2 h-4 w-4" />
+              Search
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -393,9 +437,11 @@ const InvoicePage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <FieldError
+                  message={form.formState.errors.customer?.message as string}
+                />
               </div>
 
-            
               <div className="space-y-2">
                 <label>Invoice Date</label>
                 <Input
@@ -404,11 +450,19 @@ const InvoicePage = () => {
                   value={form.watch('invoiceDate')}
                   onChange={(e) => form.setValue('invoiceDate', e.target.value)}
                 />
+                <FieldError
+                  message={form.formState.errors.invoiceDate?.message as string}
+                />
               </div>
 
               <div className="space-y-2">
                 <label>Reference Invoice Number</label>
                 <Input {...form.register('invoiceNumber')} />
+                <FieldError
+                  message={
+                    form.formState.errors.invoiceNumber?.message as string
+                  }
+                />
               </div>
 
               {/* Transaction Type */}
@@ -428,11 +482,19 @@ const InvoicePage = () => {
                     <SelectItem value="outflow">Outflow</SelectItem>
                   </SelectContent>
                 </Select>
+                <FieldError
+                  message={
+                    form.formState.errors.transactionType?.message as string
+                  }
+                />
               </div>
 
               <div className="space-y-2">
                 <label>Details</label>
-                <Input {...form.register('details')}  />
+                <Input {...form.register('details')} />
+                <FieldError
+                  message={form.formState.errors.details?.message as string}
+                />
               </div>
 
               {/* Amount */}
@@ -442,8 +504,14 @@ const InvoicePage = () => {
                   {...form.register('amount')}
                   type="number"
                   onChange={(e) =>
-                    form.setValue('amount', parseFloat(e.target.value))
+                    form.setValue(
+                      'amount',
+                      e.target.value === '' ? '' : parseFloat(e.target.value)
+                    )
                   }
+                />
+                <FieldError
+                  message={form.formState.errors.amount?.message as string}
                 />
               </div>
             </div>
@@ -451,8 +519,10 @@ const InvoicePage = () => {
             <div className="space-y-2">
               <label>Description</label>
               <Textarea {...form.register('description')} />
+              <FieldError
+                message={form.formState.errors.description?.message as string}
+              />
             </div>
-            
 
             {/* Form Actions */}
             <div className="flex justify-end space-x-4">
@@ -479,12 +549,18 @@ const InvoicePage = () => {
         onPageChange={setCurrentPage}
       />
 
-      <InvoiceDialog
-        invoice={selectedInvoice}
+      <InvoicePaymentDialog
         open={isDialogOpen}
-        onClose={handleClose}
-        // onConfirm={confirmPayment}
-        setInvoices={setInvoices}
+        onOpenChange={(open: boolean) => {
+          setIsDialogOpen(open);
+          if (!open) setSelectedInvoice(null);
+        }}
+        invoice={selectedInvoice}
+        categories={categories}
+        methods={methods}
+        storages={storages}
+        editingPayment={null}
+        onSaved={() => fetchInvoices(currentPage, entriesPerPage, searchTerm)}
       />
     </div>
   );

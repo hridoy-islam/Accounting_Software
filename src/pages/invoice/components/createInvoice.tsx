@@ -25,6 +25,13 @@ import {
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCurrency } from '@/hooks/useCurrency';
+import {
+  customerFormSchema,
+  FieldError,
+  FieldErrors,
+  scheduleFormSchema,
+  validateWithSchema
+} from './invoice-form-validation';
 
 export default function CreateInvoice() {
   const { id: companyId } = useParams<{ id: string }>();
@@ -48,6 +55,8 @@ export default function CreateInvoice() {
   const [banks, setBanks] = useState<any[]>([]);
   const [isLoadingBanks, setIsLoadingBanks] = useState(false);
   const [selectedBank, setSelectedBank] = useState('');
+  const [customerErrors, setCustomerErrors] = useState<FieldErrors>({});
+  const [scheduleErrors, setScheduleErrors] = useState<FieldErrors>({});
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
     name: '',
@@ -251,14 +260,47 @@ export default function CreateInvoice() {
     setItems(updatedItems);
   };
 
+  const handleCustomerChange = (field: string, value: string) => {
+    setNewCustomer((prev) => ({ ...prev, [field]: value }));
+    setCustomerErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _removed, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const clearScheduleError = (field: string) =>
+    setScheduleErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _removed, ...rest } = prev;
+      return rest;
+    });
+
+  // Validates the schedule dialog before it is accepted
+  const handleConfirmSchedule = () => {
+    const result = validateWithSchema(scheduleFormSchema, {
+      frequency: scheduleFrequency,
+      scheduledDay: scheduleDay,
+      scheduledMonth:
+        scheduleFrequency === 'yearly' ? scheduleMonth : undefined,
+      dueDays: scheduleDueDays
+    });
+
+    setScheduleErrors(result.errors);
+    if (!result.success) return;
+
+    setIsRecurring(true);
+    setIsScheduleDialogOpen(false);
+  };
+
   const handleCreateCustomer = async () => {
-    if (!newCustomer.name) {
-      toast({
-        title: 'Customer name is required',
-        variant: 'destructive'
-      });
-      return;
-    }
+    const { success, errors } = validateWithSchema(
+      customerFormSchema,
+      newCustomer
+    );
+    setCustomerErrors(errors);
+    if (!success) return;
+
     try {
       const response = await axiosInstance.post('/customer', {
         ...newCustomer,
@@ -268,6 +310,7 @@ export default function CreateInvoice() {
       setCustomers([...customers, createdCustomer]);
       setSelectedCustomer(createdCustomer._id);
       setIsNewCustomerDialogOpen(false);
+      setCustomerErrors({});
       setNewCustomer({
         name: '',
         email: '',
@@ -779,7 +822,8 @@ export default function CreateInvoice() {
                   <div className="mb-2 flex items-center border-t border-gray-100 pt-2">
                     <span className="mr-4 w-28 font-bold">Total</span>
                     <span className=" ml-auto w-32 text-center font-bold">
-                      {symbol}{total.toFixed(2)}
+                      {symbol}
+                      {total.toFixed(2)}
                     </span>
                   </div>
                   {Number(partialPayment) > 0 && (
@@ -800,7 +844,8 @@ export default function CreateInvoice() {
                       </div>
                       <div className="mb-2 flex items-center border-t border-gray-300 pt-2 ">
                         <span className="ml-auto w-32 text-center font-bold">
-                          {symbol}{balanceDue.toFixed(2)}
+                          {symbol}
+                          {balanceDue.toFixed(2)}
                         </span>
                       </div>
                     </>
@@ -897,12 +942,16 @@ export default function CreateInvoice() {
                     { label: 'Monthly', value: 'monthly' },
                     { label: 'Yearly', value: 'yearly' }
                   ].find((opt) => opt.value === scheduleFrequency)}
-                  onChange={(opt: any) => setScheduleFrequency(opt?.value)}
+                  onChange={(opt: any) => {
+                    setScheduleFrequency(opt?.value);
+                    clearScheduleError('frequency');
+                  }}
                   options={[
                     { label: 'Monthly', value: 'monthly' },
                     { label: 'Yearly', value: 'yearly' }
                   ]}
                 />
+                <FieldError message={scheduleErrors.frequency} />
               </div>
 
               <div className="space-y-2">
@@ -923,9 +972,13 @@ export default function CreateInvoice() {
                         value={monthOptions.find(
                           (m) => m.value === scheduleMonth
                         )}
-                        onChange={(opt: any) => setScheduleMonth(opt?.value)}
+                        onChange={(opt: any) => {
+                          setScheduleMonth(opt?.value);
+                          clearScheduleError('scheduledMonth');
+                        }}
                         menuPlacement="auto"
                       />
+                      <FieldError message={scheduleErrors.scheduledMonth} />
                     </div>
                   )}
 
@@ -936,10 +989,14 @@ export default function CreateInvoice() {
                       placeholder="Enter a day (1–30)"
                       options={daysOptions}
                       value={daysOptions.find((d) => d.value === scheduleDay)}
-                      onChange={(opt: any) => setScheduleDay(opt?.value)}
+                      onChange={(opt: any) => {
+                        setScheduleDay(opt?.value);
+                        clearScheduleError('scheduledDay');
+                      }}
                       menuPlacement="auto"
                       maxMenuHeight={200}
                     />
+                    <FieldError message={scheduleErrors.scheduledDay} />
                   </div>
                 </div>
               </div>
@@ -954,8 +1011,12 @@ export default function CreateInvoice() {
                   min="0"
                   placeholder="e.g., 30"
                   value={scheduleDueDays}
-                  onChange={(e) => setScheduleDueDays(e.target.value)}
+                  onChange={(e) => {
+                    setScheduleDueDays(e.target.value);
+                    clearScheduleError('dueDays');
+                  }}
                 />
+                <FieldError message={scheduleErrors.dueDays} />
                 <p className="text-xs font-semibold text-gray-500">
                   We will automatically set future due dates based on the
                   duration you choose
@@ -1002,15 +1063,7 @@ export default function CreateInvoice() {
             >
               Cancel
             </Button>
-            <Button
-              variant="theme"
-              disabled={!scheduleFrequency || !scheduleDay}
-              onClick={() => {
-                if (!scheduleFrequency || !scheduleDay) return;
-                setIsRecurring(true);
-                setIsScheduleDialogOpen(false);
-              }}
-            >
+            <Button variant="theme" onClick={handleConfirmSchedule}>
               Done
             </Button>
           </DialogFooter>
@@ -1032,10 +1085,9 @@ export default function CreateInvoice() {
               <Input
                 id="customerName"
                 value={newCustomer.name}
-                onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, name: e.target.value })
-                }
+                onChange={(e) => handleCustomerChange('name', e.target.value)}
               />
+              <FieldError message={customerErrors.name} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="customerEmail">Email</Label>
@@ -1043,19 +1095,16 @@ export default function CreateInvoice() {
                 id="customerEmail"
                 type="email"
                 value={newCustomer.email}
-                onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, email: e.target.value })
-                }
+                onChange={(e) => handleCustomerChange('email', e.target.value)}
               />
+              <FieldError message={customerErrors.email} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="customerPhone">Phone</Label>
               <Input
                 id="customerPhone"
                 value={newCustomer.phone}
-                onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, phone: e.target.value })
-                }
+                onChange={(e) => handleCustomerChange('phone', e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -1064,7 +1113,7 @@ export default function CreateInvoice() {
                 id="customerAddress"
                 value={newCustomer.address}
                 onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, address: e.target.value })
+                  handleCustomerChange('address', e.target.value)
                 }
               />
             </div>
@@ -1074,7 +1123,7 @@ export default function CreateInvoice() {
                 id="bankName"
                 value={newCustomer.bankName}
                 onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, bankName: e.target.value })
+                  handleCustomerChange('bankName', e.target.value)
                 }
               />
             </div>
@@ -1084,7 +1133,7 @@ export default function CreateInvoice() {
                 id="accountNo"
                 value={newCustomer.accountNo}
                 onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, accountNo: e.target.value })
+                  handleCustomerChange('accountNo', e.target.value)
                 }
               />
             </div>
@@ -1094,7 +1143,7 @@ export default function CreateInvoice() {
                 id="sortCode"
                 value={newCustomer.sortCode}
                 onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, sortCode: e.target.value })
+                  handleCustomerChange('sortCode', e.target.value)
                 }
               />
             </div>
@@ -1104,10 +1153,7 @@ export default function CreateInvoice() {
                 id="beneficiary"
                 value={newCustomer.beneficiary}
                 onChange={(e) =>
-                  setNewCustomer({
-                    ...newCustomer,
-                    beneficiary: e.target.value
-                  })
+                  handleCustomerChange('beneficiary', e.target.value)
                 }
               />
             </div>

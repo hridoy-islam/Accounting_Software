@@ -105,3 +105,7 @@
 .bg-due{
   @apply bg-red-500/10 text-red-500 border-none 
 }
+
+.bg-partial{
+  @apply bg-amber-500/10 text-amber-600 border-none
+}

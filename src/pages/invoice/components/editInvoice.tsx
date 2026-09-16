@@ -5,7 +5,10 @@ import {
   Trash2,
   ArrowLeft,
   Trash,
-  CalendarClock
+  CalendarClock,
+  Wallet,
+  Pencil,
+  Paperclip
 } from 'lucide-react';
 import axiosInstance from '@/lib/axios';
 import { toast } from '@/components/ui/use-toast';
@@ -24,6 +27,14 @@ import {
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCurrency } from '@/hooks/useCurrency';
+import {
+  customerFormSchema,
+  FieldError,
+  FieldErrors,
+  scheduleFormSchema,
+  validateWithSchema
+} from './invoice-form-validation';
+import { InvoicePaymentDialog } from './InvoicePaymentDialog';
 
 export default function EditInvoice() {
   const { id: companyId, invoiceId } = useParams<{
@@ -54,7 +65,20 @@ export default function EditInvoice() {
   const [selectedBank, setSelectedBank] = useState('');
   const [transactionType, setTransactionType] = useState('');
 
+  // --- PAYMENT STATE ---
+  const [invId, setInvId] = useState('');
+  const [categories, setCategories] = useState<any[]>([]);
+  const [methods, setMethods] = useState<any[]>([]);
+  const [storages, setStorages] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<any | null>(null);
+  const [deletingPayment, setDeletingPayment] = useState<any | null>(null);
+  const [isDeletingPayment, setIsDeletingPayment] = useState(false);
+
   // New Customer Dialog State
+  const [customerErrors, setCustomerErrors] = useState<FieldErrors>({});
+  const [scheduleErrors, setScheduleErrors] = useState<FieldErrors>({});
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
     name: '',
@@ -155,6 +179,35 @@ export default function EditInvoice() {
     }
   };
 
+  // Categories/methods/storages are the transaction fields a payment needs
+  const fetchTransactionOptions = async () => {
+    if (!companyId) return;
+    try {
+      const [categoriesRes, methodsRes, storagesRes] = await Promise.all([
+        axiosInstance.get(`/categories/company/${companyId}?limit=10000`),
+        axiosInstance.get(`/methods/company/${companyId}?limit=10000`),
+        axiosInstance.get(`/storages/company/${companyId}?limit=10000`)
+      ]);
+      setCategories(categoriesRes.data.data.result || []);
+      setMethods(methodsRes.data.data.result || []);
+      setStorages(storagesRes.data.data.result || []);
+    } catch (error) {
+      console.error('Error fetching transaction options:', error);
+    }
+  };
+
+  const fetchPayments = async () => {
+    if (!invoiceId) return;
+    try {
+      const response = await axiosInstance.get(
+        `/invoice/${invoiceId}/payments`
+      );
+      setPayments(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching invoice payments:', error);
+    }
+  };
+
   const fetchInvoiceDetails = async () => {
     if (!invoiceId) return;
     try {
@@ -162,6 +215,7 @@ export default function EditInvoice() {
       const data = response.data.data;
 
       // Populate State
+      setInvId(data.invId || '');
       setTransactionType(data.transactionType || 'inflow');
       setSelectedCustomer(
         typeof data.customer === 'object' ? data.customer._id : data.customer
@@ -232,7 +286,9 @@ export default function EditInvoice() {
         await Promise.all([
           fetchBanks(),
           fetchCustomers(),
-          fetchInvoiceDetails()
+          fetchInvoiceDetails(),
+          fetchTransactionOptions(),
+          fetchPayments()
         ]);
       } catch (error) {
         console.error('Initialization error:', error);
@@ -245,6 +301,12 @@ export default function EditInvoice() {
       init();
     }
   }, [companyId, invoiceId]);
+
+  // Total already received through recorded payment transactions
+  const paidFromPayments = payments.reduce(
+    (sum, payment) => sum + (Number(payment.transactionAmount) || 0),
+    0
+  );
 
   // Calculation Effect
   useEffect(() => {
@@ -283,7 +345,7 @@ export default function EditInvoice() {
           : parsedPartialPayment;
     }
 
-    const newBalance = Math.max(0, newTotal - paymentAmount);
+    const newBalance = Math.max(0, newTotal - paymentAmount - paidFromPayments);
     setBalanceDue(newBalance);
   }, [
     items,
@@ -291,7 +353,8 @@ export default function EditInvoice() {
     invoiceDiscount,
     invoiceDiscountType,
     partialPayment,
-    partialPaymentType
+    partialPaymentType,
+    paidFromPayments
   ]);
 
   // --- HANDLERS ---
@@ -355,14 +418,47 @@ export default function EditInvoice() {
     setItems(updatedItems);
   };
 
+  const handleCustomerChange = (field: string, value: string) => {
+    setNewCustomer((prev) => ({ ...prev, [field]: value }));
+    setCustomerErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _removed, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const clearScheduleError = (field: string) =>
+    setScheduleErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _removed, ...rest } = prev;
+      return rest;
+    });
+
+  // Validates the schedule dialog before it is accepted
+  const handleConfirmSchedule = () => {
+    const result = validateWithSchema(scheduleFormSchema, {
+      frequency: scheduleFrequency,
+      scheduledDay: scheduleDay,
+      scheduledMonth:
+        scheduleFrequency === 'yearly' ? scheduleMonth : undefined,
+      dueDays: scheduleDueDays
+    });
+
+    setScheduleErrors(result.errors);
+    if (!result.success) return;
+
+    setIsRecurring(true);
+    setIsScheduleDialogOpen(false);
+  };
+
   const handleCreateCustomer = async () => {
-    if (!newCustomer.name) {
-      toast({
-        title: 'Customer name is required',
-        variant: 'destructive'
-      });
-      return;
-    }
+    const { success, errors } = validateWithSchema(
+      customerFormSchema,
+      newCustomer
+    );
+    setCustomerErrors(errors);
+    if (!success) return;
+
     try {
       const response = await axiosInstance.post('/customer', {
         ...newCustomer,
@@ -372,6 +468,7 @@ export default function EditInvoice() {
       setCustomers([...customers, createdCustomer]);
       setSelectedCustomer(createdCustomer._id);
       setIsNewCustomerDialogOpen(false);
+      setCustomerErrors({});
       setNewCustomer({
         name: '',
         email: '',
@@ -392,6 +489,43 @@ export default function EditInvoice() {
         title: 'Failed to create customer',
         variant: 'destructive'
       });
+    }
+  };
+
+  const handleOpenPaymentDialog = (payment: any = null) => {
+    if (!transactionType) {
+      toast({
+        title: 'Please select a transaction type first',
+        variant: 'destructive'
+      });
+      return;
+    }
+    setEditingPayment(payment);
+    setIsPaymentDialogOpen(true);
+  };
+
+  // Deleting the payment here also deletes the linked transaction
+  const handleDeletePayment = async () => {
+    if (!deletingPayment) return;
+    setIsDeletingPayment(true);
+    try {
+      await axiosInstance.delete(
+        `/invoice/${invoiceId}/payments/${deletingPayment._id}`
+      );
+      await fetchPayments();
+      setDeletingPayment(null);
+      toast({
+        title: 'Payment deleted successfully',
+        className: 'bg-theme text-white border-none'
+      });
+    } catch (error: any) {
+      console.error('Error deleting payment:', error);
+      toast({
+        title: error?.response?.data?.message || 'Failed to delete payment',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsDeletingPayment(false);
     }
   };
 
@@ -424,7 +558,6 @@ export default function EditInvoice() {
       });
       return;
     }
-    
 
     const todayISO = new Date().toISOString().split('T')[0];
     const actualInvoiceDate = invoiceDate || todayISO;
@@ -515,33 +648,39 @@ export default function EditInvoice() {
           </Button>
           <h1 className="text-2xl font-bold">Edit Invoice</h1>
         </div>
-        <Button
-          variant="outline"
-          className={`${isRecurring ? 'hover:bg-theme/90 border-none bg-theme text-white' : ''}`}
-          onClick={() => {
-            setIsScheduleDialogOpen(true);
-          }}
-        >
-          <CalendarClock className="mr-2 h-4 w-4" />
-          {isRecurring && scheduleFrequency && scheduleDay ? (
-            <span className="flex items-center gap-1 text-xs sm:text-sm">
-              <span className="font-semibold text-inherit">
-                Scheduled ( {scheduleDay} of every{' '}
-                {scheduleFrequency === 'monthly' ? 'month' : 'year'}
-              </span>
-              {scheduleFrequency === 'yearly' && (
+        <div className="flex items-center gap-2">
+          <Button variant="theme" onClick={() => handleOpenPaymentDialog()}>
+            <Wallet className="mr-2 h-4 w-4" />
+            Make Payment
+          </Button>
+          <Button
+            variant="outline"
+            className={`${isRecurring ? 'hover:bg-theme/90 border-none bg-theme text-white' : ''}`}
+            onClick={() => {
+              setIsScheduleDialogOpen(true);
+            }}
+          >
+            <CalendarClock className="mr-2 h-4 w-4" />
+            {isRecurring && scheduleFrequency && scheduleDay ? (
+              <span className="flex items-center gap-1 text-xs sm:text-sm">
                 <span className="font-semibold text-inherit">
-                  {' '}
-                  of{' '}
-                  {monthOptions.find((m) => m.value === scheduleMonth)?.label}
+                  Scheduled ( {scheduleDay} of every{' '}
+                  {scheduleFrequency === 'monthly' ? 'month' : 'year'}
                 </span>
-              )}
-              )
-            </span>
-          ) : (
-            'Schedule Invoice'
-          )}
-        </Button>
+                {scheduleFrequency === 'yearly' && (
+                  <span className="font-semibold text-inherit">
+                    {' '}
+                    of{' '}
+                    {monthOptions.find((m) => m.value === scheduleMonth)?.label}
+                  </span>
+                )}
+                )
+              </span>
+            ) : (
+              'Schedule Invoice'
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* --- FORM CONTENT --- */}
@@ -881,12 +1020,23 @@ export default function EditInvoice() {
                   <div className="mb-2 flex items-center border-t border-gray-100 pt-2">
                     <span className="mr-4 w-28 font-bold">Total</span>
                     <span className=" ml-auto w-32 text-center font-bold">
-                      {symbol}{total.toFixed(2)}
+                      {symbol}
+                      {total.toFixed(2)}
                     </span>
                   </div>
+                  {paidFromPayments > 0 && (
+                    <div className="mb-2 flex items-center text-black">
+                      <span className="mr-4 w-32 font-medium">
+                        Payments Received
+                      </span>
+                      <span className="ml-auto w-32 text-center font-medium">
+                        -{paidFromPayments.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                   {Number(partialPayment) > 0 && (
                     <>
-                      <div className="mb-2 flex items-center text-gray-600">
+                      <div className="mb-2 flex items-center text-black">
                         <span className="mr-4 w-32 font-medium">
                           {partialPaymentType === 'percentage'
                             ? `Paid (${Number(partialPayment) || 0}%)`
@@ -900,12 +1050,16 @@ export default function EditInvoice() {
                           ).toFixed(2)}
                         </span>
                       </div>
-                      <div className="mb-2 flex items-center border-t border-gray-300 pt-2 ">
-                        <span className="ml-auto w-32 text-center font-bold">
-                          {symbol}{balanceDue.toFixed(2)}
-                        </span>
-                      </div>
                     </>
+                  )}
+                  {(Number(partialPayment) > 0 || paidFromPayments > 0) && (
+                    <div className="mb-2 flex items-center border-t border-gray-300 pt-2 ">
+                      <span className="mr-4 w-28 font-bold">Balance Due</span>
+                      <span className="ml-auto w-32 text-center font-bold">
+                        {symbol}
+                        {balanceDue.toFixed(2)}
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -913,6 +1067,126 @@ export default function EditInvoice() {
           </CardContent>
         </Card>
       </div>
+      {/* --- PAYMENTS --- */}
+      <div className="mt-8">
+        <Card>
+          <CardContent className="p-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 p-4">
+              <div>
+                <h2 className="text-lg font-semibold">Payments</h2>
+                <p className="text-sm text-black">
+                  Each payment is recorded as a {transactionType || 'linked'}{' '}
+                  transaction and kept in sync with it.
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-xs text-black">Paid / Balance Due</p>
+                  <p className="font-semibold">
+                    {symbol}
+                    {paidFromPayments.toFixed(2)} / {symbol}
+                    {balanceDue.toFixed(2)}
+                  </p>
+                </div>
+                <Button
+                  variant="theme"
+                  onClick={() => handleOpenPaymentDialog()}
+                >
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Make Payment
+                </Button>
+              </div>
+            </div>
+
+            {payments.length === 0 ? (
+              <p className="p-6 text-center text-sm text-black">
+                No payment has been recorded for this invoice yet.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-sm">
+                      <th className="p-3 text-left">DATE</th>
+                      <th className="p-3 text-left">TRANSACTION ID</th>
+                      <th className="p-3 text-left">CATEGORY</th>
+                      <th className="p-3 text-left">METHOD</th>
+                      <th className="p-3 text-left">STORAGE</th>
+                      <th className="p-3 text-center">DOC</th>
+                      <th className="p-3 text-right">AMOUNT</th>
+                      <th className="w-24 p-3 text-center">ACTIONS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((payment) => (
+                      <tr
+                        key={payment._id}
+                        className="border-b border-gray-200 text-sm"
+                      >
+                        <td className="p-3">
+                          {payment.transactionDate
+                            ? new Date(
+                                payment.transactionDate
+                              ).toLocaleDateString()
+                            : '-'}
+                        </td>
+                        <td className="p-3">{payment.tcid || '-'}</td>
+                        <td className="p-3">
+                          {payment.transactionCategory?.name || '-'}
+                        </td>
+                        <td className="p-3">
+                          {payment.transactionMethod?.name || '-'}
+                        </td>
+                        <td className="p-3">
+                          {payment.storage?.storageName || '-'}
+                        </td>
+                        <td className="p-3 text-center">
+                          {payment.transactionDoc ? (
+                            <a
+                              href={payment.transactionDoc}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="hover:bg-theme/90 inline-flex items-center gap-1.5 rounded-md bg-theme px-3 py-1.5 text-sm font-medium text-white transition"
+                            >
+                              <Paperclip className="h-4 w-4" />
+                              View Document
+                            </a>
+                          ) : (
+                            '-'
+                          )}
+                        </td>
+                        <td className="p-3 text-right font-medium">
+                          {symbol}
+                          {(Number(payment.transactionAmount) || 0).toFixed(2)}
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              size="icon"
+                              onClick={() => handleOpenPaymentDialog(payment)}
+                              className="hover:bg-theme/90 bg-theme text-white"
+                            >
+                              <Pencil className="h-4 w-4 " />
+                            </Button>
+                            <Button
+                              variant={'destructive'}
+                              size="icon"
+                              onClick={() => setDeletingPayment(payment)}
+                            >
+                              <Trash2 className="h-4 w-4 " />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="mt-6 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="notes">Notes</Label>
@@ -923,9 +1197,7 @@ export default function EditInvoice() {
             placeholder="Thanks for your business."
             className="min-h-[80px] max-w-[500px] border-gray-200"
           />
-          <p className="text-sm text-gray-500">
-            Will be displayed on the invoice
-          </p>
+          <p className="text-sm text-black">Will be displayed on the invoice</p>
         </div>
         <div>
           <Button
@@ -962,6 +1234,64 @@ export default function EditInvoice() {
         </div>
       </div>
 
+      {/* PAYMENT DIALOG */}
+      <InvoicePaymentDialog
+        open={isPaymentDialogOpen}
+        onOpenChange={(open: boolean) => {
+          setIsPaymentDialogOpen(open);
+          if (!open) setEditingPayment(null);
+        }}
+        invoice={{
+          _id: invoiceId,
+          invId,
+          invoiceNumber,
+          invoiceDate,
+          transactionType,
+          total,
+          balanceDue
+        }}
+        categories={categories}
+        methods={methods}
+        storages={storages}
+        editingPayment={editingPayment}
+        onSaved={fetchPayments}
+      />
+
+      {/* DELETE PAYMENT CONFIRMATION */}
+      <Dialog
+        open={!!deletingPayment}
+        onOpenChange={(open) => {
+          if (!open) setDeletingPayment(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Delete Payment</DialogTitle>
+            <DialogDescription>
+              This also deletes the linked transaction
+              {deletingPayment?.tcid ? ` (${deletingPayment.tcid})` : ''} and
+              updates the storage balance. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              disabled={isDeletingPayment}
+              onClick={() => setDeletingPayment(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={isDeletingPayment}
+              onClick={handleDeletePayment}
+            >
+              {isDeletingPayment ? 'Deleting...' : 'Delete Payment'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* SCHEDULE DIALOG */}
       <Dialog
         open={isScheduleDialogOpen}
@@ -996,12 +1326,16 @@ export default function EditInvoice() {
                     { label: 'Monthly', value: 'monthly' },
                     { label: 'Yearly', value: 'yearly' }
                   ].find((opt) => opt.value === scheduleFrequency)}
-                  onChange={(opt: any) => setScheduleFrequency(opt?.value)}
+                  onChange={(opt: any) => {
+                    setScheduleFrequency(opt?.value);
+                    clearScheduleError('frequency');
+                  }}
                   options={[
                     { label: 'Monthly', value: 'monthly' },
                     { label: 'Yearly', value: 'yearly' }
                   ]}
                 />
+                <FieldError message={scheduleErrors.frequency} />
               </div>
 
               <div className="space-y-2">
@@ -1022,9 +1356,13 @@ export default function EditInvoice() {
                         value={monthOptions.find(
                           (m) => m.value === scheduleMonth
                         )}
-                        onChange={(opt: any) => setScheduleMonth(opt?.value)}
+                        onChange={(opt: any) => {
+                          setScheduleMonth(opt?.value);
+                          clearScheduleError('scheduledMonth');
+                        }}
                         menuPlacement="auto"
                       />
+                      <FieldError message={scheduleErrors.scheduledMonth} />
                     </div>
                   )}
 
@@ -1035,10 +1373,14 @@ export default function EditInvoice() {
                       placeholder="Select Day"
                       options={daysOptions}
                       value={daysOptions.find((d) => d.value === scheduleDay)}
-                      onChange={(opt: any) => setScheduleDay(opt?.value)}
+                      onChange={(opt: any) => {
+                        setScheduleDay(opt?.value);
+                        clearScheduleError('scheduledDay');
+                      }}
                       menuPlacement="auto"
                       maxMenuHeight={200}
                     />
+                    <FieldError message={scheduleErrors.scheduledDay} />
                   </div>
                 </div>
               </div>
@@ -1053,16 +1395,20 @@ export default function EditInvoice() {
                   min="0"
                   placeholder="e.g. 7"
                   value={scheduleDueDays}
-                  onChange={(e) => setScheduleDueDays(e.target.value)}
+                  onChange={(e) => {
+                    setScheduleDueDays(e.target.value);
+                    clearScheduleError('dueDays');
+                  }}
                 />
-                <p className="text-xs font-semibold text-gray-500">
+                <FieldError message={scheduleErrors.dueDays} />
+                <p className="text-xs font-semibold text-black">
                   We will automatically set future due dates based on the
                   duration you choose
                 </p>
               </div>
 
               {scheduleFrequency && scheduleDay && (
-                <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600">
+                <div className="rounded-md bg-gray-50 p-3 text-sm text-black">
                   <p>
                     Invoice will generate on{' '}
                     <span className="font-semibold text-theme">
@@ -1093,15 +1439,7 @@ export default function EditInvoice() {
             >
               Cancel
             </Button>
-            <Button
-              variant="theme"
-              disabled={!scheduleFrequency || !scheduleDay}
-              onClick={() => {
-                if (!scheduleFrequency || !scheduleDay) return;
-                setIsRecurring(true);
-                setIsScheduleDialogOpen(false);
-              }}
-            >
+            <Button variant="theme" onClick={handleConfirmSchedule}>
               Done
             </Button>
           </DialogFooter>
@@ -1123,10 +1461,9 @@ export default function EditInvoice() {
               <Input
                 id="customerName"
                 value={newCustomer.name}
-                onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, name: e.target.value })
-                }
+                onChange={(e) => handleCustomerChange('name', e.target.value)}
               />
+              <FieldError message={customerErrors.name} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="customerEmail">Email</Label>
@@ -1134,19 +1471,16 @@ export default function EditInvoice() {
                 id="customerEmail"
                 type="email"
                 value={newCustomer.email}
-                onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, email: e.target.value })
-                }
+                onChange={(e) => handleCustomerChange('email', e.target.value)}
               />
+              <FieldError message={customerErrors.email} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="customerPhone">Phone</Label>
               <Input
                 id="customerPhone"
                 value={newCustomer.phone}
-                onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, phone: e.target.value })
-                }
+                onChange={(e) => handleCustomerChange('phone', e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -1155,7 +1489,7 @@ export default function EditInvoice() {
                 id="customerAddress"
                 value={newCustomer.address}
                 onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, address: e.target.value })
+                  handleCustomerChange('address', e.target.value)
                 }
               />
             </div>
@@ -1165,7 +1499,7 @@ export default function EditInvoice() {
                 id="bankName"
                 value={newCustomer.bankName}
                 onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, bankName: e.target.value })
+                  handleCustomerChange('bankName', e.target.value)
                 }
               />
             </div>
@@ -1175,7 +1509,7 @@ export default function EditInvoice() {
                 id="accountNo"
                 value={newCustomer.accountNo}
                 onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, accountNo: e.target.value })
+                  handleCustomerChange('accountNo', e.target.value)
                 }
               />
             </div>
@@ -1185,7 +1519,7 @@ export default function EditInvoice() {
                 id="sortCode"
                 value={newCustomer.sortCode}
                 onChange={(e) =>
-                  setNewCustomer({ ...newCustomer, sortCode: e.target.value })
+                  handleCustomerChange('sortCode', e.target.value)
                 }
               />
             </div>
@@ -1195,10 +1529,7 @@ export default function EditInvoice() {
                 id="beneficiary"
                 value={newCustomer.beneficiary}
                 onChange={(e) =>
-                  setNewCustomer({
-                    ...newCustomer,
-                    beneficiary: e.target.value
-                  })
+                  handleCustomerChange('beneficiary', e.target.value)
                 }
               />
             </div>
