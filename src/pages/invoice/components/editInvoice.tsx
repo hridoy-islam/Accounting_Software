@@ -901,7 +901,7 @@ export default function EditInvoice() {
                 Add New Row
               </Button>
             </div>
-            <div className=" flex items-center justify-end pr-12 -mt-8">
+            <div className=" flex items-center justify-end  -mt-8 pr-56">
               <span className="mr-4 w-48 font-bold">Total Invoice Amount</span>
               <span className="w-32 text-center font-bold">
                 {symbol}
@@ -1024,7 +1024,7 @@ export default function EditInvoice() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-end border-t border-gray-200 p-4">
+                  <div className="flex items-center justify-end border-t border-gray-200 mr-20 py-4">
                     <span className="mr-4 w-40 font-bold">
                       Total Paid Amount
                     </span>
