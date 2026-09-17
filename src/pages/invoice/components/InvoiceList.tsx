@@ -122,9 +122,9 @@ export function InvoiceList({
             <TableHead className="text-left">Balance Due</TableHead>
             <TableHead className="text-left">Status</TableHead>
             <TableHead className="text-left">Type</TableHead>
-            {hasPermission('TransactionList', 'create') && (
+            {/* {hasPermission('TransactionList', 'create') && (
               <TableHead className="text-left">Payment</TableHead>
-            )}
+            )} */}
 
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
@@ -242,7 +242,7 @@ export function InvoiceList({
                         : 'Outflow'}
                     </Badge>
                   </TableCell>
-                  {hasPermission('TransactionList', 'create') && (
+                  {/* {hasPermission('TransactionList', 'create') && (
                     <TableCell className="text-left">
                       <div className="flex items-center justify-center">
                         {invoice.status === 'paid' ? (
@@ -260,7 +260,7 @@ export function InvoiceList({
                         )}
                       </div>
                     </TableCell>
-                  )}
+                  )} */}
 
                   <TableCell className="flex flex-row items-center justify-end gap-2 text-right">
                     <InvoicePDFPreview

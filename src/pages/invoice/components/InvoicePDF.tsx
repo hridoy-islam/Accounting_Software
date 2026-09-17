@@ -10,6 +10,8 @@ import {
 } from '@react-pdf/renderer';
 import { Download, Eye } from 'lucide-react';
 import moment from 'moment';
+import { useEffect, useState } from 'react';
+import axiosInstance from '@/lib/axios';
 import {
   Dialog,
   DialogContent,
@@ -135,6 +137,35 @@ const styles = StyleSheet.create({
     marginBottom: 2
   },
   
+  // --- Transactions (payments recorded against the invoice) ---
+  txContainer: {
+    marginTop: 5,
+    marginBottom: 10
+  },
+  txTable: {
+    width: '100%'
+  },
+  txHeader: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+    paddingVertical: 4
+  },
+  txRow: {
+    flexDirection: 'row',
+    paddingVertical: 3
+  },
+  txTotalRow: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: '#000',
+    paddingVertical: 4
+  },
+  txDate: { width: '35%' },
+  txMethod: { width: '40%' },
+  txAmount: { width: '25%', textAlign: 'right' },
+  txSummaryLabel: { width: '75%', textAlign: 'right', paddingRight: 10 },
+
   // Utilities
   bold: {
     fontFamily: 'Helvetica-Bold'
@@ -153,7 +184,7 @@ const styles = StyleSheet.create({
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const InvoicePDF = ({ invoice, currencySymbol = '£', currencyCode = 'GBP' }: { invoice: any; currencySymbol?: string; currencyCode?: string }) => {
+const InvoicePDF = ({ invoice, payments, currencySymbol = '£', currencyCode = 'GBP' }: { invoice: any; payments?: any[]; currencySymbol?: string; currencyCode?: string }) => {
   const currencyLabel =
     currencySymbol === '$' || currencySymbol === '£'
       ? currencySymbol
@@ -169,7 +200,14 @@ const InvoicePDF = ({ invoice, currencySymbol = '£', currencyCode = 'GBP' }: { 
     return invoice.partialPayment;
   };
 
-  const paidAmount = calculatePaidAmount();
+  // Payment transactions recorded against this invoice
+  const transactions: any[] = payments || invoice.payments || [];
+  const paidFromTransactions = transactions.reduce(
+    (sum: number, payment: any) => sum + (Number(payment.transactionAmount) || 0),
+    0
+  );
+
+  const paidAmount = calculatePaidAmount() + paidFromTransactions;
   const balanceDue = Math.max(0, (invoice.total || 0) - paidAmount);
   const isOutflow = invoice.transactionType === 'outflow';
 
@@ -345,6 +383,51 @@ const InvoicePDF = ({ invoice, currencySymbol = '£', currencyCode = 'GBP' }: { 
           </View>
         </View>
 
+        {/* --- TRANSACTIONS --- */}
+        {transactions.length > 0 && (
+          <View style={styles.txContainer}>
+            <View style={styles.txTable}>
+              <Text style={styles.bankTitle}>Transactions</Text>
+
+              <View style={styles.txHeader}>
+                <Text style={[styles.txDate, styles.tableHeaderLabel]}>Date</Text>
+                <Text style={[styles.txMethod, styles.tableHeaderLabel]}>Method</Text>
+                <Text style={[styles.txAmount, styles.tableHeaderLabel]}>Amount</Text>
+              </View>
+
+              {transactions.map((payment: any, index: number) => (
+                <View key={payment._id || index} style={styles.txRow}>
+                  <Text style={styles.txDate}>
+                    {payment.transactionDate
+                      ? moment(payment.transactionDate).format('DD/MM/YYYY')
+                      : ''}
+                  </Text>
+                  <Text style={styles.txMethod}>
+                    {payment.transactionMethod?.name || payment.transactionMethod || '-'}
+                  </Text>
+                  <Text style={styles.txAmount}>
+                    {currencyLabel}{(Number(payment.transactionAmount) || 0).toFixed(2)}
+                  </Text>
+                </View>
+              ))}
+
+              <View style={styles.txTotalRow}>
+                <Text style={[styles.txSummaryLabel, styles.bold]}>Total Paid</Text>
+                <Text style={[styles.txAmount, styles.bold]}>
+                  {currencyLabel}{paidFromTransactions.toFixed(2)}
+                </Text>
+              </View>
+
+              <View style={styles.txRow}>
+                <Text style={[styles.txSummaryLabel, styles.bold]}>New Balance</Text>
+                <Text style={[styles.txAmount, styles.bold]}>
+                  {currencyLabel}{balanceDue.toFixed(2)}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         {/* --- ACCOUNT DETAILS (Footer) --- */}
         <View style={styles.footerContainer}>
           <Text style={styles.bankTitle}>Account Details</Text>
@@ -401,10 +484,10 @@ const InvoicePDF = ({ invoice, currencySymbol = '£', currencyCode = 'GBP' }: { 
   );
 };
 
-export const InvoicePDFDownload = ({ invoice, currencySymbol = '£', currencyCode = 'GBP' }: { invoice: any; currencySymbol?: string; currencyCode?: string }) => {
+export const InvoicePDFDownload = ({ invoice, payments, currencySymbol = '£', currencyCode = 'GBP' }: { invoice: any; payments?: any[]; currencySymbol?: string; currencyCode?: string }) => {
   return (
     <PDFDownloadLink
-      document={<InvoicePDF invoice={invoice} currencySymbol={currencySymbol} currencyCode={currencyCode} />}
+      document={<InvoicePDF invoice={invoice} payments={payments} currencySymbol={currencySymbol} currencyCode={currencyCode} />}
       fileName={`invoice_${invoice.invId}.pdf`}
     >
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -418,8 +501,34 @@ export const InvoicePDFDownload = ({ invoice, currencySymbol = '£', currencyCod
 };
 
 export const InvoicePDFPreview = ({ invoice, currencySymbol = '£', currencyCode = 'GBP' }: { invoice: any; currencySymbol?: string; currencyCode?: string }) => {
+  const [open, setOpen] = useState(false);
+  const [payments, setPayments] = useState<any[]>(invoice?.payments || []);
+
+  // The list endpoint does not carry the payment transactions, so they are
+  // pulled in when the preview is opened.
+  useEffect(() => {
+    if (!open || !invoice?._id) return;
+
+    let cancelled = false;
+    const fetchPayments = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/invoice/${invoice._id}/payments`
+        );
+        if (!cancelled) setPayments(response.data?.data || []);
+      } catch (error) {
+        console.error('Error fetching invoice payments:', error);
+      }
+    };
+
+    fetchPayments();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, invoice?._id]);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size={'sm'} className="gap-2 bg-theme text-white text-xs hover:bg-theme/90">
           Preview
@@ -435,7 +544,7 @@ export const InvoicePDFPreview = ({ invoice, currencySymbol = '£', currencyCode
           
           <div className="mr-8">
             <PDFDownloadLink
-              document={<InvoicePDF invoice={invoice} currencySymbol={currencySymbol} currencyCode={currencyCode} />}
+              document={<InvoicePDF invoice={invoice} payments={payments} currencySymbol={currencySymbol} currencyCode={currencyCode} />}
               fileName={`invoice_${invoice.invId}.pdf`}
             >
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -456,7 +565,7 @@ export const InvoicePDFPreview = ({ invoice, currencySymbol = '£', currencyCode
             showToolbar={false}
             className="h-full w-full border-none"
           >
-            <InvoicePDF invoice={invoice} currencySymbol={currencySymbol} currencyCode={currencyCode} />
+            <InvoicePDF invoice={invoice} payments={payments} currencySymbol={currencySymbol} currencyCode={currencyCode} />
           </PDFViewer>
         </div>
         

@@ -649,10 +649,13 @@ export default function EditInvoice() {
           <h1 className="text-2xl font-bold">Edit Invoice</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="theme" onClick={() => handleOpenPaymentDialog()}>
-            <Wallet className="mr-2 h-4 w-4" />
-            Make Payment
-          </Button>
+          <Button
+                variant="theme"
+                onClick={() => handleOpenPaymentDialog()}
+              >
+                <Wallet className="mr-2 h-4 w-4" />
+                Make Payment
+              </Button>
           <Button
             variant="outline"
             className={`${isRecurring ? 'hover:bg-theme/90 border-none bg-theme text-white' : ''}`}
@@ -886,16 +889,155 @@ export default function EditInvoice() {
                         </Button>
                       </td>
                     </tr>
+                   
                   ))}
                 </tbody>
               </table>
             </div>
+
+            <div className="ml-2 mt-4 flex flex-wrap items-center gap-2">
+              <Button variant="theme" onClick={handleAddRow}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add New Row
+              </Button>
+            </div>
+            <div className=" flex items-center justify-end pr-12 -mt-8">
+              <span className="mr-4 w-48 font-bold">Total Invoice Amount</span>
+              <span className="w-32 text-center font-bold">
+                {symbol}
+                {total.toFixed(2)}
+              </span>
+            </div>
+
+            {/* --- PAYMENTS --- */}
+            <div className="mt-4">
+              <Card>
+                <CardContent className="p-0">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 p-4">
+                    <div>
+                      <h2 className="text-lg font-semibold">Payments</h2>
+                      <p className="text-sm text-black">
+                        Each payment is recorded as a{' '}
+                        {transactionType || 'linked'} transaction and kept in
+                        sync with it.
+                      </p>
+                    </div>
+                    {/* <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-xs text-black">Paid / Balance Due</p>
+                        <p className="font-semibold">
+                          {symbol}
+                          {paidFromPayments.toFixed(2)} / {symbol}
+                          {balanceDue.toFixed(2)}
+                        </p>
+                      </div>
+                    </div> */}
+                  </div>
+
+                  {payments.length === 0 ? (
+                    <p className="p-6 text-center text-sm text-black">
+                      No payment has been recorded for this invoice yet.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-200 text-sm">
+                            <th className="p-3 text-left">DATE</th>
+                            <th className="p-3 text-left">TRANSACTION ID</th>
+                            <th className="p-3 text-left">CATEGORY</th>
+                            <th className="p-3 text-left">METHOD</th>
+                            <th className="p-3 text-left">STORAGE</th>
+                            <th className="p-3 text-center">DOC</th>
+                            <th className="p-3 text-right">AMOUNT</th>
+                            <th className="w-24 p-3 text-center">ACTIONS</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payments.map((payment) => (
+                            <tr
+                              key={payment._id}
+                              className="border-b border-gray-200 text-sm"
+                            >
+                              <td className="p-3">
+                                {payment.transactionDate
+                                  ? new Date(
+                                      payment.transactionDate
+                                    ).toLocaleDateString()
+                                  : '-'}
+                              </td>
+                              <td className="p-3">{payment.tcid || '-'}</td>
+                              <td className="p-3">
+                                {payment.transactionCategory?.name || '-'}
+                              </td>
+                              <td className="p-3">
+                                {payment.transactionMethod?.name || '-'}
+                              </td>
+                              <td className="p-3">
+                                {payment.storage?.storageName || '-'}
+                              </td>
+                              <td className="p-3 text-center">
+                                {payment.transactionDoc ? (
+                                  <a
+                                    href={payment.transactionDoc}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="hover:bg-theme/90 inline-flex items-center gap-1.5 rounded-md bg-theme px-3 py-1.5 text-sm font-medium text-white transition"
+                                  >
+                                    <Paperclip className="h-4 w-4" />
+                                    View Document
+                                  </a>
+                                ) : (
+                                  '-'
+                                )}
+                              </td>
+                              <td className="p-3 text-right font-medium">
+                                {symbol}
+                                {(
+                                  Number(payment.transactionAmount) || 0
+                                ).toFixed(2)}
+                              </td>
+                              <td className="p-3">
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button
+                                    size="icon"
+                                    onClick={() =>
+                                      handleOpenPaymentDialog(payment)
+                                    }
+                                    className="hover:bg-theme/90 bg-theme text-white"
+                                  >
+                                    <Pencil className="h-4 w-4 " />
+                                  </Button>
+                                  <Button
+                                    variant={'destructive'}
+                                    size="icon"
+                                    onClick={() => setDeletingPayment(payment)}
+                                  >
+                                    <Trash2 className="h-4 w-4 " />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end border-t border-gray-200 p-4">
+                    <span className="mr-4 w-40 font-bold">
+                      Total Paid Amount
+                    </span>
+                    <span className="w-32 text-center font-bold">
+                      {symbol}
+                      {paidFromPayments.toFixed(2)}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
             <div className="flex justify-between p-4">
               <div className="flex flex-col gap-2">
-                <Button variant="theme" onClick={handleAddRow}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add New Row
-                </Button>
                 <div className="mb-2 flex items-center">
                   <span className="mr-4 w-28 font-medium">VAT (%)</span>
                   <Input
@@ -950,7 +1092,7 @@ export default function EditInvoice() {
                     </div>
                   </div>
                 </div>
-                <div className="mb-2 flex items-center">
+                {/* <div className="mb-2 flex items-center">
                   <span className="mr-4 w-28 font-medium">Paid Amount</span>
                   <div className="flex w-full items-center gap-2">
                     <Select
@@ -985,7 +1127,7 @@ export default function EditInvoice() {
                       />
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
               <div className="flex flex-wrap justify-between gap-4 p-4">
                 <div className="flex flex-col text-left">
@@ -1026,8 +1168,8 @@ export default function EditInvoice() {
                   </div>
                   {paidFromPayments > 0 && (
                     <div className="mb-2 flex items-center text-black">
-                      <span className="mr-4 w-32 font-medium">
-                        Payments Received
+                      <span className="mr-4 w-48 font-medium">
+                        Total paid
                       </span>
                       <span className="ml-auto w-32 text-center font-medium">
                         -{paidFromPayments.toFixed(2)}
@@ -1064,125 +1206,6 @@ export default function EditInvoice() {
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-      {/* --- PAYMENTS --- */}
-      <div className="mt-8">
-        <Card>
-          <CardContent className="p-0">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 p-4">
-              <div>
-                <h2 className="text-lg font-semibold">Payments</h2>
-                <p className="text-sm text-black">
-                  Each payment is recorded as a {transactionType || 'linked'}{' '}
-                  transaction and kept in sync with it.
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <p className="text-xs text-black">Paid / Balance Due</p>
-                  <p className="font-semibold">
-                    {symbol}
-                    {paidFromPayments.toFixed(2)} / {symbol}
-                    {balanceDue.toFixed(2)}
-                  </p>
-                </div>
-                <Button
-                  variant="theme"
-                  onClick={() => handleOpenPaymentDialog()}
-                >
-                  <Wallet className="mr-2 h-4 w-4" />
-                  Make Payment
-                </Button>
-              </div>
-            </div>
-
-            {payments.length === 0 ? (
-              <p className="p-6 text-center text-sm text-black">
-                No payment has been recorded for this invoice yet.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 text-sm">
-                      <th className="p-3 text-left">DATE</th>
-                      <th className="p-3 text-left">TRANSACTION ID</th>
-                      <th className="p-3 text-left">CATEGORY</th>
-                      <th className="p-3 text-left">METHOD</th>
-                      <th className="p-3 text-left">STORAGE</th>
-                      <th className="p-3 text-center">DOC</th>
-                      <th className="p-3 text-right">AMOUNT</th>
-                      <th className="w-24 p-3 text-center">ACTIONS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map((payment) => (
-                      <tr
-                        key={payment._id}
-                        className="border-b border-gray-200 text-sm"
-                      >
-                        <td className="p-3">
-                          {payment.transactionDate
-                            ? new Date(
-                                payment.transactionDate
-                              ).toLocaleDateString()
-                            : '-'}
-                        </td>
-                        <td className="p-3">{payment.tcid || '-'}</td>
-                        <td className="p-3">
-                          {payment.transactionCategory?.name || '-'}
-                        </td>
-                        <td className="p-3">
-                          {payment.transactionMethod?.name || '-'}
-                        </td>
-                        <td className="p-3">
-                          {payment.storage?.storageName || '-'}
-                        </td>
-                        <td className="p-3 text-center">
-                          {payment.transactionDoc ? (
-                            <a
-                              href={payment.transactionDoc}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="hover:bg-theme/90 inline-flex items-center gap-1.5 rounded-md bg-theme px-3 py-1.5 text-sm font-medium text-white transition"
-                            >
-                              <Paperclip className="h-4 w-4" />
-                              View Document
-                            </a>
-                          ) : (
-                            '-'
-                          )}
-                        </td>
-                        <td className="p-3 text-right font-medium">
-                          {symbol}
-                          {(Number(payment.transactionAmount) || 0).toFixed(2)}
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center justify-center gap-1">
-                            <Button
-                              size="icon"
-                              onClick={() => handleOpenPaymentDialog(payment)}
-                              className="hover:bg-theme/90 bg-theme text-white"
-                            >
-                              <Pencil className="h-4 w-4 " />
-                            </Button>
-                            <Button
-                              variant={'destructive'}
-                              size="icon"
-                              onClick={() => setDeletingPayment(payment)}
-                            >
-                              <Trash2 className="h-4 w-4 " />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>

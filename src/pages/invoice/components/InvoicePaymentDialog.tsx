@@ -134,8 +134,8 @@ export function InvoicePaymentDialog({
         transactionCategory: getId(editingPayment.transactionCategory),
         transactionMethod: getId(editingPayment.transactionMethod),
         storage: getId(editingPayment.storage),
-        invoiceNumber: editingPayment.invoiceNumber || '',
-        invoiceDate: toDateInput(editingPayment.invoiceDate),
+        invoiceNumber: invoice?.invoiceNumber || editingPayment.invoiceNumber || '',
+        invoiceDate: toDateInput(invoice?.invoiceDate || editingPayment.invoiceDate),
         description: editingPayment.description || ''
       });
     } else {
@@ -145,7 +145,7 @@ export function InvoicePaymentDialog({
         transactionCategory: '',
         transactionMethod: '',
         storage: '',
-        invoiceNumber: invoice?.invoiceNumber || invoice?.invId || '',
+        invoiceNumber: invoice?.invoiceNumber || '',
         invoiceDate: toDateInput(invoice?.invoiceDate),
         description: ''
       });
@@ -173,6 +173,20 @@ export function InvoicePaymentDialog({
   const remainingAfterPayment = Math.max(0, outstanding - amount);
   const willBeFullyPaid = amount > 0 && remainingAfterPayment <= 0;
 
+  // The payment can never be negative or larger than what is still open, so
+  // the submit button stays disabled until the amount is inside that range.
+  const amountError =
+    form.transactionAmount === ''
+      ? ''
+      : isNaN(Number(form.transactionAmount))
+        ? 'Amount must be a number'
+        : amount <= 0
+          ? 'Amount must be greater than 0'
+          : amount > outstanding + 0.005
+            ? `Amount cannot be more than the outstanding balance (${symbol}${outstanding.toFixed(2)})`
+            : '';
+  const isAmountValid = amount > 0 && amount <= outstanding + 0.005;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
@@ -197,6 +211,14 @@ export function InvoicePaymentDialog({
   const handleReview = () => {
     if (!invoice?._id) {
       toast({ title: 'Invoice is not loaded yet', variant: 'destructive' });
+      return;
+    }
+    if (!isAmountValid) {
+      setErrors((prev) => ({
+        ...prev,
+        transactionAmount:
+          amountError || 'Enter an amount within the outstanding balance'
+      }));
       return;
     }
     if (!validate()) return;
@@ -286,12 +308,12 @@ export function InvoicePaymentDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-6xl">
+        <DialogContent className="max-h-[95vh] overflow-y-auto sm:max-w-6xl">
           <DialogHeader>
             <DialogTitle>
               {editingPayment ? 'Edit Payment' : 'Make Payment'}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription >
               This payment is recorded as an{' '}
               <span className="font-semibold">{transactionType}</span>{' '}
               transaction for invoice{' '}
@@ -322,6 +344,7 @@ export function InvoicePaymentDialog({
                   id="paymentAmount"
                   type="number"
                   min="0"
+                  max={outstanding}
                   step="0.01"
                   placeholder="0.00"
                   value={form.transactionAmount}
@@ -329,7 +352,7 @@ export function InvoicePaymentDialog({
                     handleChange('transactionAmount', e.target.value)
                   }
                 />
-                <FieldError message={errors.transactionAmount} />
+                <FieldError message={errors.transactionAmount || amountError} />
               </div>
               <div className="space-y-2">
                 <Label>Category* ({transactionType})</Label>
@@ -352,7 +375,7 @@ export function InvoicePaymentDialog({
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Method*</Label>
+                <Label>Transaction Method*</Label>
                 <Select
                   options={methodOptions}
                   value={
@@ -389,22 +412,28 @@ export function InvoicePaymentDialog({
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="paymentInvoiceNumber">Invoice Number</Label>
+                <Label htmlFor="paymentInvoiceNumber">
+                  Reference Invoice Number
+                </Label>
                 <Input
                   id="paymentInvoiceNumber"
                   value={form.invoiceNumber}
-                  onChange={(e) =>
-                    handleChange('invoiceNumber', e.target.value)
-                  }
+                  disabled
+                  readOnly
+                  className="bg-gray-100"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="paymentInvoiceDate">Invoice Date</Label>
+                <Label htmlFor="paymentInvoiceDate">
+                  Reference Invoice Date
+                </Label>
                 <Input
                   id="paymentInvoiceDate"
                   type="date"
                   value={form.invoiceDate}
-                  onChange={(e) => handleChange('invoiceDate', e.target.value)}
+                  disabled
+                  readOnly
+                  className="bg-gray-100"
                 />
               </div>
             </div>
@@ -501,7 +530,11 @@ export function InvoicePaymentDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button variant="theme" onClick={handleReview}>
+            <Button
+              variant="theme"
+              disabled={!isAmountValid}
+              onClick={handleReview}
+            >
               {editingPayment ? 'Update Payment' : 'Mark as Paid'}
             </Button>
           </DialogFooter>
