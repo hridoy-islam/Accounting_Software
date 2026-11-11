@@ -9,8 +9,24 @@ import { useParams } from 'react-router-dom';
 import { ImageUploader } from '@/components/shared/image-uploader';
 import { DataTablePagination } from '@/components/shared/data-table-pagination';
 import { EditTransactionDialog } from './components/EditTransactionDialog';
-import { RefreshCcw } from 'lucide-react';
+import { Download, RefreshCcw } from 'lucide-react';
 import { usePermission } from '@/hooks/usePermission';
+import Papa from 'papaparse';
+import moment from 'moment';
+
+const buildTransactionParams = (appliedFilters) => {
+  const { search, type, category, method, storage, fromDate, toDate } =
+    appliedFilters;
+  return {
+    searchTerm: search || undefined,
+    transactionType: type || undefined,
+    transactionCategory: category || undefined,
+    transactionMethod: method || undefined,
+    storage: storage || undefined,
+    startDate: fromDate || undefined,
+    endDate: toDate || undefined
+  };
+};
 
 
 export default function TransactionPage() {
@@ -42,6 +58,54 @@ export default function TransactionPage() {
   const [appliedFilters, setAppliedFilters] = useState(filters);
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [downloading, setDownloading] = useState(false);
+
+  // Show the CSV button only once at least one filter has been applied
+  const hasActiveFilters = Object.values(
+    buildTransactionParams(appliedFilters)
+  ).some((v) => v !== undefined);
+
+  const handleDownloadCsv = async () => {
+    try {
+      setDownloading(true);
+      const res = await axiosInstance.get(`/transactions/company/${id}`, {
+        params: { ...buildTransactionParams(appliedFilters), limit: 'all' }
+      });
+      const rows = (res.data.data.result || []).map((t) => ({
+        TCID: t.tcid,
+        'Transaction Date': t.transactionDate
+          ? moment(t.transactionDate).format('YYYY-MM-DD')
+          : '',
+        Type: t.transactionType,
+        Amount: Number(t.transactionAmount ?? 0).toFixed(2),
+        Category: t.transactionCategory?.name ?? '',
+        Method: t.transactionMethod?.name ?? '',
+        Storage: t.storage?.storageName ?? '',
+        'Invoice Number': t.invoiceNumber ?? '',
+        'Invoice Date': t.invoiceDate
+          ? moment(t.invoiceDate).format('YYYY-MM-DD')
+          : '',
+        Details: t.details ?? '',
+        Description: t.description ?? '',
+        Attachment: t.transactionDoc ?? ''
+      }));
+
+      const csv = Papa.unparse(rows);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `transactions_${moment().format('YYYYMMDD_HHmmss')}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading CSV:', error);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const fetchData = async (page, entriesPerPage, appliedFilters) => {
     try {
@@ -233,6 +297,18 @@ export default function TransactionPage() {
                 Refresh
               </div>
             </Button>
+            {hasActiveFilters && (
+              <Button
+                className="bg-black text-white hover:bg-black/80"
+                onClick={handleDownloadCsv}
+                disabled={downloading}
+              >
+                <div className="flex flex-row items-center justify-center gap-2">
+                  <Download size="18" />
+                  {downloading ? 'Downloading...' : 'Download CSV'}
+                </div>
+              </Button>
+            )}
             {hasPermission('TransactionList', 'create') &&(
             <Button variant="theme" onClick={() => setDialogOpen(true)}>
               Add Transaction
