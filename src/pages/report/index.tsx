@@ -323,7 +323,7 @@ export default function ReportPage() {
         ...tableConfig
       });
 
-      yPos = doc.autoTable.previous.finalY + 15;
+      yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
     }
 
     // Outflow Transactions Table
@@ -367,7 +367,7 @@ export default function ReportPage() {
         ...tableConfig
       });
 
-      yPos = doc.autoTable.previous.finalY + 15;
+      yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
     }
 
     // Footer with Page Numbers and Timestamp

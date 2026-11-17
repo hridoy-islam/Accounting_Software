@@ -16,7 +16,7 @@ export const validateWithSchema = <T extends z.ZodTypeAny>(
   }
 
   const errors: FieldErrors = {};
-  result.error.errors.forEach((issue) => {
+  result.error.issues.forEach((issue) => {
     const key = issue.path.join('.') || 'form';
     // Keep the first message per field - that is the one worth showing
     if (!errors[key]) errors[key] = issue.message;
@@ -73,10 +73,10 @@ export const customerFormSchema = z.object({
 export const scheduleFormSchema = z
   .object({
     frequency: z.enum(['monthly', 'yearly'], {
-      errorMap: () => ({ message: 'Please select how often to schedule' })
+      error: 'Please select how often to schedule'
     }),
     scheduledDay: z
-      .number({ invalid_type_error: 'Please select a day' })
+      .number({ error: 'Please select a day' })
       .int()
       .min(1, 'Please select a day')
       .max(31, 'Please select a valid day'),
@@ -92,7 +92,7 @@ export const scheduleFormSchema = z
   .superRefine((values, ctx) => {
     if (values.frequency === 'yearly' && !values.scheduledMonth) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['scheduledMonth'],
         message: 'Please select a month'
       });
@@ -103,7 +103,7 @@ export const scheduleFormSchema = z
 export const invoiceDialogSchema = z.object({
   customer: requiredText('Please select a customer'),
   transactionType: z.enum(['inflow', 'outflow'], {
-    errorMap: () => ({ message: 'Please select a transaction type' })
+    error: 'Please select a transaction type'
   }),
   amount: z
     .union([z.number(), z.string()])

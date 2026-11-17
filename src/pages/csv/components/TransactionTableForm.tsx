@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { z } from 'zod';
 import {
   Form,
@@ -33,10 +33,13 @@ import axiosInstance from '@/lib/axios';
 import { usePermission } from '@/hooks/usePermission';
 import { useEffect } from 'react';
 
+// Form values: one row per CSV transaction (rows are validated individually below)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TransactionRowsForm = { transactions: any[] };
 
 const transactionSchema = z.object({
   transactionType: z.enum(['inflow', 'outflow'], {
-    required_error: 'Transaction type is required.'
+    error: 'Transaction type is required.'
   }),
   transactionDate: z
     .string()
@@ -72,8 +75,10 @@ const TransactionTableForm = ({
 }) => {
   const {hasPermission} = usePermission();
   
-  const form = useForm({
-    resolver: zodResolver(transactionSchema),
+  // The form holds a `transactions` array; each row is validated with
+  // transactionSchema.safeParse in handleRowSubmit, so keep the form loosely typed.
+  const form = useForm<TransactionRowsForm>({
+    resolver: zodResolver(transactionSchema) as unknown as Resolver<TransactionRowsForm>,
     defaultValues: {
       transactions: transactions.map((transaction) => ({
         ...transaction,
@@ -102,8 +107,8 @@ console.log(categories)
 
     if (!validationResult.success) {
       console.error('Validation error:', validationResult.error);
-      validationResult.error.errors.forEach((err) => {
-        form.setError(`transactions.${index}.${err.path[0]}`, {
+      validationResult.error.issues.forEach((err) => {
+        form.setError(`transactions.${index}.${String(err.path[0])}`, {
           type: 'manual',
           message: err.message
         });

@@ -35,7 +35,7 @@ export function ApplicationDialog({
   onOpenChange,
   onSubmit,
 }) {
-  const form = useForm({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       institution: "",
