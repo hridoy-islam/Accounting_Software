@@ -3,6 +3,7 @@ import { persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import authReducer from './features/authSlice';
 import permissionReducer from './features/permissionSlice';
+import { injectStore } from '../lib/axios';
 const persistConfig = {
   key: 'accounting',
   storage
@@ -18,6 +19,8 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 const store = configureStore({
   reducer: persistedReducer
 });
+
+injectStore(store);
 
 export type AppDispatch = typeof store.dispatch;
 

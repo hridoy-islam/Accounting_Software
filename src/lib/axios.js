@@ -1,109 +1,32 @@
-// import axios from 'axios';
-
-
-// // Create an instance of axios with custom configurations
-// const axiosInstance = axios.create({
-//   baseURL: import.meta.env.VITE_API_URL
-// });
-
-// axiosInstance.interceptors.request.use(
-//   (config) => {
-//     const token = JSON.parse(localStorage.getItem('accounting')); // Use JSON.parse
-
-//     if (token) {
-//       config.headers['Authorization'] = `Bearer ${token}`;
-//     }
-
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
-
-
-// // // Function to refresh the token
-// const refreshToken = async () => {
-//   try {
-//     const refreshToken = JSON.parse(localStorage.getItem('accountingRefresh'));
-
-//     if (!refreshToken) {
-   
-//       return null;
-//     }
-
-//     const response = await axios.post(
-//       `${import.meta.env.VITE_API_URL}/auth/refreshToken`,
-//       { refreshToken }
-//     );
-
-
-
-//     if (response.data && response.data.data) {
-//       const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-
-//       localStorage.setItem('accounting', JSON.stringify(accessToken));
-//       localStorage.setItem('accountingRefresh', JSON.stringify(newRefreshToken));
-
-      
-//       return accessToken;
-//     } else {
-//       return null;
-//     }
-//   } catch (error) {
-
-//     localStorage.removeItem('accounting');
-//     localStorage.removeItem('accountingRefresh');
-
-//     store.dispatch(logout());
-
-//     return null;
-//   }
-// };
-
-// // Response Interceptor: Handle token expiration and refresh
-// axiosInstance.interceptors.response.use(
-//   (response) => response,
-//   async (error) => {
-//     const originalRequest = error.config;
-
-//     if (error.response && (error.response.status === 500 || error.response.status === 400)) {
-//       if (!originalRequest._retry) {
-//         originalRequest._retry = true;
-
-//         const newToken = await refreshToken();
-//         if (newToken) {
-//           originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-//           return axiosInstance(originalRequest);
-//         }
-//       }
-//     }
-
-//     return Promise.reject(error);
-//   }
-// );
-
-// export default axiosInstance;
-
-
-
-
 import axios from 'axios';
-import { logout } from '../redux/features/authSlice';
-import store from '../redux/store';
 
+const API_URL = import.meta.env.VITE_API_URL;
+const ACCESS_TOKEN_KEY = 'accounting';
 
-// Create Axios instance
+// The Redux store is injected from redux/store.ts to avoid a circular import
+// (store -> authSlice -> axios -> store).
+let store;
+export const injectStore = (_store) => {
+  store = _store;
+};
+
+export const getAccessToken = () => {
+  try {
+    return JSON.parse(localStorage.getItem(ACCESS_TOKEN_KEY));
+  } catch {
+    return null;
+  }
+};
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true // Allows cookies (for refresh token) to be sent
+  baseURL: API_URL,
+  withCredentials: true // send the httpOnly refresh-token cookie
 });
 
-// Request interceptor: Attach access token to all outgoing requests
+// Attach access token to every request
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = JSON.parse(localStorage.getItem('accounting')); // Access token
-   
+    const token = getAccessToken();
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -112,55 +35,90 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Refresh token function
-const refreshToken = async () => {
+// Clear everything and send the user to the login page
+let isLoggingOut = false;
+export const forceLogout = async () => {
+  if (isLoggingOut) return;
+  isLoggingOut = true;
   try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/auth/refreshToken`,
-      {},
-      { withCredentials: true } // Include refresh token from cookie
-    );
-
-    const accessToken = response?.data?.data?.accessToken;
-    
-    if (accessToken) {
-      localStorage.setItem('accounting', JSON.stringify(accessToken));
-      return accessToken;
-    
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    if (store) {
+      const { logout } = await import('../redux/features/authSlice');
+      await store.dispatch(logout());
     }
-
-    return null;
-  } catch (error) {
-    // Token refresh failed — clean up and logout
-    localStorage.removeItem('accounting');
-    store.dispatch(logout());
-    return null;
+  } finally {
+    isLoggingOut = false;
+    if (window.location.pathname !== '/') {
+      window.location.replace('/');
+    }
   }
 };
 
-// Response interceptor: Handle JWT expiration and retry request
+// A single shared refresh request, so parallel 401s don't each trigger a refresh
+let refreshPromise = null;
+
+const refreshAccessToken = () => {
+  if (!refreshPromise) {
+    const storedRefreshToken = store?.getState()?.auth?.refreshToken;
+
+    refreshPromise = axios
+      .post(
+        `${API_URL}/auth/refreshToken`,
+        // cookie is preferred server-side; body is a fallback when cross-site cookies are blocked
+        storedRefreshToken ? { refreshToken: storedRefreshToken } : {},
+        { withCredentials: true }
+      )
+      .then(async (response) => {
+        const accessToken = response?.data?.data?.accessToken;
+        if (!accessToken) throw new Error('No access token returned');
+
+        localStorage.setItem(ACCESS_TOKEN_KEY, JSON.stringify(accessToken));
+        if (store) {
+          const { setAccessToken } = await import(
+            '../redux/features/authSlice'
+          );
+          store.dispatch(setAccessToken(accessToken));
+        }
+        return accessToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+};
+
+const isAuthRoute = (url = '') =>
+  /\/auth\/(login|refreshToken|logout|signup)/.test(url);
+
+// Refresh on expired access token, retry once; log out if refresh fails
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const status = error.response?.status;
 
-    // Only retry once and only if JWT has expired
-    if (
-      error.response?.status === 401 &&
-      error.response?.data?.message === 'JWT Expired' &&
-      !originalRequest._retry
-    ) {
-      originalRequest._retry = true;
-
-      const newToken = await refreshToken();
-
-      if (newToken) {
-        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-        return axiosInstance(originalRequest);
-      }
+    if (!originalRequest || status !== 401 || isAuthRoute(originalRequest.url)) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    // Already retried with a fresh token and still 401 -> session is invalid
+    if (originalRequest._retry) {
+      await forceLogout();
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    try {
+      const newToken = await refreshAccessToken();
+      originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+      return axiosInstance(originalRequest);
+    } catch (refreshError) {
+      // Refresh token expired or invalid -> automatic logout
+      await forceLogout();
+      return Promise.reject(refreshError);
+    }
   }
 );
 

@@ -101,6 +101,7 @@ export const loginUser = createAsyncThunk<UserResponse, UserCredentials>(
       `${import.meta.env.VITE_API_URL}/auth/login`,
       userCredentials,
       {
+        withCredentials: true, // lets the browser store the httpOnly refresh-token cookie
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Content-Type': 'application/json' //this line solved cors
@@ -207,7 +208,16 @@ export const changePassword = createAsyncThunk<
 
 export const logout = createAsyncThunk<void>('user/logout', async () => {
   localStorage.removeItem('accounting');
-  // localStorage.removeItem('accountingRefresh');
+  try {
+    // Clear the httpOnly refresh cookie on the server (best effort)
+    await axios.post(
+      `${import.meta.env.VITE_API_URL}/auth/logout`,
+      {},
+      { withCredentials: true }
+    );
+  } catch {
+    // ignore - local state is cleared regardless
+  }
 });
 
 const authSlice = createSlice({
@@ -216,6 +226,14 @@ const authSlice = createSlice({
   reducers: {
     resetError(state) {
       state.error = null; // Reset the error state
+    },
+    setAccessToken(state, action) {
+      state.token = action.payload;
+      try {
+        state.user = jwtDecode(action.payload);
+      } catch {
+        // keep existing user if decode fails
+      }
     }
   },
   extraReducers: (builder) => {
@@ -263,6 +281,12 @@ const authSlice = createSlice({
         state.error = 'Please Check Your Login Credentials';
         state.token = null;
       })
+      .addCase(logout.pending, (state) => {
+        // clear immediately so protected routes redirect without waiting for the network
+        state.user = null;
+        state.token = null;
+        state.refreshToken = null;
+      })
       .addCase(logout.fulfilled, (state) => {
         state.loading = false;
         state.user = null; // Clear user state on logout
@@ -273,5 +297,5 @@ const authSlice = createSlice({
   }
 });
 
-export const { resetError } = authSlice.actions;
+export const { resetError, setAccessToken } = authSlice.actions;
 export default authSlice.reducer;
